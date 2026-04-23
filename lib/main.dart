@@ -1,57 +1,42 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:go_router/go_router.dart';
+import 'features/auth/presentation/pages/welcome_page.dart';
+import 'features/auth/presentation/pages/login_page.dart';
+import 'features/auth/presentation/pages/register_page.dart';
+import 'features/auth/presentation/pages/forgot_password_page.dart';
 
 void main() {
   runApp(const MatchDayApp());
 }
+
+final _router = GoRouter(
+  initialLocation: '/',
+  routes: [
+    GoRoute(path: '/', builder: (context, state) => const WelcomePage()),
+    GoRoute(path: '/iniciar-sesion', builder: (context, state) => const LoginPage()),
+    GoRoute(path: '/crear-cuenta', builder: (context, state) => const RegisterPage()),
+    GoRoute(path: '/recuperar-contrasena', builder: (context, state) => const ForgotPasswordPage()),
+  ],
+);
 
 class MatchDayApp extends StatelessWidget {
   const MatchDayApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return MaterialApp.router(
       title: 'MatchDay',
-      debugShowCheckedModeBanner: false, // Quita la etiqueta fea de "DEBUG"
-      themeMode: ThemeMode.dark, // Forzamos el Dark Mode que diseñaste
+      debugShowCheckedModeBanner: false,
+      themeMode: ThemeMode.dark,
       darkTheme: ThemeData(
         brightness: Brightness.dark,
-        scaffoldBackgroundColor: const Color(0xFF121212), // Dark slate
-        primaryColor: const Color(0xFF39CEA5), // Tu verde neón
-        colorScheme: const ColorScheme.dark(
-          primary: Color(0xFF39CEA5),
-          secondary: Color(0xFF39CEA5),
-        ),
-        textTheme: GoogleFonts.poppinsTextTheme(Theme.of(context).textTheme).apply(
-          bodyColor: Colors.white,
-          displayColor: Colors.white,
-        ),
+        scaffoldBackgroundColor: const Color(0xFF151515), // El color exacto de tu Figma
+        primaryColor: const Color(0xFF39CEA5),
+        textTheme: GoogleFonts.poppinsTextTheme(ThemeData.dark().textTheme),
         useMaterial3: true,
       ),
-      home: const PlaceholderScreen(), // Pantalla temporal
-    );
-  }
-}
-
-// Un widget temporal mientras armamos las pantallas reales
-class PlaceholderScreen extends StatelessWidget {
-  const PlaceholderScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('MatchDay', style: TextStyle(fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        centerTitle: true,
-      ),
-      body: const Center(
-        child: Text(
-          '¡El lienzo está listo!',
-          style: TextStyle(fontSize: 20, color: Color(0xFF39CEA5)),
-        ),
-      ),
+      routerConfig: _router,
     );
   }
 }

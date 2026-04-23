@@ -1,0 +1,26 @@
+lib/features/
+├── auth/            # 🔐 Autenticación (Login, Google OAuth, Registro)
+├── main_hub/        # 🧭 Navegación Global (El Bottom Navigation Bar)
+├── teams_discovery/ # 🔍 Equipos (La nueva Home: explorar equipos buscando jugadores)
+├── matches/         # ⚽ Partidos (El Muro: buscar retos, crear encuentros, pagos)
+├── my_teams/        # 👥 Mis Equipos (Gestión de rosters, jugador vs organizador)
+├── rankings/        # 🏆 Clasificación (Leaderboards mensuales/anuales por deporte)
+├── profile/         # 👤 Perfil (Edición de datos, estadísticas, historial de partidos)
+└── media/           # 🖼️ Gestión Multimedia (Subida de logos, fotos de perfil y recibos)
+
+
+
+lib/features/matches/
+├── domain/                  # Capa 1: El núcleo (Independiente de Flutter)
+│   ├── entities/            # (MatchEntity, PaymentEntity)
+│   └── repositories/        # (IMatchesRepository - Contrato)
+├── application/             # Capa 2: Casos de Uso
+│   └── usecases/            # (CreateMatchUseCase, GetPendingPaymentsUseCase)
+├── infrastructure/          # Capa 3: Datos (Aquí vive Dio)
+│   ├── models/              # (MatchModel - con fromJson/toJson)
+│   ├── datasources/         # (MatchesRemoteDataSource - peticiones HTTP con Dio)
+│   └── repositories/        # (MatchesRepositoryImpl - une el datasource con el domain)
+└── presentation/            # Capa 4: UI y Estado (Aquí vive Bloc)
+    ├── bloc/                # (MatchesBloc, MatchesEvent, MatchesState)
+    ├── pages/               # (MatchesWallPage, MatchDetailPage)
+    └── widgets/             # (MatchCardWidget, PaymentStatusWidget)
