@@ -1,174 +1,172 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-class RegisterPage extends StatefulWidget {
+import '../../../../core/di/injection_container.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/widgets/theme_toggle_button.dart';
+import '../bloc/auth_bloc.dart';
+import '../bloc/auth_event.dart';
+import '../bloc/auth_state.dart';
+import '../widgets/custom_text_field.dart';
+import '../widgets/google_sign_in_button.dart'; // Importamos el nuevo widget
+
+class RegisterPage extends StatelessWidget {
   const RegisterPage({super.key});
 
   @override
-  State<RegisterPage> createState() => _RegisterPageState();
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (_) => sl<AuthBloc>(),
+      child: const _RegisterView(),
+    );
+  }
 }
 
-class _RegisterPageState extends State<RegisterPage> {
+class _RegisterView extends StatefulWidget {
+  const _RegisterView();
+
+  @override
+  State<_RegisterView> createState() => _RegisterViewState();
+}
+
+class _RegisterViewState extends State<_RegisterView> {
   bool _acceptedTerms = false;
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _confirmPasswordController = TextEditingController();
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
+    _confirmPasswordController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Botón de retroceso
-              IconButton(
-                icon: const Icon(Icons.arrow_back, color: Colors.white),
-                onPressed: () => context.pop(),
-                padding: EdgeInsets.zero,
-                alignment: Alignment.centerLeft,
-              ),
-              const SizedBox(height: 16),
-              
-              // Títulos
-              const Text('Comenzar', style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white)),
-              const SizedBox(height: 8),
-              const Text(
-                'Únete a la comunidad o continúa instantáneamente con Google.',
-                style: TextStyle(fontSize: 14, color: Color(0xFF9CA3AF)),
-              ),
-              const SizedBox(height: 32),
+    final colorScheme = Theme.of(context).colorScheme;
 
-              // Botón de Google
-              SizedBox(
-                width: double.infinity,
-                height: 56,
-                child: ElevatedButton.icon(
-                  onPressed: () {},
-                  icon: const Icon(Icons.g_mobiledata, size: 32, color: Colors.black),
-                  label: const Text('Continuar con Google', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black)),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  ),
-                ),
-              ),
+    return BlocConsumer<AuthBloc, AuthState>(
+      listener: (context, state) {
+        if (state is AuthError) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(state.message), backgroundColor: Colors.red),
+          );
+        } else if (state is AuthAuthenticated) {
+          context.go('/hub'); 
+        }
+      },
+      builder: (context, state) {
+        final isLoading = state is AuthLoading;
 
-              // Divisor
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 24.0),
-                child: Row(
-                  children: [
-                    const Expanded(child: Divider(color: Color(0xFF2A2A2A))),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                      child: Text('O con Email', style: TextStyle(color: const Color(0xFF9CA3AF).withOpacity(0.8))),
-                    ),
-                    const Expanded(child: Divider(color: Color(0xFF2A2A2A))),
-                  ],
-                ),
-              ),
-
-              // Campos del Formulario
-              _buildTextField(label: 'Nombre Completo', hint: 'Ingresa tu nombre completo', icon: Icons.person_outline),
-              const SizedBox(height: 20),
-              _buildTextField(label: 'Correo Electrónico', hint: 'Ingresa tu correo', icon: Icons.mail_outline),
-              const SizedBox(height: 20),
-              _buildTextField(label: 'Contraseña', hint: 'Crea una contraseña', icon: Icons.lock_outline, isPassword: true),
-              const SizedBox(height: 20),
-              _buildTextField(label: 'Confirmar Contraseña', hint: 'Confirma tu contraseña', icon: Icons.lock_outline, isPassword: true),
-              const SizedBox(height: 24),
-
-              // Checkbox de Términos
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  GestureDetector(
-                    onTap: () => setState(() => _acceptedTerms = !_acceptedTerms),
-                    child: Container(
-                      width: 24,
-                      height: 24,
-                      margin: const EdgeInsets.only(top: 2),
-                      decoration: BoxDecoration(
-                        color: _acceptedTerms ? const Color(0xFF39CEA5) : Colors.transparent,
-                        border: Border.all(color: _acceptedTerms ? const Color(0xFF39CEA5) : const Color(0xFF2A2A2A), width: 2),
-                        borderRadius: BorderRadius.circular(6),
+        return Scaffold(
+          body: SafeArea(
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      IconButton(
+                        icon: Icon(Icons.arrow_back, color: colorScheme.onSurface), 
+                        onPressed: isLoading ? null : () => context.pop()
                       ),
-                      child: _acceptedTerms ? const Icon(Icons.check, size: 16, color: Colors.black) : null,
-                    ),
+                      const ThemeToggleButton(),
+                    ],
                   ),
-                  const SizedBox(width: 12),
-                  const Expanded(
-                    child: Text.rich(
-                      TextSpan(
-                        text: 'Acepto los ',
-                        style: TextStyle(color: Color(0xFF9CA3AF), fontSize: 14),
-                        children: [
-                          TextSpan(
-                            text: 'Términos y Condiciones',
-                            style: TextStyle(color: Color(0xFF39CEA5), fontWeight: FontWeight.bold),
+                ),
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Comenzar', style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: colorScheme.onSurface)),
+                        const SizedBox(height: 8),
+                        const Text('Únete a la comunidad o continúa con Google.', style: TextStyle(fontSize: 14, color: AppColors.textMuted)),
+                        const SizedBox(height: 32),
+
+                        // BOTÓN DE GOOGLE REFACTORIZADO
+                        GoogleSignInButton(
+                          isLoading: isLoading,
+                          onPressed: () => context.read<AuthBloc>().add(SignInWithGoogleButtonPressed()),
+                        ),
+
+                        const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 24.0),
+                          child: Row(
+                            children: [
+                              Expanded(child: Divider()), 
+                              Padding(padding: EdgeInsets.symmetric(horizontal: 16.0), child: Text('O con Email', style: TextStyle(color: AppColors.textMuted))), 
+                              Expanded(child: Divider())
+                            ]
                           ),
-                        ],
-                      ),
+                        ),
+
+                        CustomTextField(label: 'Nombre Completo', hint: 'Tu nombre', icon: Icons.person_outline, controller: _nameController),
+                        const SizedBox(height: 20),
+                        CustomTextField(label: 'Correo Electrónico', hint: 'Tu correo', icon: Icons.mail_outline, controller: _emailController),
+                        const SizedBox(height: 20),
+                        CustomTextField(label: 'Contraseña', hint: 'Crea una clave', icon: Icons.lock_outline, isPassword: true, controller: _passwordController),
+                        const SizedBox(height: 20),
+                        CustomTextField(label: 'Confirmar Contraseña', hint: 'Repite la clave', icon: Icons.lock_outline, isPassword: true, controller: _confirmPasswordController),
+                        const SizedBox(height: 24),
+
+                        GestureDetector(
+                          onTap: isLoading ? null : () => setState(() => _acceptedTerms = !_acceptedTerms),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 24, height: 24,
+                                decoration: BoxDecoration(
+                                  color: _acceptedTerms ? AppColors.primary : Colors.transparent,
+                                  border: Border.all(color: _acceptedTerms ? AppColors.primary : AppColors.border, width: 2),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: _acceptedTerms ? const Icon(Icons.check, size: 16, color: Colors.black) : null,
+                              ),
+                              const SizedBox(width: 12),
+                              const Expanded(child: Text('Acepto los Términos y Condiciones', style: TextStyle(color: AppColors.textMuted, fontSize: 14))),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 32),
+
+                        SizedBox(
+                          width: double.infinity, height: 56,
+                          child: ElevatedButton(
+                            onPressed: isLoading ? null : () {
+                              if (!_acceptedTerms) {
+                                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Debes aceptar los términos')));
+                                return;
+                              }
+                              context.read<AuthBloc>().add(SignInWithEmailButtonPressed(email: _emailController.text, password: _passwordController.text));
+                            },
+                            child: isLoading ? const CircularProgressIndicator(color: Colors.black) : const Text('Crear Cuenta', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center, 
+                          children: [
+                            const Text('¿Ya tienes cuenta? ', style: TextStyle(color: AppColors.textMuted)), 
+                            GestureDetector(onTap: () => context.push('/iniciar-sesion'), child: const Text('Inicia Sesión', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold)))
+                          ]
+                        ),
+                      ],
                     ),
                   ),
-                ],
-              ),
-              const SizedBox(height: 32),
-
-              // Botón Crear Cuenta
-              SizedBox(
-                width: double.infinity,
-                height: 56,
-                child: ElevatedButton(
-                  onPressed: () {}, // context.go('/equipos')
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF39CEA5),
-                    foregroundColor: Colors.black,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  ),
-                  child: const Text('Crear Cuenta', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                 ),
-              ),
-
-              const SizedBox(height: 24),
-              // Link de Login
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Text('¿Ya tienes cuenta? ', style: TextStyle(color: Color(0xFF9CA3AF))),
-                  GestureDetector(
-                    onTap: () => context.push('/iniciar-sesion'),
-                    child: const Text('Inicia Sesión', style: TextStyle(color: Color(0xFF39CEA5), fontWeight: FontWeight.bold)),
-                  ),
-                ],
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTextField({required String label, required String hint, required IconData icon, bool isPassword = false}) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label, style: const TextStyle(color: Color(0xFF9CA3AF), fontSize: 14, fontWeight: FontWeight.w500)),
-        const SizedBox(height: 8),
-        TextField(
-          obscureText: isPassword,
-          style: const TextStyle(color: Colors.white),
-          decoration: InputDecoration(
-            hintText: hint,
-            hintStyle: const TextStyle(color: Color(0xFF4A4A4A)),
-            prefixIcon: Icon(icon, color: const Color(0xFF9CA3AF)),
-            filled: true,
-            fillColor: const Color(0xFF1E1E1E),
-            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFF2A2A2A))),
-            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFF39CEA5))),
-          ),
-        ),
-      ],
+        );
+      },
     );
   }
 }

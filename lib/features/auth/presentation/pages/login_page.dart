@@ -1,175 +1,170 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import '../../infrastructure/datasources/auth_remote_data_source.dart';
+
+import '../../../../core/di/injection_container.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/widgets/theme_toggle_button.dart';
+import '../bloc/auth_bloc.dart';
+import '../bloc/auth_event.dart';
+import '../bloc/auth_state.dart';
+import '../widgets/custom_text_field.dart';
+import '../widgets/google_sign_in_button.dart'; // Importamos el nuevo widget
 
 class LoginPage extends StatelessWidget {
   const LoginPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              // Header
-              Container(
-                width: 80,
-                height: 80,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF39CEA5),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: const Icon(Icons.emoji_events, size: 48, color: Colors.black),
-              ),
-              const SizedBox(height: 16),
-              const Text('MatchDay', style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white)),
-              const SizedBox(height: 48),
+    return BlocProvider(
+      create: (_) => sl<AuthBloc>(),
+      child: const _LoginView(),
+    );
+  }
+}
 
-              // Formulario
-              _buildTextField(label: 'Correo Electrónico', hint: 'Ingresa tu correo', icon: Icons.mail_outline),
-              const SizedBox(height: 20),
-              // Aquí pasamos el context para que el Textfield sepa cómo navegar
-              _buildTextField(label: 'Contraseña', hint: 'Ingresa tu contraseña', icon: Icons.lock_outline, isPassword: true, context: context),
-              const SizedBox(height: 24),
+class _LoginView extends StatefulWidget {
+  const _LoginView();
 
-              // Botón Principal
-              SizedBox(
-                width: double.infinity,
-                height: 56,
-                child: ElevatedButton(
-                  onPressed: () {
-                    // Aquí luego conectaremos el AuthRobot
-                    // context.go('/equipos'); // Navegar a Home temporalmente
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF39CEA5),
-                    foregroundColor: Colors.black,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+  @override
+  State<_LoginView> createState() => _LoginViewState();
+}
+
+class _LoginViewState extends State<_LoginView> {
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return BlocConsumer<AuthBloc, AuthState>(
+      listener: (context, state) {
+        if (state is AuthError) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(state.message), backgroundColor: Colors.red),
+          );
+        } else if (state is AuthAuthenticated) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('¡Bienvenido a MatchDay!'), backgroundColor: AppColors.primary),
+          );
+          context.go('/hub');
+        }
+      },
+      builder: (context, state) {
+        final isLoading = state is AuthLoading;
+
+        return Scaffold(
+          body: SafeArea(
+            child: Column(
+              children: [
+                const Align(
+                  alignment: Alignment.topRight,
+                  child: Padding(
+                    padding: EdgeInsets.only(right: 16.0, top: 8.0),
+                    child: ThemeToggleButton(),
                   ),
-                  child: const Text('Iniciar Sesión', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                 ),
-              ),
-
-              // Divisor
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 24.0),
-                child: Row(
-                  children: [
-                    const Expanded(child: Divider(color: Color(0xFF2A2A2A))),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                      child: Text('O', style: TextStyle(color: const Color(0xFF9CA3AF).withOpacity(0.8))),
-                    ),
-                    const Expanded(child: Divider(color: Color(0xFF2A2A2A))),
-                  ],
-                ),
-              ),
-
-              // Botón de Google
-              SizedBox(
-                width: double.infinity,
-                height: 56,
-                child: ElevatedButton.icon(
-                  onPressed: () async {
-                    final authSource = AuthRemoteDataSource();
-                    
-                    // Mostramos un loader visual rápido (opcional pero recomendado)
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Abriendo Google...'), duration: Duration(seconds: 1)),
-                    );
-
-                    try {
-                      final idToken = await authSource.signInWithGoogle();
-                      
-                      if (idToken != null && context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('¡Login exitoso con Google!'),
-                            backgroundColor: Color(0xFF39CEA5),
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
+                    child: Column(
+                      children: [
+                        Container(
+                          width: 80, height: 80,
+                          decoration: BoxDecoration(
+                            color: AppColors.primary,
+                            borderRadius: BorderRadius.circular(16),
                           ),
-                        );
-                        // context.go('/equipos'); // Descomentar cuando tengamos el Hub
-                      }
-                    } catch (e) {
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Cancelado o error de conexión'), backgroundColor: Colors.red),
-                        );
-                      }
-                    }
-                  },
-                  icon: const Icon(Icons.g_mobiledata, size: 32, color: Colors.black),
-                  label: const Text('Continuar con Google', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black)),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          child: const Icon(Icons.emoji_events, size: 48, color: Colors.black),
+                        ),
+                        const SizedBox(height: 16),
+                        Text('MatchDay', style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: colorScheme.onSurface)),
+                        const SizedBox(height: 48),
+
+                        CustomTextField(
+                          label: 'Correo Electrónico', 
+                          hint: 'Ingresa tu correo', 
+                          icon: Icons.mail_outline,
+                          controller: _emailController,
+                        ),
+                        const SizedBox(height: 20),
+                        CustomTextField(
+                          label: 'Contraseña', 
+                          hint: 'Ingresa tu contraseña', 
+                          icon: Icons.lock_outline, 
+                          isPassword: true, 
+                          controller: _passwordController,
+                          onForgotPasswordTap: () => context.push('/recuperar-contrasena'),
+                        ),
+                        const SizedBox(height: 24),
+
+                        SizedBox(
+                          width: double.infinity, height: 56,
+                          child: ElevatedButton(
+                            onPressed: isLoading ? null : () {
+                              context.read<AuthBloc>().add(SignInWithEmailButtonPressed(
+                                email: _emailController.text,
+                                password: _passwordController.text,
+                              ));
+                            },
+                            child: isLoading 
+                                ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.black, strokeWidth: 2))
+                                : const Text('Iniciar Sesión', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                          ),
+                        ),
+
+                        _buildDivider(),
+
+                        // BOTÓN DE GOOGLE REFACTORIZADO
+                        GoogleSignInButton(
+                          isLoading: isLoading,
+                          onPressed: () => context.read<AuthBloc>().add(SignInWithGoogleButtonPressed()),
+                        ),
+
+                        const SizedBox(height: 24),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Text('¿No tienes cuenta? ', style: TextStyle(color: AppColors.textMuted)),
+                            GestureDetector(
+                              onTap: isLoading ? null : () => context.push('/crear-cuenta'), 
+                              child: const Text('Regístrate', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold)),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-
-              const SizedBox(height: 24),
-              // Link de registro
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Text('¿No tienes cuenta? ', style: TextStyle(color: Color(0xFF9CA3AF))),
-                  GestureDetector(
-                    onTap: () => context.push('/crear-cuenta'), 
-                    child: const Text('Regístrate', style: TextStyle(color: Color(0xFF39CEA5), fontWeight: FontWeight.bold)),
-                  ),
-                ],
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
-  // Componente reutilizable para los TextFields oscuros
-  Widget _buildTextField({required String label, required String hint, required IconData icon, bool isPassword = false, BuildContext? context}) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(label, style: const TextStyle(color: Color(0xFF9CA3AF), fontSize: 14, fontWeight: FontWeight.w500)),
-            if (isPassword)
-              GestureDetector(
-                onTap: () {
-                  if (context != null) {
-                    context.push('/recuperar-contrasena');
-                  }
-                }, 
-                child: const Text('¿Olvidaste tu contraseña?', style: TextStyle(color: Color(0xFF39CEA5), fontSize: 12)),
-              ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        TextField(
-          obscureText: isPassword,
-          style: const TextStyle(color: Colors.white),
-          decoration: InputDecoration(
-            hintText: hint,
-            hintStyle: const TextStyle(color: Color(0xFF4A4A4A)),
-            prefixIcon: Icon(icon, color: const Color(0xFF9CA3AF)),
-            filled: true,
-            fillColor: const Color(0xFF1E1E1E),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFF2A2A2A)),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFF39CEA5)),
-            ),
+  Widget _buildDivider() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 24.0),
+      child: Row(
+        children: [
+          const Expanded(child: Divider()),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: Text('O', style: TextStyle(color: AppColors.textMuted.withOpacity(0.8))),
           ),
-        ),
-      ],
+          const Expanded(child: Divider()),
+        ],
+      ),
     );
   }
 }

@@ -1,12 +1,25 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+
+// NUESTRA CAJA DE HERRAMIENTAS Y TEMAS
+import 'core/di/injection_container.dart' as di; 
+import 'core/theme/app_theme.dart';
+import 'core/theme/bloc/theme_bloc.dart';
+
 import 'features/auth/presentation/pages/welcome_page.dart';
 import 'features/auth/presentation/pages/login_page.dart';
 import 'features/auth/presentation/pages/register_page.dart';
 import 'features/auth/presentation/pages/forgot_password_page.dart';
+import 'features/main_hub/presentation/pages/main_hub_page.dart';
 
-void main() {
+void main() async {
+  // 1. Aseguramos que Flutter esté listo
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  // 2. Inicializamos GetIt ANTES de correr la app
+  await di.init(); 
+
   runApp(const MatchDayApp());
 }
 
@@ -17,6 +30,7 @@ final _router = GoRouter(
     GoRoute(path: '/iniciar-sesion', builder: (context, state) => const LoginPage()),
     GoRoute(path: '/crear-cuenta', builder: (context, state) => const RegisterPage()),
     GoRoute(path: '/recuperar-contrasena', builder: (context, state) => const ForgotPasswordPage()),
+    GoRoute(path: '/hub', builder: (context, state) => const MainHubPage()),
   ],
 );
 
@@ -25,18 +39,22 @@ class MatchDayApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp.router(
-      title: 'MatchDay',
-      debugShowCheckedModeBanner: false,
-      themeMode: ThemeMode.dark,
-      darkTheme: ThemeData(
-        brightness: Brightness.dark,
-        scaffoldBackgroundColor: const Color(0xFF151515), // El color exacto de tu Figma
-        primaryColor: const Color(0xFF39CEA5),
-        textTheme: GoogleFonts.poppinsTextTheme(ThemeData.dark().textTheme),
-        useMaterial3: true,
+    // Envolvemos la app en el BLoC del Tema para que reaccione al Switch
+    return BlocProvider(
+      create: (_) => di.sl<ThemeBloc>(),
+      child: BlocBuilder<ThemeBloc, ThemeMode>(
+        builder: (context, currentThemeMode) {
+          return MaterialApp.router(
+            title: 'MatchDay',
+            debugShowCheckedModeBanner: false,
+            // Aplicamos el tema dinámicamente basado en el estado del BLoC
+            themeMode: currentThemeMode, 
+            theme: AppTheme.lightTheme, 
+            darkTheme: AppTheme.darkTheme, 
+            routerConfig: _router,
+          );
+        },
       ),
-      routerConfig: _router,
     );
   }
 }
