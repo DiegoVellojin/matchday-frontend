@@ -19,7 +19,7 @@ dependencies:
   # --- Navegación & Estado ---
   go_router: ^17.2.2
   flutter_bloc: ^9.1.1
-  flutter_riverpod: ^3.3.1 # Mantengo ambas por compatibilidad de tus módulos
+  flutter_riverpod: ^3.3.1 
   get_it: ^9.2.1
 
   # --- Networking & Backend ---
@@ -37,19 +37,16 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.14.4
 
 flutter:
   uses-material-design: true
-
-  # Registro de Assets Vectoriales e Imágenes
   assets:
     - assets/icons/
-    # Al declarar la carpeta con '/', registras todos los archivos dentro automáticamente
 
-  # Configuración de Fuentes (puedes activarla si añades .ttf en el futuro)
-  # fonts:
-  #   - family: Poppins
-  #     fonts:
-  #       - asset: assets/fonts/Poppins-Regular.ttf
-  #       - asset: assets/fonts/Poppins-Bold.ttf
-  #         weight: 700
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/icons/app_icon.png"
+  adaptive_icon_background: "#151515"
+  adaptive_icon_foreground: "assets/icons/app_icon.png"
