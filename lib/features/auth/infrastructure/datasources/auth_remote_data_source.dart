@@ -1,12 +1,15 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import '../../../../core/constants/api_constants.dart';
 
 class AuthRemoteDataSource {
-  // 1. Ahora usamos la instancia Singleton global
   final GoogleSignIn _googleSignIn = GoogleSignIn.instance;
+  final Dio dio;
   bool _isInitialized = false;
 
-  // 2. Nuevo paso obligatorio: Inicializar el plugin
+  AuthRemoteDataSource({required this.dio});
+
   Future<void> _ensureInitialized() async {
     if (!_isInitialized) {
       await _googleSignIn.initialize();
@@ -14,58 +17,100 @@ class AuthRemoteDataSource {
     }
   }
 
-  /// Abre el modal nativo de Google y retorna el idToken si el usuario acepta.
+  /// 1. Flujo Google
   Future<String?> signInWithGoogle() async {
     try {
-      // Aseguramos que esté inicializado antes de llamar a nada
       await _ensureInitialized();
-
-      // 3. Ya no existe signIn(), ahora usamos authenticate()
       final GoogleSignInAccount googleUser = await _googleSignIn.authenticate(
-        // scopeHint le dice a Google qué datos pediremos (email y perfil)
         scopeHint: [
           'email',
           'https://www.googleapis.com/auth/userinfo.profile',
         ],
       );
 
-      // Extraemos las credenciales (aquí está nuestro valioso idToken)
-      final GoogleSignInAuthentication googleAuth = googleUser.authentication;
-      final String? idToken = googleAuth.idToken;
+      final String? idToken = googleUser.authentication.idToken;
 
-      debugPrint(
-        "✅ ÉXITO: Usuario de Google seleccionado -> ${googleUser.email}",
-      );
-      
       if (idToken != null) {
-        debugPrint("==========================================");
-        debugPrint("🔑 TAMAÑO DEL ID TOKEN: ${idToken.length}");
-        debugPrint("=== INICIO DEL TOKEN (CÓPIALO COMPLETO) ===");
-        final int chunkSize = 800;
-        for (var i = 0; i < idToken.length; i += chunkSize) {
-          debugPrint(idToken.substring(i, i + chunkSize > idToken.length ? idToken.length : i + chunkSize));
-        }
-        debugPrint("=== FIN DEL TOKEN ===");
-        debugPrint("==========================================");
+        debugPrint("🚀 Enviando Google Token a Render...");
+        final response = await dio.post(
+          '${ApiConstants.baseUrl}${ApiConstants.authGoogle}',
+          data: {"id_token": idToken},
+        );
+        return response.data['access_token'];
       }
-
-      return idToken;
+      return null;
     } on GoogleSignInException catch (e) {
-      // 4. Nuevo manejo de errores específico de la v7.x
-      debugPrint("❌ Error Google Sign-In: ${e.code.name}");
-
-      // Si el usuario simplemente cerró la ventana (canceló), retornamos null silenciosamente
-      if (e.code.name == 'canceled' || e.code.name == 'sign_in_canceled') {
+      if (e.code.name == 'canceled' || e.code.name == 'sign_in_canceled')
         return null;
-      }
       throw Exception('Fallo al autenticar con Google');
-    } catch (error) {
-      debugPrint("❌ Error general en Google Sign-In: $error");
-      throw Exception('Fallo inesperado al iniciar sesión');
+    } on DioException catch (e) {
+      throw Exception(
+        e.response?.data['detail'] ?? 'Error validando Google en el servidor',
+      );
     }
   }
 
-  /// Cierra la sesión local de Google
+  /// 2. Flujo Login
+  Future<String> loginUser(String email, String password) async {
+    try {
+      final response = await dio.post(
+        '${ApiConstants.baseUrl}${ApiConstants.authLogin}',
+        data: {'email': email, 'password': password},
+      );
+      return response.data['access_token'];
+    } on DioException catch (e) {
+      throw Exception(e.response?.data['detail'] ?? 'Credenciales inválidas');
+    }
+  }
+
+  /// 3. Flujo Registro
+  Future<String> registerUser(
+    String nombre,
+    String email,
+    String password,
+  ) async {
+    try {
+      final response = await dio.post(
+        '${ApiConstants.baseUrl}${ApiConstants.authRegister}',
+        data: {'nombre_usuario': nombre, 'email': email, 'password': password},
+      );
+      return response.data['access_token'];
+    } on DioException catch (e) {
+      throw Exception(
+        e.response?.data['detail'] ?? 'Error al registrar usuario',
+      );
+    }
+  }
+
+  /// 4. Flujo Solicitar Recuperación
+  Future<void> forgotPassword(String email) async {
+    try {
+      await dio.post(
+        '${ApiConstants.baseUrl}${ApiConstants.authForgotPassword}',
+        data: {'email': email},
+      );
+    } on DioException catch (e) {
+      throw Exception(
+        e.response?.data['detail'] ?? 'Error al procesar la solicitud',
+      );
+    }
+  }
+
+  /// 5. Flujo Restablecer Contraseña (NUEVO)
+  Future<void> resetPassword(String token, String newPassword) async {
+    try {
+      await dio.post(
+        'https://matchday-backend-3qot.onrender.com/api/v1/auth/reset-password',
+        data: {'token': token, 'new_password': newPassword},
+      );
+    } on DioException catch (e) {
+      throw Exception(
+        e.response?.data['detail'] ?? 'Error al actualizar contraseña',
+      );
+    }
+  }
+
+  /// 6. Cerrar Sesión
   Future<void> signOut() async {
     await _ensureInitialized();
     await _googleSignIn.disconnect();

@@ -28,6 +28,7 @@ dependencies:
   firebase_core: ^4.7.0
   firebase_storage: ^13.3.0
   google_sign_in: ^7.2.0
+  app_links: ^6.4.0
 
   # --- Utilidades & Mapas ---
   google_maps_flutter: ^2.17.0

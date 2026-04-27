@@ -9,7 +9,7 @@ import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
 import '../bloc/auth_state.dart';
 import '../widgets/custom_text_field.dart';
-import '../widgets/google_sign_in_button.dart'; // Importamos el nuevo widget
+import '../widgets/google_sign_in_button.dart';
 
 class LoginPage extends StatelessWidget {
   const LoginPage({super.key});
@@ -53,7 +53,10 @@ class _LoginViewState extends State<_LoginView> {
           );
         } else if (state is AuthAuthenticated) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('¡Bienvenido a MatchDay!'), backgroundColor: AppColors.primary),
+            const SnackBar(
+              content: Text('¡Bienvenido a MatchDay!'),
+              backgroundColor: AppColors.primary,
+            ),
           );
           context.go('/hub');
         }
@@ -74,69 +77,115 @@ class _LoginViewState extends State<_LoginView> {
                 ),
                 Expanded(
                   child: SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24.0,
+                      vertical: 8.0,
+                    ),
                     child: Column(
                       children: [
                         Container(
-                          width: 80, height: 80,
+                          width: 80,
+                          height: 80,
                           decoration: BoxDecoration(
                             color: AppColors.primary,
                             borderRadius: BorderRadius.circular(16),
                           ),
-                          child: const Icon(Icons.emoji_events, size: 48, color: Colors.black),
+                          child: const Icon(
+                            Icons.emoji_events,
+                            size: 48,
+                            color: Colors.black,
+                          ),
                         ),
                         const SizedBox(height: 16),
-                        Text('MatchDay', style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: colorScheme.onSurface)),
+                        Text(
+                          'MatchDay',
+                          style: TextStyle(
+                            fontSize: 32,
+                            fontWeight: FontWeight.bold,
+                            color: colorScheme.onSurface,
+                          ),
+                        ),
                         const SizedBox(height: 48),
 
                         CustomTextField(
-                          label: 'Correo Electrónico', 
-                          hint: 'Ingresa tu correo', 
+                          label: 'Correo Electrónico',
+                          hint: 'Ingresa tu correo',
                           icon: Icons.mail_outline,
                           controller: _emailController,
                         ),
                         const SizedBox(height: 20),
                         CustomTextField(
-                          label: 'Contraseña', 
-                          hint: 'Ingresa tu contraseña', 
-                          icon: Icons.lock_outline, 
-                          isPassword: true, 
+                          label: 'Contraseña',
+                          hint: 'Ingresa tu contraseña',
+                          icon: Icons.lock_outline,
+                          isPassword: true,
                           controller: _passwordController,
-                          onForgotPasswordTap: () => context.push('/recuperar-contrasena'),
+                          onForgotPasswordTap: () =>
+                              context.push('/recuperar-contrasena'),
                         ),
                         const SizedBox(height: 24),
 
                         SizedBox(
-                          width: double.infinity, height: 56,
+                          width: double.infinity,
+                          height: 56,
                           child: ElevatedButton(
-                            onPressed: isLoading ? null : () {
-                              context.read<AuthBloc>().add(SignInWithEmailButtonPressed(
-                                email: _emailController.text,
-                                password: _passwordController.text,
-                              ));
-                            },
-                            child: isLoading 
-                                ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.black, strokeWidth: 2))
-                                : const Text('Iniciar Sesión', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                            onPressed: isLoading
+                                ? null
+                                : () {
+                                    context.read<AuthBloc>().add(
+                                      SignInWithEmailButtonPressed(
+                                        email: _emailController.text,
+                                        password: _passwordController.text,
+                                      ),
+                                    );
+                                  },
+                            child: isLoading
+                                ? const SizedBox(
+                                    width: 24,
+                                    height: 24,
+                                    child: CircularProgressIndicator(
+                                      color: Colors.black,
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : const Text(
+                                    'Iniciar Sesión',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
                           ),
                         ),
 
                         _buildDivider(),
 
-                        // BOTÓN DE GOOGLE REFACTORIZADO
                         GoogleSignInButton(
                           isLoading: isLoading,
-                          onPressed: () => context.read<AuthBloc>().add(SignInWithGoogleButtonPressed()),
+                          onPressed: () => context.read<AuthBloc>().add(
+                            SignInWithGoogleButtonPressed(),
+                          ),
                         ),
 
                         const SizedBox(height: 24),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Text('¿No tienes cuenta? ', style: TextStyle(color: AppColors.textMuted)),
+                            const Text(
+                              '¿No tienes cuenta? ',
+                              style: TextStyle(color: AppColors.textMuted),
+                            ),
                             GestureDetector(
-                              onTap: isLoading ? null : () => context.push('/crear-cuenta'), 
-                              child: const Text('Regístrate', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold)),
+                              onTap: isLoading
+                                  ? null
+                                  : () => context.push('/crear-cuenta'),
+                              child: const Text(
+                                'Regístrate',
+                                style: TextStyle(
+                                  color: AppColors.primary,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                             ),
                           ],
                         ),
@@ -160,7 +209,10 @@ class _LoginViewState extends State<_LoginView> {
           const Expanded(child: Divider()),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: Text('O', style: TextStyle(color: AppColors.textMuted.withOpacity(0.8))),
+            child: Text(
+              'O',
+              style: TextStyle(color: AppColors.textMuted.withOpacity(0.8)),
+            ),
           ),
           const Expanded(child: Divider()),
         ],

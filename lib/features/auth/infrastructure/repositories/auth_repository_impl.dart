@@ -1,54 +1,88 @@
-import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:fpdart/fpdart.dart';
 import '../../../../core/error/failures.dart';
 import '../../domain/entities/user_entity.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../datasources/auth_remote_data_source.dart';
-import '../models/user_model.dart'; // Importamos el modelo
+import '../models/user_model.dart';
 
 class AuthRepositoryImpl implements IAuthRepository {
   final AuthRemoteDataSource remoteDataSource;
-  final Dio dio = Dio(); // Dio para conectarnos a Render
 
   AuthRepositoryImpl({required this.remoteDataSource});
 
   @override
   Future<Either<Failure, UserEntity>> signInWithGoogle() async {
     try {
-      final idToken = await remoteDataSource.signInWithGoogle();
-      
-      if (idToken != null) {
-        // Apuntamos a la API pública de Render
-        String baseUrl = 'https://matchday-backend-3qot.onrender.com';
-
-        debugPrint("🚀 Enviando petición al backend en Render: $baseUrl/api/v1/auth/google");
-        
-        final response = await dio.post(
-          '$baseUrl/api/v1/auth/google',
-          data: {
-            "id_token": idToken,
-          },
+      final token = await remoteDataSource.signInWithGoogle();
+      if (token != null) {
+        debugPrint("✅ JWT RECIBIDO DE GOOGLE: $token");
+        return const Right(
+          UserModel(
+            id: 'temp_id',
+            email: 'google_user@matchday.com',
+            name: 'Jugador Google',
+          ),
         );
-
-        final accessToken = response.data['access_token'];
-        debugPrint("✅ RENDER RESPONDIÓ JWT: $accessToken");
-
-        final userModel = const UserModel(
-          id: '123', 
-          email: 'usuario@gmail.com', 
-          name: 'Jugador Google'
-        );
-        return Right(userModel);
       } else {
-        return const Left(AuthFailure('Inicio de sesión cancelado por el usuario'));
+        return const Left(
+          AuthFailure('Inicio de sesión cancelado por el usuario'),
+        );
       }
-    } on DioException catch (e) {
-      debugPrint("❌ Error de Dio conectando a Render: ${e.response?.data ?? e.message}");
-      return Left(ServerFailure('Error en el Backend: ${e.response?.data ?? e.message}'));
     } catch (e) {
-      debugPrint("❌ Error inesperado: $e");
-      return Left(ServerFailure(e.toString()));
+      return Left(ServerFailure(e.toString().replaceAll('Exception: ', '')));
+    }
+  }
+
+  @override
+  Future<Either<Failure, UserEntity>> login(
+    String email,
+    String password,
+  ) async {
+    try {
+      final token = await remoteDataSource.loginUser(email, password);
+      debugPrint("✅ JWT RECIBIDO EN LOGIN: $token");
+      return Right(UserModel(id: 'temp_id', email: email, name: 'Jugador'));
+    } catch (e) {
+      return Left(ServerFailure(e.toString().replaceAll('Exception: ', '')));
+    }
+  }
+
+  @override
+  Future<Either<Failure, UserEntity>> register(
+    String name,
+    String email,
+    String password,
+  ) async {
+    try {
+      final token = await remoteDataSource.registerUser(name, email, password);
+      debugPrint("✅ JWT RECIBIDO EN REGISTRO: $token");
+      return Right(UserModel(id: 'temp_id', email: email, name: name));
+    } catch (e) {
+      return Left(ServerFailure(e.toString().replaceAll('Exception: ', '')));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> forgotPassword(String email) async {
+    try {
+      await remoteDataSource.forgotPassword(email);
+      return const Right(null);
+    } catch (e) {
+      return Left(ServerFailure(e.toString().replaceAll('Exception: ', '')));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> resetPassword(
+    String token,
+    String newPassword,
+  ) async {
+    try {
+      await remoteDataSource.resetPassword(token, newPassword);
+      return const Right(null);
+    } catch (e) {
+      return Left(ServerFailure(e.toString().replaceAll('Exception: ', '')));
     }
   }
 

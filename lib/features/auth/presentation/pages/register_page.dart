@@ -9,7 +9,7 @@ import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
 import '../bloc/auth_state.dart';
 import '../widgets/custom_text_field.dart';
-import '../widgets/google_sign_in_button.dart'; // Importamos el nuevo widget
+import '../widgets/google_sign_in_button.dart';
 
 class RegisterPage extends StatelessWidget {
   const RegisterPage({super.key});
@@ -35,7 +35,8 @@ class _RegisterViewState extends State<_RegisterView> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _confirmPasswordController = TextEditingController();
+  final TextEditingController _confirmPasswordController =
+      TextEditingController();
 
   @override
   void dispose() {
@@ -57,7 +58,7 @@ class _RegisterViewState extends State<_RegisterView> {
             SnackBar(content: Text(state.message), backgroundColor: Colors.red),
           );
         } else if (state is AuthAuthenticated) {
-          context.go('/hub'); 
+          context.go('/hub');
         }
       },
       builder: (context, state) {
@@ -68,13 +69,19 @@ class _RegisterViewState extends State<_RegisterView> {
             child: Column(
               children: [
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8.0,
+                    vertical: 8.0,
+                  ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       IconButton(
-                        icon: Icon(Icons.arrow_back, color: colorScheme.onSurface), 
-                        onPressed: isLoading ? null : () => context.pop()
+                        icon: Icon(
+                          Icons.arrow_back,
+                          color: colorScheme.onSurface,
+                        ),
+                        onPressed: isLoading ? null : () => context.pop(),
                       ),
                       const ThemeToggleButton(),
                     ],
@@ -82,81 +89,213 @@ class _RegisterViewState extends State<_RegisterView> {
                 ),
                 Expanded(
                   child: SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24.0,
+                      vertical: 8.0,
+                    ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Comenzar', style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: colorScheme.onSurface)),
+                        Text(
+                          'Comenzar',
+                          style: TextStyle(
+                            fontSize: 32,
+                            fontWeight: FontWeight.bold,
+                            color: colorScheme.onSurface,
+                          ),
+                        ),
                         const SizedBox(height: 8),
-                        const Text('Únete a la comunidad o continúa con Google.', style: TextStyle(fontSize: 14, color: AppColors.textMuted)),
+                        const Text(
+                          'Únete a la comunidad o continúa con Google.',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: AppColors.textMuted,
+                          ),
+                        ),
                         const SizedBox(height: 32),
 
-                        // BOTÓN DE GOOGLE REFACTORIZADO
                         GoogleSignInButton(
                           isLoading: isLoading,
-                          onPressed: () => context.read<AuthBloc>().add(SignInWithGoogleButtonPressed()),
+                          onPressed: () => context.read<AuthBloc>().add(
+                            SignInWithGoogleButtonPressed(),
+                          ),
                         ),
 
                         const Padding(
                           padding: EdgeInsets.symmetric(vertical: 24.0),
                           child: Row(
                             children: [
-                              Expanded(child: Divider()), 
-                              Padding(padding: EdgeInsets.symmetric(horizontal: 16.0), child: Text('O con Email', style: TextStyle(color: AppColors.textMuted))), 
-                              Expanded(child: Divider())
-                            ]
+                              Expanded(child: Divider()),
+                              Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 16.0),
+                                child: Text(
+                                  'O con Email',
+                                  style: TextStyle(color: AppColors.textMuted),
+                                ),
+                              ),
+                              Expanded(child: Divider()),
+                            ],
                           ),
                         ),
 
-                        CustomTextField(label: 'Nombre Completo', hint: 'Tu nombre', icon: Icons.person_outline, controller: _nameController),
+                        CustomTextField(
+                          label: 'Nombre Completo',
+                          hint: 'Tu nombre',
+                          icon: Icons.person_outline,
+                          controller: _nameController,
+                        ),
                         const SizedBox(height: 20),
-                        CustomTextField(label: 'Correo Electrónico', hint: 'Tu correo', icon: Icons.mail_outline, controller: _emailController),
+                        CustomTextField(
+                          label: 'Correo Electrónico',
+                          hint: 'Tu correo',
+                          icon: Icons.mail_outline,
+                          controller: _emailController,
+                        ),
                         const SizedBox(height: 20),
-                        CustomTextField(label: 'Contraseña', hint: 'Crea una clave', icon: Icons.lock_outline, isPassword: true, controller: _passwordController),
+                        CustomTextField(
+                          label: 'Contraseña',
+                          hint: 'Crea una clave',
+                          icon: Icons.lock_outline,
+                          isPassword: true,
+                          controller: _passwordController,
+                        ),
                         const SizedBox(height: 20),
-                        CustomTextField(label: 'Confirmar Contraseña', hint: 'Repite la clave', icon: Icons.lock_outline, isPassword: true, controller: _confirmPasswordController),
+                        CustomTextField(
+                          label: 'Confirmar Contraseña',
+                          hint: 'Repite la clave',
+                          icon: Icons.lock_outline,
+                          isPassword: true,
+                          controller: _confirmPasswordController,
+                        ),
                         const SizedBox(height: 24),
 
                         GestureDetector(
-                          onTap: isLoading ? null : () => setState(() => _acceptedTerms = !_acceptedTerms),
+                          onTap: isLoading
+                              ? null
+                              : () => setState(
+                                  () => _acceptedTerms = !_acceptedTerms,
+                                ),
                           child: Row(
                             children: [
                               Container(
-                                width: 24, height: 24,
+                                width: 24,
+                                height: 24,
                                 decoration: BoxDecoration(
-                                  color: _acceptedTerms ? AppColors.primary : Colors.transparent,
-                                  border: Border.all(color: _acceptedTerms ? AppColors.primary : AppColors.border, width: 2),
+                                  color: _acceptedTerms
+                                      ? AppColors.primary
+                                      : Colors.transparent,
+                                  border: Border.all(
+                                    color: _acceptedTerms
+                                        ? AppColors.primary
+                                        : AppColors.border,
+                                    width: 2,
+                                  ),
                                   borderRadius: BorderRadius.circular(6),
                                 ),
-                                child: _acceptedTerms ? const Icon(Icons.check, size: 16, color: Colors.black) : null,
+                                child: _acceptedTerms
+                                    ? const Icon(
+                                        Icons.check,
+                                        size: 16,
+                                        color: Colors.black,
+                                      )
+                                    : null,
                               ),
                               const SizedBox(width: 12),
-                              const Expanded(child: Text('Acepto los Términos y Condiciones', style: TextStyle(color: AppColors.textMuted, fontSize: 14))),
+                              const Expanded(
+                                child: Text(
+                                  'Acepto los Términos y Condiciones',
+                                  style: TextStyle(
+                                    color: AppColors.textMuted,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ),
                             ],
                           ),
                         ),
                         const SizedBox(height: 32),
 
                         SizedBox(
-                          width: double.infinity, height: 56,
+                          width: double.infinity,
+                          height: 56,
                           child: ElevatedButton(
-                            onPressed: isLoading ? null : () {
-                              if (!_acceptedTerms) {
-                                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Debes aceptar los términos')));
-                                return;
-                              }
-                              context.read<AuthBloc>().add(SignInWithEmailButtonPressed(email: _emailController.text, password: _passwordController.text));
-                            },
-                            child: isLoading ? const CircularProgressIndicator(color: Colors.black) : const Text('Crear Cuenta', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                            onPressed: isLoading
+                                ? null
+                                : () {
+                                    if (!_acceptedTerms) {
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        const SnackBar(
+                                          content: Text(
+                                            'Debes aceptar los términos',
+                                          ),
+                                          backgroundColor: Colors.red,
+                                        ),
+                                      );
+                                      return;
+                                    }
+                                    if (_passwordController.text !=
+                                        _confirmPasswordController.text) {
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        const SnackBar(
+                                          content: Text(
+                                            'Las contraseñas no coinciden',
+                                          ),
+                                          backgroundColor: Colors.red,
+                                        ),
+                                      );
+                                      return;
+                                    }
+                                    context.read<AuthBloc>().add(
+                                      RegisterButtonPressed(
+                                        name: _nameController.text,
+                                        email: _emailController.text,
+                                        password: _passwordController.text,
+                                      ),
+                                    );
+                                  },
+                            child: isLoading
+                                ? const SizedBox(
+                                    width: 24,
+                                    height: 24,
+                                    child: CircularProgressIndicator(
+                                      color: Colors.black,
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : const Text(
+                                    'Crear Cuenta',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
                           ),
                         ),
                         const SizedBox(height: 24),
                         Row(
-                          mainAxisAlignment: MainAxisAlignment.center, 
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Text('¿Ya tienes cuenta? ', style: TextStyle(color: AppColors.textMuted)), 
-                            GestureDetector(onTap: () => context.push('/iniciar-sesion'), child: const Text('Inicia Sesión', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold)))
-                          ]
+                            const Text(
+                              '¿Ya tienes cuenta? ',
+                              style: TextStyle(color: AppColors.textMuted),
+                            ),
+                            GestureDetector(
+                              onTap: isLoading
+                                  ? null
+                                  : () => context.push('/iniciar-sesion'),
+                              child: const Text(
+                                'Inicia Sesión',
+                                style: TextStyle(
+                                  color: AppColors.primary,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),

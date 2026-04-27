@@ -15,3 +15,9 @@ class AuthError extends AuthState {
   final String message;
   AuthError(this.message);
 }
+
+// NUEVO: Estado para cuando el correo de recuperación se envía con éxito
+class AuthPasswordResetSent extends AuthState {
+  final String message;
+  AuthPasswordResetSent(this.message);
+}
