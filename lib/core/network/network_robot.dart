@@ -1,9 +1,11 @@
 import 'package:dio/dio.dart';
+import '../storage/secure_storage_service.dart';
 
 class NetworkRobot {
   final Dio _dio;
+  final SecureStorageService _storage;
 
-  NetworkRobot(this._dio) {
+  NetworkRobot(this._dio, this._storage) {
     // Configuraciones maestras de tu backend FastAPI
     // Nota: Si usas el emulador de Android para probar un localhost, la IP es 10.0.2.2
     _dio.options.baseUrl = 'http://10.0.2.2:8000/api/v1'; 
@@ -14,8 +16,12 @@ class NetworkRobot {
     _dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
-          // TODO: En el futuro leeremos el token del SecureStorage y lo inyectaremos aquí
-          // options.headers['Authorization'] = 'Bearer $tuToken';
+          // Buscamos el token en el almacenamiento seguro
+          final token = await _storage.getToken();
+          
+          if (token != null) {
+            options.headers['Authorization'] = 'Bearer $token';
+          }
           
           print('🌐 PETICIÓN [${options.method}] => RUTA: ${options.path}');
           return handler.next(options); 

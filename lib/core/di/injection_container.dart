@@ -2,8 +2,10 @@ import 'package:dio/dio.dart';
 import 'package:get_it/get_it.dart';
 
 // Importaciones Core
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../network/network_robot.dart';
 import '../theme/bloc/theme_bloc.dart';
+import '../storage/secure_storage_service.dart';
 
 // Importaciones de Auth
 import '../../features/auth/application/usecases/sign_in_with_google_usecase.dart';
@@ -24,8 +26,11 @@ Future<void> init() async {
   // ===========================================================================
   // 5. CORE & PAQUETES EXTERNOS
   // ===========================================================================
+  sl.registerLazySingleton<FlutterSecureStorage>(() => const FlutterSecureStorage());
+  sl.registerLazySingleton<SecureStorageService>(() => SecureStorageService(sl()));
+  
   sl.registerLazySingleton<Dio>(() => Dio());
-  sl.registerLazySingleton<NetworkRobot>(() => NetworkRobot(sl()));
+  sl.registerLazySingleton<NetworkRobot>(() => NetworkRobot(sl(), sl()));
 
   // ===========================================================================
   // 4. DATA SOURCES
@@ -36,7 +41,10 @@ Future<void> init() async {
   // 3. REPOSITORIOS
   // ===========================================================================
   sl.registerLazySingleton<IAuthRepository>(
-    () => AuthRepositoryImpl(remoteDataSource: sl()),
+    () => AuthRepositoryImpl(
+      remoteDataSource: sl(),
+      secureStorageService: sl(),
+    ),
   );
 
   // ===========================================================================

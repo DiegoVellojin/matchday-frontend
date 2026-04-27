@@ -3,13 +3,18 @@ import 'package:fpdart/fpdart.dart';
 import '../../../../core/error/failures.dart';
 import '../../domain/entities/user_entity.dart';
 import '../../domain/repositories/auth_repository.dart';
+import '../../../../core/storage/secure_storage_service.dart';
 import '../datasources/auth_remote_data_source.dart';
 import '../models/user_model.dart';
 
 class AuthRepositoryImpl implements IAuthRepository {
   final AuthRemoteDataSource remoteDataSource;
+  final SecureStorageService secureStorageService;
 
-  AuthRepositoryImpl({required this.remoteDataSource});
+  AuthRepositoryImpl({
+    required this.remoteDataSource,
+    required this.secureStorageService,
+  });
 
   @override
   Future<Either<Failure, UserEntity>> signInWithGoogle() async {
@@ -17,6 +22,7 @@ class AuthRepositoryImpl implements IAuthRepository {
       final token = await remoteDataSource.signInWithGoogle();
       if (token != null) {
         debugPrint("✅ JWT RECIBIDO DE GOOGLE: $token");
+        await secureStorageService.saveToken(token);
         return const Right(
           UserModel(
             id: 'temp_id',
@@ -42,6 +48,7 @@ class AuthRepositoryImpl implements IAuthRepository {
     try {
       final token = await remoteDataSource.loginUser(email, password);
       debugPrint("✅ JWT RECIBIDO EN LOGIN: $token");
+      await secureStorageService.saveToken(token);
       return Right(UserModel(id: 'temp_id', email: email, name: 'Jugador'));
     } catch (e) {
       return Left(ServerFailure(e.toString().replaceAll('Exception: ', '')));
@@ -57,6 +64,7 @@ class AuthRepositoryImpl implements IAuthRepository {
     try {
       final token = await remoteDataSource.registerUser(name, email, password);
       debugPrint("✅ JWT RECIBIDO EN REGISTRO: $token");
+      await secureStorageService.saveToken(token);
       return Right(UserModel(id: 'temp_id', email: email, name: name));
     } catch (e) {
       return Left(ServerFailure(e.toString().replaceAll('Exception: ', '')));
@@ -90,6 +98,7 @@ class AuthRepositoryImpl implements IAuthRepository {
   Future<Either<Failure, void>> signOut() async {
     try {
       await remoteDataSource.signOut();
+      await secureStorageService.deleteToken();
       return const Right(null);
     } catch (e) {
       return const Left(ServerFailure('Error al cerrar sesión localmente'));
