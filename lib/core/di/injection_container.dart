@@ -26,6 +26,8 @@ import '../../features/teams_discovery/application/usecases/get_team_by_id_useca
 import '../../features/teams_discovery/application/usecases/get_team_members_usecase.dart';
 import '../../features/teams_discovery/application/usecases/get_pending_requests_usecase.dart';
 import '../../features/teams_discovery/application/usecases/respond_to_join_request_usecase.dart';
+import '../../features/teams_discovery/application/usecases/get_sports_usecase.dart';
+
 
 
 
@@ -115,6 +117,7 @@ Future<void> init() async {
   sl.registerLazySingleton(() => GetTeamMembersUseCase(sl()));
   sl.registerLazySingleton(() => GetPendingRequestsUseCase(sl()));
   sl.registerLazySingleton(() => RespondToJoinRequestUseCase(sl()));
+  sl.registerLazySingleton(() => GetSportsUseCase(sl()));
 
 
 
@@ -150,6 +153,11 @@ Future<void> init() async {
 
   // Teams Discovery (NUEVO)
   sl.registerFactory(
-    () => TeamsDiscoveryBloc(getTeamsUseCase: sl(), requestJoinUseCase: sl()),
+    () => TeamsDiscoveryBloc(
+      getTeamsUseCase: sl(),
+      requestJoinUseCase: sl(),
+      getSportsUseCase: sl(),
+    ),
   );
+
 }

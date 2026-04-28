@@ -1,13 +1,25 @@
 import 'package:dio/dio.dart';
 import '../../../../core/network/network_robot.dart';
 import '../models/team_model.dart';
+import '../models/sport_model.dart';
 
 class TeamsDiscoveryRemoteDataSource {
   final NetworkRobot networkRobot;
 
   TeamsDiscoveryRemoteDataSource({required this.networkRobot});
 
+  Future<List<SportModel>> getSports() async {
+    try {
+      final response = await networkRobot.get('/sports');
+      final List<dynamic> data = response.data;
+      return data.map((json) => SportModel.fromJson(json)).toList();
+    } catch (e) {
+      throw _handleError(e, 'Error al obtener la lista de deportes');
+    }
+  }
+
   Exception _handleError(dynamic e, String defaultMessage) {
+
     if (e is DioException) {
       if (e.response != null && e.response!.data != null) {
         final data = e.response!.data;

@@ -1,6 +1,7 @@
 import 'package:fpdart/fpdart.dart';
 import '../../../../core/error/failures.dart';
 import '../../domain/entities/team_entity.dart';
+import '../../domain/entities/sport_entity.dart';
 import '../../domain/repositories/i_teams_discovery_repository.dart';
 import '../datasources/teams_discovery_remote_data_source.dart';
 
@@ -10,7 +11,18 @@ class TeamsDiscoveryRepositoryImpl implements ITeamsDiscoveryRepository {
   TeamsDiscoveryRepositoryImpl({required this.remoteDataSource});
 
   @override
+  Future<Either<Failure, List<SportEntity>>> getSports() async {
+    try {
+      final sports = await remoteDataSource.getSports();
+      return Right(sports);
+    } catch (e) {
+      return Left(ServerFailure(e.toString().replaceAll('Exception: ', '')));
+    }
+  }
+
+  @override
   Future<Either<Failure, List<TeamEntity>>> getDiscoverableTeams() async {
+
     try {
       final teams = await remoteDataSource.getDiscoverableTeams();
       return Right(teams);

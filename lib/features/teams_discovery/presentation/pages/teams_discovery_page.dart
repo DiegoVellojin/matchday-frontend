@@ -7,7 +7,9 @@ import '../../../../core/theme/bloc/theme_bloc.dart';
 import '../bloc/teams_discovery_bloc.dart';
 import '../bloc/teams_discovery_event.dart';
 import '../bloc/teams_discovery_state.dart';
+import '../../domain/entities/sport_entity.dart';
 import '../widgets/team_discovery_card.dart';
+
 
 class TeamsDiscoveryPage extends StatelessWidget {
   const TeamsDiscoveryPage({super.key});
@@ -30,14 +32,249 @@ class _TeamsDiscoveryView extends StatefulWidget {
 }
 
 class _TeamsDiscoveryViewState extends State<_TeamsDiscoveryView> {
-  int _selectedFilterIndex = 0;
-  final List<String> _filters = [
-    'Todos',
-    'Fútbol',
-    'Baloncesto',
-    'Tenis',
-    'Voleibol',
-  ];
+  String _selectedFilter = 'Todos';
+  final List<String> _recentSports = [];
+  int? _filterMaxMembers; // null es "Cualquiera"
+  bool _filterOnlyRecruiting = true;
+
+  final _searchController = TextEditingController();
+  String _searchQuery = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _searchController.addListener(() {
+      setState(() {
+        _searchQuery = _searchController.text.trim().toLowerCase();
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  List<String> _getDynamicFilters(List<SportEntity> sportsFromState) {
+    final allSportNames = sportsFromState.map((s) => s.name).toList();
+    final remainingSports = allSportNames.where((s) => !_recentSports.contains(s)).toList();
+    return ['Todos', ..._recentSports, ...remainingSports];
+  }
+
+  void _openFiltersBottomSheet(BuildContext context, List<SportEntity> sports) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (modalContext) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            final colorScheme = Theme.of(context).colorScheme;
+            final isDark = Theme.of(context).brightness == Brightness.dark;
+
+            return Container(
+              padding: EdgeInsets.only(
+                left: 20,
+                right: 20,
+                top: 20,
+                bottom: MediaQuery.of(context).viewInsets.bottom + 30,
+              ),
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 50,
+                      height: 5,
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade400,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Text(
+                    'Filtros Avanzados',
+                    style: TextStyle(
+                      color: colorScheme.onSurface,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+
+                  Text(
+                    'Deportes',
+                    style: TextStyle(
+                      color: colorScheme.onSurface,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      _buildModalChip(
+                        label: 'Todos',
+                        isSelected: _selectedFilter == 'Todos',
+                        setModalState: setModalState,
+                        onTap: () {
+                          setState(() => _selectedFilter = 'Todos');
+                        },
+                      ),
+                      ...sports.map((sport) {
+                        final isSelected = _selectedFilter == sport.name;
+                        return _buildModalChip(
+                          label: sport.name,
+                          isSelected: isSelected,
+                          setModalState: setModalState,
+                          onTap: () {
+                            setState(() {
+                              _selectedFilter = sport.name;
+                              _recentSports.remove(sport.name);
+                              _recentSports.insert(0, sport.name);
+                            });
+                          },
+                        );
+                      }),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+
+                  Text(
+                    'Capacidad máxima de jugadores',
+                    style: TextStyle(
+                      color: colorScheme.onSurface,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      _buildModalChip(
+                        label: 'Cualquiera',
+                        isSelected: _filterMaxMembers == null,
+                        setModalState: setModalState,
+                        onTap: () => setState(() => _filterMaxMembers = null),
+                      ),
+                      _buildModalChip(
+                        label: '5 Jugadores',
+                        isSelected: _filterMaxMembers == 5,
+                        setModalState: setModalState,
+                        onTap: () => setState(() => _filterMaxMembers = 5),
+                      ),
+                      _buildModalChip(
+                        label: '7 Jugadores',
+                        isSelected: _filterMaxMembers == 7,
+                        setModalState: setModalState,
+                        onTap: () => setState(() => _filterMaxMembers = 7),
+                      ),
+                      _buildModalChip(
+                        label: '11 Jugadores',
+                        isSelected: _filterMaxMembers == 11,
+                        setModalState: setModalState,
+                        onTap: () => setState(() => _filterMaxMembers = 11),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Solo equipos reclutando',
+                        style: TextStyle(
+                          color: colorScheme.onSurface,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      Switch(
+                        value: _filterOnlyRecruiting,
+                        activeColor: AppColors.primary,
+                        onChanged: (val) {
+                          setModalState(() {
+                            _filterOnlyRecruiting = val;
+                          });
+                          setState(() {
+                            _filterOnlyRecruiting = val;
+                          });
+                        },
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 30),
+
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: Colors.black,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      onPressed: () => Navigator.pop(modalContext),
+                      child: const Text(
+                        'Aplicar Filtros',
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildModalChip({
+    required String label,
+    required bool isSelected,
+    required void Function(void Function()) setModalState,
+    required VoidCallback onTap,
+  }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return ChoiceChip(
+      selected: isSelected,
+      showCheckmark: false,
+      backgroundColor: colorScheme.surface,
+      selectedColor: AppColors.primary,
+      side: BorderSide(
+        color: isSelected ? AppColors.primary : (isDark ? Colors.transparent : Colors.grey.shade300),
+      ),
+      label: Text(
+        label,
+        style: TextStyle(
+          color: isSelected ? Colors.black : colorScheme.onSurface,
+          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+        ),
+      ),
+      onSelected: (selected) {
+        setModalState(() {
+          onTap();
+        });
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -46,267 +283,258 @@ class _TeamsDiscoveryViewState extends State<_TeamsDiscoveryView> {
 
     return Scaffold(
       body: SafeArea(
-        child: Column(
-          children: [
-            // Custom AppBar
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 20.0,
-                vertical: 16.0,
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
+        child: BlocConsumer<TeamsDiscoveryBloc, TeamsDiscoveryState>(
+          listener: (context, state) {
+            if (state is TeamsDiscoveryError) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(state.message),
+                  backgroundColor: AppColors.error,
+                ),
+              );
+            } else if (state is TeamJoinRequestSuccess) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(state.message),
+                  backgroundColor: AppColors.primary,
+                ),
+              );
+            }
+          },
+          builder: (context, state) {
+            if (state is TeamsDiscoveryLoading) {
+              return const Center(
+                child: CircularProgressIndicator(color: AppColors.primary),
+              );
+            }
+
+            final List<SportEntity> sportsList = state is TeamsDiscoveryLoaded ? state.sports : [];
+            final List<String> dynamicFilters = _getDynamicFilters(sportsList);
+
+            return Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const CircleAvatar(
-                        backgroundColor: AppColors.primary,
-                        radius: 20,
-                        child: Icon(Icons.person_outline, color: Colors.black),
+                      Row(
+                        children: [
+                          const CircleAvatar(
+                            backgroundColor: AppColors.primary,
+                            radius: 20,
+                            child: Icon(Icons.person_outline, color: Colors.black),
+                          ),
+                          const SizedBox(width: 12),
+                          Text(
+                            'MatchDay',
+                            style: TextStyle(
+                              color: colorScheme.onSurface,
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(width: 12),
-                      Text(
-                        'MatchDay',
-                        style: TextStyle(
-                          color: colorScheme.onSurface,
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                  Row(
-                    children: [
-                      BlocBuilder<ThemeBloc, ThemeMode>(
-                        builder: (context, themeMode) {
-                          final isDarkTheme = themeMode == ThemeMode.dark;
-                          return IconButton(
+                      Row(
+                        children: [
+                          BlocBuilder<ThemeBloc, ThemeMode>(
+                            builder: (context, themeMode) {
+                              final isDarkTheme = themeMode == ThemeMode.dark;
+                              return IconButton(
+                                icon: Icon(
+                                  isDarkTheme ? Icons.light_mode : Icons.dark_mode,
+                                  color: colorScheme.onSurface,
+                                ),
+                                onPressed: () => context.read<ThemeBloc>().add(ToggleThemeEvent()),
+                              );
+                            },
+                          ),
+                          IconButton(
                             icon: Icon(
-                              isDarkTheme ? Icons.light_mode : Icons.dark_mode,
+                              Icons.notifications_none_outlined,
                               color: colorScheme.onSurface,
                             ),
-                            onPressed: () =>
-                                context.read<ThemeBloc>().add(ToggleThemeEvent()),
-                          );
-                        },
-                      ),
-                      IconButton(
-                        icon: Icon(
-                          Icons.notifications_none_outlined,
-                          color: colorScheme.onSurface,
-                        ),
-                        onPressed: () => context.push('/notificaciones'),
+                            onPressed: () => context.push('/notificaciones'),
+                          ),
+                        ],
                       ),
                     ],
                   ),
+                ),
 
-                ],
-              ),
-            ),
-
-            // Barra de Búsqueda
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20.0),
-              child: Container(
-                height: 50,
-                decoration: BoxDecoration(
-                  color: colorScheme.surface,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: isDark ? Colors.transparent : Colors.grey.shade300,
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                  child: Container(
+                    height: 50,
+                    decoration: BoxDecoration(
+                      color: colorScheme.surface,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: isDark ? Colors.transparent : Colors.grey.shade300,
+                      ),
+                    ),
+                    child: TextField(
+                      controller: _searchController,
+                      style: TextStyle(color: colorScheme.onSurface),
+                      decoration: InputDecoration(
+                        icon: Padding(
+                          padding: const EdgeInsets.only(left: 16.0),
+                          child: Icon(
+                            Icons.search,
+                            color: isDark ? const Color(0xFF9CA3AF) : Colors.grey.shade600,
+                          ),
+                        ),
+                        hintText: 'Buscar equipos...',
+                        hintStyle: TextStyle(
+                          color: isDark ? const Color(0xFF9CA3AF) : Colors.grey.shade500,
+                        ),
+                        border: InputBorder.none,
+                        contentPadding: const EdgeInsets.symmetric(vertical: 15),
+                      ),
+                    ),
                   ),
                 ),
-                child: TextField(
-                  style: TextStyle(color: colorScheme.onSurface),
-                  decoration: InputDecoration(
-                    icon: Padding(
-                      padding: const EdgeInsets.only(left: 16.0),
-                      child: Icon(
-                        Icons.search,
-                        color: isDark
-                            ? const Color(0xFF9CA3AF)
-                            : Colors.grey.shade600,
-                      ),
-                    ),
-                    hintText: 'Buscar equipos...',
-                    hintStyle: TextStyle(
-                      color: isDark
-                          ? const Color(0xFF9CA3AF)
-                          : Colors.grey.shade500,
-                    ),
-                    border: InputBorder.none,
-                    contentPadding: const EdgeInsets.symmetric(vertical: 15),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
+                const SizedBox(height: 16),
 
-            // Filtros horizontales
-            SizedBox(
-              height: 40,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                itemCount: _filters.length + 1,
-                itemBuilder: (context, index) {
-                  if (index == _filters.length) {
-                    return Padding(
-                      padding: const EdgeInsets.only(left: 4.0, right: 16.0),
-                      child: ActionChip(
-                        backgroundColor: colorScheme.surface,
-                        side: BorderSide(
-                          color: isDark
-                              ? AppColors.border
-                              : Colors.grey.shade300,
-                        ),
-                        label: Row(
-                          children: [
-                            Icon(
-                              Icons.tune,
-                              size: 16,
-                              color: colorScheme.onSurface,
+                if (dynamicFilters.length > 1)
+                  SizedBox(
+                    height: 40,
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      itemCount: dynamicFilters.length + 1,
+                      itemBuilder: (context, index) {
+                        if (index == dynamicFilters.length) {
+                          return Padding(
+                            padding: const EdgeInsets.only(left: 4.0, right: 16.0),
+                            child: ActionChip(
+                              backgroundColor: colorScheme.surface,
+                              side: BorderSide(
+                                color: isDark ? AppColors.border : Colors.grey.shade300,
+                              ),
+                              label: Row(
+                                children: [
+                                  Icon(Icons.tune, size: 16, color: colorScheme.onSurface),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    'Filtros',
+                                    style: TextStyle(color: colorScheme.onSurface),
+                                  ),
+                                ],
+                              ),
+                              onPressed: () => _openFiltersBottomSheet(context, sportsList),
                             ),
-                            const SizedBox(width: 4),
-                            Text(
-                              'Filtros',
-                              style: TextStyle(color: colorScheme.onSurface),
+                          );
+                        }
+
+                        final filterName = dynamicFilters[index];
+                        final isSelected = _selectedFilter == filterName;
+
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                          child: ChoiceChip(
+                            selected: isSelected,
+                            showCheckmark: false,
+                            backgroundColor: colorScheme.surface,
+                            selectedColor: AppColors.primary,
+                            side: BorderSide(
+                              color: isSelected ? AppColors.primary : (isDark ? Colors.transparent : Colors.grey.shade300),
                             ),
-                          ],
-                        ),
-                        onPressed: () {},
-                      ),
-                    );
-                  }
-
-                  final isSelected = _selectedFilterIndex == index;
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                    child: ChoiceChip(
-                      selected: isSelected,
-                      showCheckmark: false,
-                      backgroundColor: colorScheme.surface,
-                      selectedColor: AppColors.primary,
-                      side: BorderSide(
-                        color: isSelected
-                            ? AppColors.primary
-                            : (isDark
-                                  ? Colors.transparent
-                                  : Colors.grey.shade300),
-                      ),
-                      label: Text(
-                        _filters[index],
-                        style: TextStyle(
-                          color: isSelected
-                              ? Colors.black
-                              : colorScheme.onSurface,
-                          fontWeight: isSelected
-                              ? FontWeight.bold
-                              : FontWeight.normal,
-                        ),
-                      ),
-                      onSelected: (selected) =>
-                          setState(() => _selectedFilterIndex = index),
-                    ),
-                  );
-                },
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            // Grid de Equipos conectados al Backend (BLoC)
-            Expanded(
-              child: BlocConsumer<TeamsDiscoveryBloc, TeamsDiscoveryState>(
-                listener: (context, state) {
-                  if (state is TeamsDiscoveryError) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(state.message),
-                        backgroundColor: AppColors.error,
-                      ),
-                    );
-                  } else if (state is TeamJoinRequestSuccess) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(state.message),
-                        backgroundColor: AppColors.primary,
-                      ),
-                    );
-                  }
-                },
-                builder: (context, state) {
-                  if (state is TeamsDiscoveryLoading) {
-                    return const Center(
-                      child: CircularProgressIndicator(
-                        color: AppColors.primary,
-                      ),
-                    );
-                  } else if (state is TeamsDiscoveryLoaded) {
-                    if (state.teams.isEmpty) {
-                      return RefreshIndicator(
-                        onRefresh: () async {
-                          final bloc = context.read<TeamsDiscoveryBloc>();
-                          bloc.add(LoadTeamsEvent());
-                          await bloc.stream.firstWhere((state) =>
-                              state is TeamsDiscoveryLoaded ||
-                              state is TeamsDiscoveryError);
-                        },
-                        child: ListView(
-                          physics: const AlwaysScrollableScrollPhysics(),
-                          children: const [
-                            SizedBox(height: 100),
-                            Center(
-                              child: Text(
-                                'No hay equipos disponibles en este momento.',
-                                style: TextStyle(color: AppColors.textMuted),
+                            label: Text(
+                              filterName,
+                              style: TextStyle(
+                                color: isSelected ? Colors.black : colorScheme.onSurface,
+                                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                               ),
                             ),
-                          ],
-                        ),
-                      );
-                    }
-
-                    return RefreshIndicator(
-                      onRefresh: () async {
-                        final bloc = context.read<TeamsDiscoveryBloc>();
-                        bloc.add(LoadTeamsEvent());
-                        await bloc.stream.firstWhere((state) =>
-                            state is TeamsDiscoveryLoaded ||
-                            state is TeamsDiscoveryError);
-                      },
-                      child: GridView.builder(
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 20.0,
-                          vertical: 8.0,
-                        ),
-                        gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          childAspectRatio: 0.75,
-                          crossAxisSpacing: 16,
-                          mainAxisSpacing: 16,
-                        ),
-                        itemCount: state.teams.length,
-                        itemBuilder: (context, index) {
-                          final team = state.teams[index];
-                          return TeamDiscoveryCard(
-                            team: team,
-                            onRequestJoin: () {
-                              context.read<TeamsDiscoveryBloc>().add(
-                                    RequestJoinTeamEvent(teamId: team.id),
-                                  );
+                            onSelected: (selected) {
+                              setState(() {
+                                _selectedFilter = filterName;
+                                if (filterName != 'Todos') {
+                                  _recentSports.remove(filterName);
+                                  _recentSports.insert(0, filterName);
+                                }
+                              });
                             },
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                const SizedBox(height: 16),
+
+                Expanded(
+                  child: Builder(
+                    builder: (context) {
+                      if (state is TeamsDiscoveryLoaded) {
+                        final filteredTeams = state.teams.where((team) {
+                          final matchesSport = _selectedFilter == 'Todos' ||
+                              team.sportName.toLowerCase() == _selectedFilter.toLowerCase();
+                          final matchesSearch = _searchQuery.isEmpty ||
+                              team.name.toLowerCase().contains(_searchQuery);
+                          final matchesMembers = _filterMaxMembers == null ||
+                              team.maxMembers == _filterMaxMembers;
+                          final matchesRecruiting = !_filterOnlyRecruiting || team.isRecruiting;
+
+                          return matchesSport && matchesSearch && matchesMembers && matchesRecruiting;
+                        }).toList();
+
+                        if (filteredTeams.isEmpty) {
+                          return RefreshIndicator(
+                            onRefresh: () async {
+                              context.read<TeamsDiscoveryBloc>().add(LoadTeamsEvent());
+                            },
+                            child: ListView(
+                              physics: const AlwaysScrollableScrollPhysics(),
+                              children: [
+                                const SizedBox(height: 100),
+                                Center(
+                                  child: Text(
+                                    state.teams.isEmpty
+                                        ? 'No hay equipos disponibles en este momento.'
+                                        : 'No se encontraron equipos para estos filtros.',
+                                    style: const TextStyle(color: AppColors.textMuted),
+                                  ),
+                                ),
+                              ],
+                            ),
                           );
-                        },
-                      ),
-                    );
-                  }
-                  return const SizedBox.shrink();
-                },
-              ),
-            ),
-          ],
+                        }
+
+                        return RefreshIndicator(
+                          onRefresh: () async {
+                            context.read<TeamsDiscoveryBloc>().add(LoadTeamsEvent());
+                          },
+                          child: GridView.builder(
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0),
+                            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 2,
+                              childAspectRatio: 0.75,
+                              crossAxisSpacing: 16,
+                              mainAxisSpacing: 16,
+                            ),
+                            itemCount: filteredTeams.length,
+                            itemBuilder: (context, index) {
+                              final team = filteredTeams[index];
+                              return TeamDiscoveryCard(
+                                team: team,
+                                onRequestJoin: () {
+                                  context.read<TeamsDiscoveryBloc>().add(RequestJoinTeamEvent(teamId: team.id));
+                                },
+                              );
+                            },
+                          ),
+                        );
+                      }
+                      return const SizedBox.shrink();
+                    },
+                  ),
+                ),
+              ],
+            );
+          },
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
@@ -323,3 +551,5 @@ class _TeamsDiscoveryViewState extends State<_TeamsDiscoveryView> {
     );
   }
 }
+
+

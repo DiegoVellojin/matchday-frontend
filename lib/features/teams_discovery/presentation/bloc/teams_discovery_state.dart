@@ -1,4 +1,5 @@
 import '../../domain/entities/team_entity.dart';
+import '../../domain/entities/sport_entity.dart';
 
 abstract class TeamsDiscoveryState {}
 
@@ -8,8 +9,10 @@ class TeamsDiscoveryLoading extends TeamsDiscoveryState {}
 
 class TeamsDiscoveryLoaded extends TeamsDiscoveryState {
   final List<TeamEntity> teams;
-  TeamsDiscoveryLoaded({required this.teams});
+  final List<SportEntity> sports;
+  TeamsDiscoveryLoaded({required this.teams, required this.sports});
 }
+
 
 class TeamsDiscoveryError extends TeamsDiscoveryState {
   final String message;

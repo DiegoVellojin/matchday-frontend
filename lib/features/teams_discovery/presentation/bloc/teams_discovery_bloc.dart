@@ -1,7 +1,9 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../application/usecases/get_discoverable_teams_usecase.dart';
 import '../../application/usecases/request_join_team_usecase.dart';
+import '../../application/usecases/get_sports_usecase.dart';
 import '../../domain/entities/team_entity.dart';
+import '../../domain/entities/sport_entity.dart';
 import 'teams_discovery_event.dart';
 import 'teams_discovery_state.dart';
 
@@ -9,34 +11,43 @@ class TeamsDiscoveryBloc
     extends Bloc<TeamsDiscoveryEvent, TeamsDiscoveryState> {
   final GetDiscoverableTeamsUseCase getTeamsUseCase;
   final RequestJoinTeamUseCase requestJoinUseCase;
+  final GetSportsUseCase getSportsUseCase;
 
-  // Mantenemos una caché en memoria de los equipos para no recargar todo si la solicitud es exitosa
   List<TeamEntity> _currentTeams = [];
+  List<SportEntity> _currentSports = [];
 
   TeamsDiscoveryBloc({
     required this.getTeamsUseCase,
     required this.requestJoinUseCase,
+    required this.getSportsUseCase,
   }) : super(TeamsDiscoveryInitial()) {
     on<LoadTeamsEvent>((event, emit) async {
       emit(TeamsDiscoveryLoading());
-      final result = await getTeamsUseCase();
-      result.fold(
+      
+      final teamsResult = await getTeamsUseCase();
+      final sportsResult = await getSportsUseCase();
+
+      teamsResult.fold(
         (failure) => emit(TeamsDiscoveryError(message: failure.message)),
         (teams) {
           _currentTeams = teams;
-          emit(TeamsDiscoveryLoaded(teams: _currentTeams));
+          sportsResult.fold(
+            (failure) => emit(TeamsDiscoveryError(message: failure.message)),
+            (sports) {
+              _currentSports = sports;
+              emit(TeamsDiscoveryLoaded(teams: _currentTeams, sports: _currentSports));
+            },
+          );
         },
       );
     });
 
     on<RequestJoinTeamEvent>((event, emit) async {
-      // No emitimos Loading genérico para no borrar la lista de la pantalla
       final result = await requestJoinUseCase(event.teamId);
       result.fold(
         (failure) {
           emit(TeamsDiscoveryError(message: failure.message));
-          // Inmediatamente regresamos al estado Loaded para que la grilla se siga viendo
-          emit(TeamsDiscoveryLoaded(teams: _currentTeams));
+          emit(TeamsDiscoveryLoaded(teams: _currentTeams, sports: _currentSports));
         },
         (_) {
           emit(
@@ -44,11 +55,9 @@ class TeamsDiscoveryBloc
               message: 'Solicitud enviada al capitán con éxito.',
             ),
           );
-          // Inmediatamente regresamos al estado Loaded para que la grilla se siga viendo
-          emit(TeamsDiscoveryLoaded(teams: _currentTeams));
+          emit(TeamsDiscoveryLoaded(teams: _currentTeams, sports: _currentSports));
         },
       );
-
     });
   }
 }
