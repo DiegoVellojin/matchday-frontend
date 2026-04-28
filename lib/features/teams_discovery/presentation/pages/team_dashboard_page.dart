@@ -125,11 +125,12 @@ class _TeamDashboardPageState extends State<TeamDashboardPage> {
                 onPressed: () {
                   SharePlus.instance.share(
                     ShareParams(
-                      text: '¡Únete a mi equipo ${team.name} en MatchDay! ⚽🏆 Descarga la app y búscanos.',
+                      text: '¡Únete a mi equipo ${team.name} en MatchDay! ⚽🏆 Ingresa aquí: https://matchday-backend-3qot.onrender.com/api/v1/teams/${team.id}/share',
                     ),
                   );
                 },
               ),
+
             ],
           ),
           const SizedBox(height: 8),
