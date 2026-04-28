@@ -40,8 +40,9 @@ class AuthRemoteDataSource {
       }
       return null;
     } on GoogleSignInException catch (e) {
-      if (e.code.name == 'canceled' || e.code.name == 'sign_in_canceled')
+      if (e.code.name == 'canceled' || e.code.name == 'sign_in_canceled') {
         return null;
+      }
       throw Exception('Fallo al autenticar con Google');
     } on DioException catch (e) {
       throw Exception(
