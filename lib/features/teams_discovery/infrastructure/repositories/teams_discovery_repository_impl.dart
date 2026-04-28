@@ -30,6 +30,17 @@ class TeamsDiscoveryRepositoryImpl implements ITeamsDiscoveryRepository {
   }
 
   @override
+  Future<Either<Failure, void>> respondToJoinRequest(int teamId, int userId, bool accept) async {
+    try {
+      await remoteDataSource.respondToJoinRequest(teamId, userId, accept);
+      return const Right(null);
+    } catch (e) {
+      return Left(ServerFailure(e.toString().replaceAll('Exception: ', '')));
+    }
+  }
+
+
+  @override
   Future<Either<Failure, TeamEntity>> getTeamById(int teamId) async {
     try {
       final team = await remoteDataSource.getTeamById(teamId);

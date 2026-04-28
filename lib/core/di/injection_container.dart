@@ -25,6 +25,8 @@ import '../../features/teams_discovery/application/usecases/create_team_usecase.
 import '../../features/teams_discovery/application/usecases/get_team_by_id_usecase.dart';
 import '../../features/teams_discovery/application/usecases/get_team_members_usecase.dart';
 import '../../features/teams_discovery/application/usecases/get_pending_requests_usecase.dart';
+import '../../features/teams_discovery/application/usecases/respond_to_join_request_usecase.dart';
+
 
 
 
@@ -112,6 +114,8 @@ Future<void> init() async {
   sl.registerLazySingleton(() => GetTeamByIdUseCase(sl()));
   sl.registerLazySingleton(() => GetTeamMembersUseCase(sl()));
   sl.registerLazySingleton(() => GetPendingRequestsUseCase(sl()));
+  sl.registerLazySingleton(() => RespondToJoinRequestUseCase(sl()));
+
 
 
 

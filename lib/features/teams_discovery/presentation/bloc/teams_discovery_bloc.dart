@@ -33,7 +33,11 @@ class TeamsDiscoveryBloc
       // No emitimos Loading genérico para no borrar la lista de la pantalla
       final result = await requestJoinUseCase(event.teamId);
       result.fold(
-        (failure) => emit(TeamsDiscoveryError(message: failure.message)),
+        (failure) {
+          emit(TeamsDiscoveryError(message: failure.message));
+          // Inmediatamente regresamos al estado Loaded para que la grilla se siga viendo
+          emit(TeamsDiscoveryLoaded(teams: _currentTeams));
+        },
         (_) {
           emit(
             TeamJoinRequestSuccess(
@@ -44,6 +48,7 @@ class TeamsDiscoveryBloc
           emit(TeamsDiscoveryLoaded(teams: _currentTeams));
         },
       );
+
     });
   }
 }

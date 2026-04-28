@@ -8,8 +8,12 @@ import '../../application/usecases/get_team_by_id_usecase.dart';
 import '../../application/usecases/get_team_members_usecase.dart';
 import '../../application/usecases/get_pending_requests_usecase.dart';
 import '../../application/usecases/request_join_team_usecase.dart';
+import '../../application/usecases/respond_to_join_request_usecase.dart';
 
 import '../../domain/entities/team_entity.dart';
+import 'package:share_plus/share_plus.dart';
+
+
 
 class TeamDashboardPage extends StatefulWidget {
   final int teamId;
@@ -124,11 +128,15 @@ class _TeamDashboardPageState extends State<TeamDashboardPage> {
               IconButton(
                 icon: const Icon(Icons.share, color: AppColors.primary),
                 onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('¡Enlace copiado!')),
+                  SharePlus.instance.share(
+                    ShareParams(
+                      text: '¡Únete a mi equipo ${team.name} en MatchDay! ⚽🏆 Descarga la app y búscanos.',
+                    ),
                   );
                 },
               ),
+
+
             ],
           ),
           const SizedBox(height: 8),
@@ -516,16 +524,51 @@ class _TeamDashboardPageState extends State<TeamDashboardPage> {
           ),
           IconButton(
             icon: const Icon(Icons.check, color: AppColors.primary),
-            onPressed: () {
-              // Endpoint de aceptar solicitud
+            onPressed: () async {
+              final userId = req['fk_id_usuario'] ?? req['id_usuario'];
+              if (userId == null) return;
+              final result = await sl<RespondToJoinRequestUseCase>().call(widget.teamId, userId, true);
+              result.fold(
+                (failure) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(failure.message), backgroundColor: AppColors.error),
+                  );
+                },
+                (_) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Solicitud aceptada correctamente.'), backgroundColor: AppColors.primary),
+                  );
+                  setState(() {
+                    _loadTeam();
+                  });
+                },
+              );
             },
           ),
           IconButton(
             icon: const Icon(Icons.close, color: AppColors.error),
-            onPressed: () {
-              // Endpoint de rechazar solicitud
+            onPressed: () async {
+              final userId = req['fk_id_usuario'] ?? req['id_usuario'];
+              if (userId == null) return;
+              final result = await sl<RespondToJoinRequestUseCase>().call(widget.teamId, userId, false);
+              result.fold(
+                (failure) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(failure.message), backgroundColor: AppColors.error),
+                  );
+                },
+                (_) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Solicitud rechazada correctamente.'), backgroundColor: AppColors.warning),
+                  );
+                  setState(() {
+                    _loadTeam();
+                  });
+                },
+              );
             },
           ),
+
         ],
       ),
     );

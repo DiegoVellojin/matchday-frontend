@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import '../../../../core/network/network_robot.dart';
 import '../models/team_model.dart';
 
@@ -6,14 +7,26 @@ class TeamsDiscoveryRemoteDataSource {
 
   TeamsDiscoveryRemoteDataSource({required this.networkRobot});
 
+  Exception _handleError(dynamic e, String defaultMessage) {
+    if (e is DioException) {
+      if (e.response != null && e.response!.data != null) {
+        final data = e.response!.data;
+        if (data is Map && data.containsKey('detail')) {
+          return Exception(data['detail'].toString());
+        }
+      }
+      return Exception('$defaultMessage: ${e.message}');
+    }
+    return Exception(e.toString());
+  }
+
   Future<List<TeamModel>> getDiscoverableTeams() async {
     try {
-      // Usamos el endpoint REST estándar para listar equipos
       final response = await networkRobot.get('/teams');
       final List<dynamic> data = response.data;
       return data.map((json) => TeamModel.fromJson(json)).toList();
     } catch (e) {
-      throw Exception('Error al obtener los equipos del servidor');
+      throw _handleError(e, 'Error al obtener los equipos del servidor');
     }
   }
 
@@ -22,7 +35,7 @@ class TeamsDiscoveryRemoteDataSource {
       final response = await networkRobot.get('/teams/$teamId');
       return TeamModel.fromJson(response.data);
     } catch (e) {
-      throw Exception('Error al obtener los detalles del equipo');
+      throw _handleError(e, 'Error al obtener los detalles del equipo');
     }
   }
 
@@ -32,7 +45,7 @@ class TeamsDiscoveryRemoteDataSource {
       final List<dynamic> data = response.data;
       return data.map((e) => Map<String, dynamic>.from(e)).toList();
     } catch (e) {
-      throw Exception('Error al obtener los miembros del equipo');
+      throw _handleError(e, 'Error al obtener los miembros del equipo');
     }
   }
 
@@ -48,15 +61,21 @@ class TeamsDiscoveryRemoteDataSource {
   }
 
   Future<void> requestJoinTeam(int teamId) async {
-
-
     try {
-      // Basado en tu API Spec: 2.5 Solicitar Unirse (Manual)
       await networkRobot.post('/teams/$teamId/join');
     } catch (e) {
-      throw Exception('Error al enviar la solicitud al capitán');
+      throw _handleError(e, 'Error al enviar la solicitud al capitán');
     }
   }
+
+  Future<void> respondToJoinRequest(int teamId, int userId, bool accept) async {
+    try {
+      await networkRobot.put('/teams/$teamId/requests/$userId', data: {'accept': accept});
+    } catch (e) {
+      throw _handleError(e, 'Error al procesar la solicitud');
+    }
+  }
+
 
   Future<void> createTeam({
     required String name,
@@ -79,8 +98,9 @@ class TeamsDiscoveryRemoteDataSource {
         },
       );
     } catch (e) {
-      throw Exception('Error al crear el equipo en el servidor');
+      throw _handleError(e, 'Error al crear el equipo en el servidor');
     }
   }
 }
+
 
