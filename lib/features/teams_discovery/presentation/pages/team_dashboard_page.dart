@@ -3,17 +3,12 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../application/usecases/get_team_by_id_usecase.dart';
-
-
 import '../../application/usecases/get_team_members_usecase.dart';
 import '../../application/usecases/get_pending_requests_usecase.dart';
 import '../../application/usecases/request_join_team_usecase.dart';
 import '../../application/usecases/respond_to_join_request_usecase.dart';
-
 import '../../domain/entities/team_entity.dart';
 import 'package:share_plus/share_plus.dart';
-
-
 
 class TeamDashboardPage extends StatefulWidget {
   final int teamId;
@@ -30,7 +25,6 @@ class _TeamDashboardPageState extends State<TeamDashboardPage> {
   late Future<List<Map<String, dynamic>>> _membersFuture;
   late Future<List<Map<String, dynamic>>> _requestsFuture;
 
-  // Dejamos matchHistory temporalmente vacío o simulado hasta tener backend para eso
   final List<Map<String, dynamic>> matchHistory = [];
 
   @override
@@ -49,24 +43,25 @@ class _TeamDashboardPageState extends State<TeamDashboardPage> {
 
     _membersFuture = sl<GetTeamMembersUseCase>().call(widget.teamId).then((result) {
       return result.fold(
-        (failure) => [],
+        (failure) => <Map<String, dynamic>>[],
         (members) => members,
       );
     });
 
     _requestsFuture = sl<GetPendingRequestsUseCase>().call(widget.teamId).then((result) {
       return result.fold(
-        (failure) => [],
+        (failure) => <Map<String, dynamic>>[],
         (requests) => requests,
       );
     });
   }
 
-
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: FutureBuilder<TeamEntity>(
         future: _teamFuture,
         builder: (context, snapshot) {
@@ -78,14 +73,14 @@ class _TeamDashboardPageState extends State<TeamDashboardPage> {
             return Center(
               child: Text(
                 'Error: ${snapshot.error}',
-                style: const TextStyle(color: AppColors.textMain),
+                style: TextStyle(color: colorScheme.onSurface),
               ),
             );
           } else if (!snapshot.hasData) {
-            return const Center(
+            return Center(
               child: Text(
                 'Equipo no encontrado.',
-                style: TextStyle(color: AppColors.textMain),
+                style: TextStyle(color: colorScheme.onSurface),
               ),
             );
           }
@@ -95,13 +90,13 @@ class _TeamDashboardPageState extends State<TeamDashboardPage> {
           return SafeArea(
             child: Column(
               children: [
-                _buildHeader(context, team),
+                _buildHeader(context, team, colorScheme),
                 Expanded(
                   child: SingleChildScrollView(
                     padding: const EdgeInsets.all(16.0),
                     child: _activeTab == 'roster'
-                        ? _buildRosterTab(team)
-                        : _buildHistoryTab(),
+                        ? _buildRosterTab(team, colorScheme)
+                        : _buildHistoryTab(colorScheme),
                   ),
                 ),
               ],
@@ -112,9 +107,9 @@ class _TeamDashboardPageState extends State<TeamDashboardPage> {
     );
   }
 
-  Widget _buildHeader(BuildContext context, TeamEntity team) {
+  Widget _buildHeader(BuildContext context, TeamEntity team, ColorScheme colorScheme) {
     return Container(
-      color: AppColors.surface,
+      color: colorScheme.surface,
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
       child: Column(
         children: [
@@ -122,7 +117,7 @@ class _TeamDashboardPageState extends State<TeamDashboardPage> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               IconButton(
-                icon: const Icon(Icons.arrow_back, color: AppColors.textMain),
+                icon: Icon(Icons.arrow_back, color: colorScheme.onSurface),
                 onPressed: () => context.pop(),
               ),
               IconButton(
@@ -135,8 +130,6 @@ class _TeamDashboardPageState extends State<TeamDashboardPage> {
                   );
                 },
               ),
-
-
             ],
           ),
           const SizedBox(height: 8),
@@ -145,7 +138,7 @@ class _TeamDashboardPageState extends State<TeamDashboardPage> {
             width: 80,
             height: 80,
             decoration: BoxDecoration(
-              color: AppColors.background,
+              color: Theme.of(context).scaffoldBackgroundColor,
               shape: BoxShape.circle,
               border: Border.all(color: AppColors.primary, width: 2),
             ),
@@ -156,7 +149,6 @@ class _TeamDashboardPageState extends State<TeamDashboardPage> {
                   : Center(
                       child: Text(
                         team.logo.isNotEmpty ? team.logo : '🛡️',
-
                         style: const TextStyle(fontSize: 40),
                       ),
                     ),
@@ -165,8 +157,8 @@ class _TeamDashboardPageState extends State<TeamDashboardPage> {
           const SizedBox(height: 12),
           Text(
             team.name,
-            style: const TextStyle(
-              color: AppColors.textMain,
+            style: TextStyle(
+              color: colorScheme.onSurface,
               fontSize: 24,
               fontWeight: FontWeight.bold,
             ),
@@ -181,22 +173,22 @@ class _TeamDashboardPageState extends State<TeamDashboardPage> {
             ),
           ),
           if (team.isRecruiting)
-            const Padding(
-              padding: EdgeInsets.only(top: 8.0),
+            Padding(
+              padding: const EdgeInsets.only(top: 8.0),
               child: Text(
                 '¡Buscando nuevos miembros!',
-                style: TextStyle(color: AppColors.textMuted, fontSize: 12),
+                style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 12),
               ),
             ),
           const SizedBox(height: 16),
           // Stats Row
           Row(
             children: [
-              _buildStatCard('Jugadores', '${team.currentMembers}/${team.maxMembers}'),
+              _buildStatCard('Jugadores', '${team.currentMembers}/${team.maxMembers}', colorScheme),
               const SizedBox(width: 8),
-              _buildStatCard('Partidos', '0'),
+              _buildStatCard('Partidos', '0', colorScheme),
               const SizedBox(width: 8),
-              _buildStatCard('Victorias', '0'),
+              _buildStatCard('Victorias', '0', colorScheme),
               if (team.soyMiembro) ...[
                 const SizedBox(width: 8),
                 Expanded(
@@ -236,19 +228,18 @@ class _TeamDashboardPageState extends State<TeamDashboardPage> {
               ],
             ],
           ),
-
           const SizedBox(height: 16),
           // Tabs
           Container(
             padding: const EdgeInsets.all(4),
             decoration: BoxDecoration(
-              color: AppColors.surface,
+              color: colorScheme.surfaceContainerHighest,
               borderRadius: BorderRadius.circular(12),
             ),
             child: Row(
               children: [
-                _buildTabButton('roster', 'Plantilla'),
-                _buildTabButton('history', 'Historial'),
+                _buildTabButton('roster', 'Plantilla', colorScheme),
+                _buildTabButton('history', 'Historial', colorScheme),
               ],
             ),
           ),
@@ -257,13 +248,12 @@ class _TeamDashboardPageState extends State<TeamDashboardPage> {
     );
   }
 
-
-  Widget _buildStatCard(String label, String value) {
+  Widget _buildStatCard(String label, String value, ColorScheme colorScheme) {
     return Expanded(
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: colorScheme.surfaceContainerHighest,
           borderRadius: BorderRadius.circular(12),
         ),
         child: Column(
@@ -279,7 +269,7 @@ class _TeamDashboardPageState extends State<TeamDashboardPage> {
             const SizedBox(height: 4),
             Text(
               label,
-              style: const TextStyle(color: AppColors.textMuted, fontSize: 11),
+              style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 11),
             ),
           ],
         ),
@@ -287,7 +277,7 @@ class _TeamDashboardPageState extends State<TeamDashboardPage> {
     );
   }
 
-  Widget _buildTabButton(String tabName, String label) {
+  Widget _buildTabButton(String tabName, String label, ColorScheme colorScheme) {
     final isSelected = _activeTab == tabName;
     return Expanded(
       child: GestureDetector(
@@ -306,7 +296,7 @@ class _TeamDashboardPageState extends State<TeamDashboardPage> {
             label,
             textAlign: TextAlign.center,
             style: TextStyle(
-              color: isSelected ? Colors.black : AppColors.textMuted,
+              color: isSelected ? Colors.black : colorScheme.onSurfaceVariant,
               fontWeight: FontWeight.bold,
               fontSize: 14,
             ),
@@ -316,7 +306,7 @@ class _TeamDashboardPageState extends State<TeamDashboardPage> {
     );
   }
 
-  Widget _buildRosterTab(TeamEntity team) {
+  Widget _buildRosterTab(TeamEntity team, ColorScheme colorScheme) {
     return FutureBuilder<List<dynamic>>(
       future: Future.wait([_membersFuture, _requestsFuture]),
       builder: (context, snapshot) {
@@ -325,40 +315,38 @@ class _TeamDashboardPageState extends State<TeamDashboardPage> {
             child: CircularProgressIndicator(color: AppColors.primary),
           );
         }
-        
-        final members = snapshot.hasData 
+
+        final members = snapshot.hasData
             ? (snapshot.data![0] as List<dynamic>).map((e) => e as Map<String, dynamic>).toList()
             : <Map<String, dynamic>>[];
-            
-        final requests = snapshot.hasData 
+
+        final requests = snapshot.hasData
             ? (snapshot.data![1] as List<dynamic>).map((e) => e as Map<String, dynamic>).toList()
             : <Map<String, dynamic>>[];
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Botón de Unirse o Mensaje de Miembro
-            _buildActionSection(team),
+            _buildActionSection(team, colorScheme),
             const SizedBox(height: 16),
-            
-            // Pending Requests (Solo se muestran si somos miembros y hay solicitudes)
+
             if (team.soyMiembro && requests.isNotEmpty) ...[
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: AppColors.surface,
+                  color: colorScheme.surface,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: AppColors.border),
+                  border: Border.all(color: colorScheme.outlineVariant),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
                       children: [
-                        const Text(
+                        Text(
                           'Solicitudes Pendientes',
                           style: TextStyle(
-                            color: AppColors.textMain,
+                            color: colorScheme.onSurface,
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
                           ),
@@ -382,45 +370,44 @@ class _TeamDashboardPageState extends State<TeamDashboardPage> {
                       ],
                     ),
                     const SizedBox(height: 12),
-                    const Divider(color: AppColors.border),
-                    ...requests.map((req) => _buildPendingRequestRow(req)),
+                    Divider(color: colorScheme.outlineVariant),
+                    ...requests.map((req) => _buildPendingRequestRow(req, colorScheme)),
                   ],
                 ),
               ),
               const SizedBox(height: 16),
             ],
 
-            // Miembros de la Plantilla
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: AppColors.surface,
+                color: colorScheme.surface,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppColors.border),
+                border: Border.all(color: colorScheme.outlineVariant),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     'Miembros del Equipo (${members.length})',
-                    style: const TextStyle(
-                      color: AppColors.textMain,
+                    style: TextStyle(
+                      color: colorScheme.onSurface,
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   const SizedBox(height: 12),
-                  const Divider(color: AppColors.border),
+                  Divider(color: colorScheme.outlineVariant),
                   if (members.isEmpty)
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 8.0),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8.0),
                       child: Text(
                         'No hay miembros en este equipo todavía.',
-                        style: TextStyle(color: AppColors.textMuted, fontSize: 14),
+                        style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 14),
                       ),
                     )
                   else
-                    ...members.map((member) => _buildMemberRow(member)),
+                    ...members.map((member) => _buildMemberRow(member, colorScheme)),
                 ],
               ),
             ),
@@ -430,8 +417,7 @@ class _TeamDashboardPageState extends State<TeamDashboardPage> {
     );
   }
 
-
-  Widget _buildActionSection(TeamEntity team) {
+  Widget _buildActionSection(TeamEntity team, ColorScheme colorScheme) {
     if (team.soyMiembro) {
       return Container(
         width: double.infinity,
@@ -441,21 +427,20 @@ class _TeamDashboardPageState extends State<TeamDashboardPage> {
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
         ),
-        child: const Row(
+        child: Row(
           children: [
-            Icon(Icons.check_circle, color: AppColors.primary),
-            SizedBox(width: 12),
+            const Icon(Icons.check_circle, color: AppColors.primary),
+            const SizedBox(width: 12),
             Expanded(
               child: Text(
                 'Eres miembro activo de este equipo.',
                 style: TextStyle(
-                  color: AppColors.textMain,
+                  color: colorScheme.onSurface,
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
                 ),
               ),
             ),
-
           ],
         ),
       );
@@ -498,7 +483,7 @@ class _TeamDashboardPageState extends State<TeamDashboardPage> {
     );
   }
 
-  Widget _buildPendingRequestRow(Map<String, dynamic> req) {
+  Widget _buildPendingRequestRow(Map<String, dynamic> req, ColorScheme colorScheme) {
     final name = req['nombre_usuario'] ?? 'Usuario';
     final photo = req['url_foto_perfil'] ?? '';
 
@@ -507,19 +492,19 @@ class _TeamDashboardPageState extends State<TeamDashboardPage> {
       child: Row(
         children: [
           CircleAvatar(
-            backgroundColor: AppColors.border,
-            backgroundImage: photo.isNotEmpty && photo.startsWith('http') 
-                ? NetworkImage(photo) as ImageProvider 
+            backgroundColor: colorScheme.surfaceContainerHighest,
+            backgroundImage: photo.isNotEmpty && photo.startsWith('http')
+                ? NetworkImage(photo) as ImageProvider
                 : null,
-            child: photo.isEmpty || !photo.startsWith('http') 
-                ? const Text('👤', style: TextStyle(color: AppColors.textMain)) 
+            child: photo.isEmpty || !photo.startsWith('http')
+                ? Text('👤', style: TextStyle(color: colorScheme.onSurface))
                 : null,
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
               name,
-              style: const TextStyle(color: AppColors.textMain, fontWeight: FontWeight.bold),
+              style: TextStyle(color: colorScheme.onSurface, fontWeight: FontWeight.bold),
             ),
           ),
           IconButton(
@@ -536,7 +521,10 @@ class _TeamDashboardPageState extends State<TeamDashboardPage> {
                 },
                 (_) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Solicitud aceptada correctamente.'), backgroundColor: AppColors.primary),
+                    const SnackBar(
+                      content: Text('Solicitud aceptada correctamente.'),
+                      backgroundColor: AppColors.primary,
+                    ),
                   );
                   setState(() {
                     _loadTeam();
@@ -559,7 +547,10 @@ class _TeamDashboardPageState extends State<TeamDashboardPage> {
                 },
                 (_) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Solicitud rechazada correctamente.'), backgroundColor: AppColors.warning),
+                    const SnackBar(
+                      content: Text('Solicitud rechazada correctamente.'),
+                      backgroundColor: AppColors.warning,
+                    ),
                   );
                   setState(() {
                     _loadTeam();
@@ -568,42 +559,40 @@ class _TeamDashboardPageState extends State<TeamDashboardPage> {
               );
             },
           ),
-
         ],
       ),
     );
   }
 
-  Widget _buildMemberRow(Map<String, dynamic> member) {
+  Widget _buildMemberRow(Map<String, dynamic> member, ColorScheme colorScheme) {
     final name = member['nombre_usuario'] ?? 'Usuario';
     final photo = member['url_foto_perfil'] ?? '';
     final role = member['rol_equipo'] ?? 'Jugador';
 
-    final roleColor = role == 'Capitán' || role == 'captain'
+    final roleColor = role == 'Capitán' || role == 'Capitan' || role == 'captain'
         ? AppColors.primary
         : role == 'Co-Capitán'
             ? AppColors.warning
-            : AppColors.textMuted;
+            : colorScheme.onSurfaceVariant;
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: Row(
         children: [
           CircleAvatar(
-            backgroundColor: AppColors.border,
-
-            backgroundImage: photo.isNotEmpty && photo.startsWith('http') 
-                ? NetworkImage(photo) as ImageProvider 
+            backgroundColor: colorScheme.surfaceContainerHighest,
+            backgroundImage: photo.isNotEmpty && photo.startsWith('http')
+                ? NetworkImage(photo) as ImageProvider
                 : null,
-            child: photo.isEmpty || !photo.startsWith('http') 
-                ? const Text('👤', style: TextStyle(color: AppColors.textMain)) 
+            child: photo.isEmpty || !photo.startsWith('http')
+                ? Text('👤', style: TextStyle(color: colorScheme.onSurface))
                 : null,
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
               name,
-              style: const TextStyle(color: AppColors.textMain, fontWeight: FontWeight.bold),
+              style: TextStyle(color: colorScheme.onSurface, fontWeight: FontWeight.bold),
             ),
           ),
           Container(
@@ -626,18 +615,18 @@ class _TeamDashboardPageState extends State<TeamDashboardPage> {
     );
   }
 
-  Widget _buildHistoryTab() {
+  Widget _buildHistoryTab(ColorScheme colorScheme) {
     if (matchHistory.isEmpty) {
-      return const Center(
+      return Center(
         child: Padding(
-          padding: EdgeInsets.all(32.0),
+          padding: const EdgeInsets.all(32.0),
           child: Column(
             children: [
-              Icon(Icons.sports_soccer, color: AppColors.textMuted, size: 48),
-              SizedBox(height: 16),
+              Icon(Icons.sports_soccer, color: colorScheme.onSurfaceVariant, size: 48),
+              const SizedBox(height: 16),
               Text(
                 'No hay historial de partidos todavía.',
-                style: TextStyle(color: AppColors.textMuted, fontSize: 16),
+                style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 16),
               ),
             ],
           ),
@@ -647,20 +636,19 @@ class _TeamDashboardPageState extends State<TeamDashboardPage> {
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: matchHistory.map((match) => _buildMatchCard(match)).toList(),
+      children: matchHistory.map((match) => _buildMatchCard(match, colorScheme)).toList(),
     );
   }
 
-
-  Widget _buildMatchCard(Map<String, dynamic> match) {
+  Widget _buildMatchCard(Map<String, dynamic> match, ColorScheme colorScheme) {
     final isWon = match['won'] as bool;
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: colorScheme.outlineVariant),
       ),
       child: Column(
         children: [
@@ -669,11 +657,11 @@ class _TeamDashboardPageState extends State<TeamDashboardPage> {
             children: [
               Row(
                 children: [
-                  const Icon(Icons.calendar_today, color: AppColors.textMuted, size: 14),
+                  Icon(Icons.calendar_today, color: colorScheme.onSurfaceVariant, size: 14),
                   const SizedBox(width: 6),
                   Text(
                     match['date'],
-                    style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
+                    style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 12),
                   ),
                 ],
               ),
@@ -700,46 +688,44 @@ class _TeamDashboardPageState extends State<TeamDashboardPage> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              // Our Team
               Expanded(
                 child: Row(
                   children: [
-                    const CircleAvatar(
-                      backgroundColor: AppColors.border,
-                      child: Text('⚽'),
+                    CircleAvatar(
+                      backgroundColor: colorScheme.surfaceContainerHighest,
+                      child: const Text('⚽'),
                     ),
                     const SizedBox(width: 8),
-                    const Expanded(
+                    Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
                             'Elite Strikers',
-                            style: TextStyle(
-                                color: AppColors.textMain, fontWeight: FontWeight.bold),
+                            style: TextStyle(color: colorScheme.onSurface, fontWeight: FontWeight.bold),
                             overflow: TextOverflow.ellipsis,
                           ),
-                          Text('Nuestro Equipo',
-                              style: TextStyle(color: AppColors.textMuted, fontSize: 11)),
+                          Text(
+                            'Nuestro Equipo',
+                            style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 11),
+                          ),
                         ],
                       ),
                     ),
                   ],
                 ),
               ),
-              // Score
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
                 child: Text(
                   '${match['ourScore']} - ${match['opponentScore']}',
-                  style: const TextStyle(
-                    color: AppColors.textMain,
+                  style: TextStyle(
+                    color: colorScheme.onSurface,
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
               ),
-              // Opponent
               Expanded(
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.end,
@@ -750,22 +736,21 @@ class _TeamDashboardPageState extends State<TeamDashboardPage> {
                         children: [
                           Text(
                             match['opponent'],
-                            style: const TextStyle(
-                                color: AppColors.textMain, fontWeight: FontWeight.bold),
+                            style: TextStyle(color: colorScheme.onSurface, fontWeight: FontWeight.bold),
                             overflow: TextOverflow.ellipsis,
                           ),
-                          const Text('Rival',
-                              style: TextStyle(color: AppColors.textMuted, fontSize: 11)),
+                          Text(
+                            'Rival',
+                            style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 11),
+                          ),
                         ],
                       ),
                     ),
                     const SizedBox(width: 8),
-                    const CircleAvatar(
-
-                      backgroundColor: AppColors.border,
-                      child: Text('⚽'),
+                    CircleAvatar(
+                      backgroundColor: colorScheme.surfaceContainerHighest,
+                      child: const Text('⚽'),
                     ),
-
                   ],
                 ),
               ),

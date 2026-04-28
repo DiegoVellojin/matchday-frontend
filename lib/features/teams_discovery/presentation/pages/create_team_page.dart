@@ -41,7 +41,6 @@ class _CreateTeamPageState extends State<CreateTeamPage> {
 
   Future<void> _pickImage() async {
     final picker = ImagePicker();
-    // Reducimos dimensiones y calidad para no saturar el storage (Compresión automática)
     final pickedFile = await picker.pickImage(
       source: ImageSource.gallery,
       maxWidth: 600,
@@ -87,10 +86,8 @@ class _CreateTeamPageState extends State<CreateTeamPage> {
     setState(() => _isLoading = true);
 
     try {
-      // 1. Subir imagen a Firebase si se seleccionó una
       String? logoUrl = await _uploadLogo();
 
-      // 2. Usar el Caso de Uso de Clean Architecture
       final createTeamUseCase = sl<CreateTeamUseCase>();
 
       final result = await createTeamUseCase(
@@ -143,25 +140,27 @@ class _CreateTeamPageState extends State<CreateTeamPage> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: AppColors.surface,
+        backgroundColor: colorScheme.surface,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.textMain),
+          icon: Icon(Icons.arrow_back, color: colorScheme.onSurface),
           onPressed: () => context.pop(),
         ),
-        title: const Text(
+        title: Text(
           'Crear Nuevo Equipo',
           style: TextStyle(
-            color: AppColors.textMain,
+            color: colorScheme.onSurface,
             fontSize: 20,
             fontWeight: FontWeight.w600,
           ),
         ),
-        shape: const Border(
-          bottom: BorderSide(color: AppColors.border, width: 1),
+        shape: Border(
+          bottom: BorderSide(color: colorScheme.outlineVariant, width: 1),
         ),
       ),
       body: _isLoading
@@ -174,10 +173,10 @@ class _CreateTeamPageState extends State<CreateTeamPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Logo del Equipo
-                  const Text(
+                  Text(
                     'Logo del Equipo',
                     style: TextStyle(
-                      color: AppColors.textMuted,
+                      color: colorScheme.onSurfaceVariant,
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
                     ),
@@ -189,16 +188,15 @@ class _CreateTeamPageState extends State<CreateTeamPage> {
                       width: double.infinity,
                       height: 160,
                       decoration: BoxDecoration(
-                        color: AppColors.surface,
+                        color: colorScheme.surface,
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
                           color: _imageFile != null
                               ? AppColors.primary
-                              : AppColors.border,
+                              : colorScheme.outlineVariant,
                           width: 2,
                         ),
                       ),
-
                       child: _imageFile != null
                           ? Stack(
                               alignment: Alignment.center,
@@ -213,7 +211,7 @@ class _CreateTeamPageState extends State<CreateTeamPage> {
                                   ),
                                 ),
                                 Container(
-                                  color: Colors.black.withOpacity(0.4),
+                                  color: Colors.black.withValues(alpha: 0.4),
                                   child: const Icon(
                                     Icons.camera_alt,
                                     color: Colors.white,
@@ -229,29 +227,29 @@ class _CreateTeamPageState extends State<CreateTeamPage> {
                                   width: 64,
                                   height: 64,
                                   decoration: BoxDecoration(
-                                    color: AppColors.border,
+                                    color: colorScheme.surfaceContainerHighest,
                                     borderRadius: BorderRadius.circular(32),
                                   ),
-                                  child: const Icon(
+                                  child: Icon(
                                     Icons.camera_alt_outlined,
-                                    color: AppColors.textMuted,
+                                    color: colorScheme.onSurfaceVariant,
                                     size: 32,
                                   ),
                                 ),
                                 const SizedBox(height: 12),
-                                const Text(
+                                Text(
                                   'Subir Logo del Equipo',
                                   style: TextStyle(
-                                    color: AppColors.textMuted,
+                                    color: colorScheme.onSurfaceVariant,
                                     fontSize: 14,
                                     fontWeight: FontWeight.w500,
                                   ),
                                 ),
                                 const SizedBox(height: 4),
-                                const Text(
+                                Text(
                                   'PNG, JPG hasta 5MB',
                                   style: TextStyle(
-                                    color: AppColors.textHint,
+                                    color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
                                     fontSize: 12,
                                   ),
                                 ),
@@ -262,10 +260,10 @@ class _CreateTeamPageState extends State<CreateTeamPage> {
                   const SizedBox(height: 24),
 
                   // Nombre del Equipo
-                  const Text(
+                  Text(
                     'Nombre del Equipo',
                     style: TextStyle(
-                      color: AppColors.textMuted,
+                      color: colorScheme.onSurfaceVariant,
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
                     ),
@@ -273,19 +271,19 @@ class _CreateTeamPageState extends State<CreateTeamPage> {
                   const SizedBox(height: 8),
                   TextField(
                     controller: _nameController,
-                    style: const TextStyle(color: AppColors.textMain),
+                    style: TextStyle(color: colorScheme.onSurface),
                     decoration: InputDecoration(
                       hintText: 'Ingresa el nombre del equipo',
-                      hintStyle: const TextStyle(color: AppColors.textHint),
+                      hintStyle: TextStyle(color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5)),
                       filled: true,
-                      fillColor: AppColors.surface,
+                      fillColor: colorScheme.surface,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: AppColors.border),
+                        borderSide: BorderSide(color: colorScheme.outlineVariant),
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: AppColors.border),
+                        borderSide: BorderSide(color: colorScheme.outlineVariant),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -296,33 +294,32 @@ class _CreateTeamPageState extends State<CreateTeamPage> {
                   const SizedBox(height: 24),
 
                   // Seleccionar Deporte
-                  const Text(
+                  Text(
                     'Seleccionar Deporte',
                     style: TextStyle(
-                      color: AppColors.textMuted,
+                      color: colorScheme.onSurfaceVariant,
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
                   const SizedBox(height: 8),
                   Container(
-
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     decoration: BoxDecoration(
-                      color: AppColors.surface,
+                      color: colorScheme.surface,
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: AppColors.border),
+                      border: Border.all(color: colorScheme.outlineVariant),
                     ),
                     child: DropdownButtonHideUnderline(
                       child: DropdownButton<int>(
                         value: _selectedSportId,
-                        dropdownColor: AppColors.surface,
-                        icon: const Icon(
+                        dropdownColor: colorScheme.surface,
+                        icon: Icon(
                           Icons.keyboard_arrow_down,
-                          color: AppColors.textMuted,
+                          color: colorScheme.onSurfaceVariant,
                         ),
                         isExpanded: true,
-                        style: const TextStyle(color: AppColors.textMain),
+                        style: TextStyle(color: colorScheme.onSurface),
                         items: _sports.map((sport) {
                           return DropdownMenuItem<int>(
                             value: sport['id'] as int,
@@ -340,10 +337,10 @@ class _CreateTeamPageState extends State<CreateTeamPage> {
                   const SizedBox(height: 24),
 
                   // Descripción Corta
-                  const Text(
+                  Text(
                     'Descripción Corta / Lema',
                     style: TextStyle(
-                      color: AppColors.textMuted,
+                      color: colorScheme.onSurfaceVariant,
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
                     ),
@@ -352,19 +349,19 @@ class _CreateTeamPageState extends State<CreateTeamPage> {
                   TextField(
                     controller: _descriptionController,
                     maxLines: 4,
-                    style: const TextStyle(color: AppColors.textMain),
+                    style: TextStyle(color: colorScheme.onSurface),
                     decoration: InputDecoration(
                       hintText: 'Cuéntale a otros jugadores sobre tu equipo...',
-                      hintStyle: const TextStyle(color: AppColors.textHint),
+                      hintStyle: TextStyle(color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5)),
                       filled: true,
-                      fillColor: AppColors.surface,
+                      fillColor: colorScheme.surface,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: AppColors.border),
+                        borderSide: BorderSide(color: colorScheme.outlineVariant),
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: AppColors.border),
+                        borderSide: BorderSide(color: colorScheme.outlineVariant),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -378,9 +375,9 @@ class _CreateTeamPageState extends State<CreateTeamPage> {
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: AppColors.surface,
+                      color: colorScheme.surface,
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: AppColors.border),
+                      border: Border.all(color: colorScheme.outlineVariant),
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -392,7 +389,7 @@ class _CreateTeamPageState extends State<CreateTeamPage> {
                               Text(
                                 'Reclutando Activamente',
                                 style: TextStyle(
-                                  color: AppColors.textMain,
+                                  color: colorScheme.onSurface,
                                   fontSize: 16,
                                   fontWeight: FontWeight.w500,
                                 ),
@@ -401,20 +398,19 @@ class _CreateTeamPageState extends State<CreateTeamPage> {
                               Text(
                                 'Permite que otros jugadores vean que buscas miembros',
                                 style: TextStyle(
-                                  color: AppColors.textMuted,
+                                  color: colorScheme.onSurfaceVariant,
                                   fontSize: 12,
                                 ),
                               ),
                             ],
                           ),
                         ),
-
                         Switch(
                           value: _isRecruiting,
-                          activeColor: AppColors.primary,
-                          activeTrackColor: AppColors.primary.withValues(alpha: 0.3),
+                          activeThumbColor: Colors.white,
+                          activeTrackColor: AppColors.primary,
                           inactiveThumbColor: Colors.white,
-                          inactiveTrackColor: AppColors.border,
+                          inactiveTrackColor: colorScheme.outlineVariant,
                           onChanged: (val) {
                             setState(() => _isRecruiting = val);
                           },
@@ -425,10 +421,10 @@ class _CreateTeamPageState extends State<CreateTeamPage> {
                   const SizedBox(height: 24),
 
                   // Máximo Miembros
-                  const Text(
+                  Text(
                     'Tamaño Máximo del Equipo',
                     style: TextStyle(
-                      color: AppColors.textMuted,
+                      color: colorScheme.onSurfaceVariant,
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
                     ),
@@ -437,19 +433,19 @@ class _CreateTeamPageState extends State<CreateTeamPage> {
                   TextField(
                     controller: _maxMembersController,
                     keyboardType: TextInputType.number,
-                    style: const TextStyle(color: AppColors.textMain),
+                    style: TextStyle(color: colorScheme.onSurface),
                     decoration: InputDecoration(
                       hintText: 'Ej. 11 para Fútbol',
-                      hintStyle: const TextStyle(color: AppColors.textHint),
+                      hintStyle: TextStyle(color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5)),
                       filled: true,
-                      fillColor: AppColors.surface,
+                      fillColor: colorScheme.surface,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: AppColors.border),
+                        borderSide: BorderSide(color: colorScheme.outlineVariant),
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: AppColors.border),
+                        borderSide: BorderSide(color: colorScheme.outlineVariant),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -457,12 +453,12 @@ class _CreateTeamPageState extends State<CreateTeamPage> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 80), // Espacio para el botón fijo
+                  const SizedBox(height: 80),
                 ],
               ),
             ),
       bottomSheet: Container(
-        color: AppColors.background,
+        color: colorScheme.surface,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: SizedBox(
           width: double.infinity,
@@ -496,7 +492,6 @@ class _CreateTeamPageState extends State<CreateTeamPage> {
                   ),
           ),
         ),
-
       ),
     );
   }
