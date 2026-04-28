@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-
+import 'package:firebase_messaging/firebase_messaging.dart';
+import '../../../../core/di/injection_container.dart';
+import '../../../../core/network/network_robot.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../teams_discovery/presentation/pages/teams_discovery_page.dart';
 
@@ -13,7 +15,40 @@ class MainHubPage extends StatefulWidget {
 class _MainHubPageState extends State<MainHubPage> {
   int _currentIndex = 0;
 
+  @override
+  void initState() {
+    super.initState();
+    _setupPushNotifications();
+  }
+
+  Future<void> _setupPushNotifications() async {
+    try {
+      FirebaseMessaging messaging = FirebaseMessaging.instance;
+
+      NotificationSettings settings = await messaging.requestPermission(
+        alert: true,
+        badge: true,
+        sound: true,
+      );
+
+      if (settings.authorizationStatus == AuthorizationStatus.authorized || 
+          settings.authorizationStatus == AuthorizationStatus.provisional) {
+        
+        String? fcmToken = await messaging.getToken();
+
+        if (fcmToken != null) {
+          final networkRobot = sl<NetworkRobot>();
+          await networkRobot.post('/users/fcm-token', data: {'fcm_token': fcmToken});
+          debugPrint('Token FCM enviado exitosamente al backend: $fcmToken');
+        }
+      }
+    } catch (e) {
+      debugPrint('Error al configurar notificaciones push: $e');
+    }
+  }
+
   final List<Widget> _pages = [
+
     const TeamsDiscoveryPage(), // Reemplazamos el Skeleton con la página real
     const Center(child: Text('🏆 Partidos', style: TextStyle(fontSize: 24))),
     const Center(child: Text('📋 Mis Equipos', style: TextStyle(fontSize: 24))),
