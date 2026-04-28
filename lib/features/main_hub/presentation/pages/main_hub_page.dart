@@ -37,10 +37,12 @@ class _MainHubPageState extends State<MainHubPage> {
         String? fcmToken = await messaging.getToken();
 
         if (fcmToken != null) {
+          print('🔑 FCM_TOKEN_DISPOSITIVO: $fcmToken');
           final networkRobot = sl<NetworkRobot>();
           await networkRobot.post('/users/fcm-token', data: {'fcm_token': fcmToken});
-          debugPrint('Token FCM enviado exitosamente al backend: $fcmToken');
+          debugPrint('Token FCM enviado exitosamente al backend.');
         }
+
       }
     } catch (e) {
       debugPrint('Error al configurar notificaciones push: $e');
