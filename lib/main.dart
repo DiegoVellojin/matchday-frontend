@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:firebase_core/firebase_core.dart';
+
 
 // NUESTRA CAJA DE HERRAMIENTAS Y TEMAS
 import 'core/di/injection_container.dart' as di;
@@ -13,10 +15,18 @@ import 'features/auth/presentation/pages/register_page.dart';
 import 'features/auth/presentation/pages/forgot_password_page.dart';
 import 'features/auth/presentation/pages/reset_password_page.dart'; // NUEVO IMPORT
 import 'features/main_hub/presentation/pages/main_hub_page.dart';
+import 'features/teams_discovery/presentation/pages/create_team_page.dart';
+import 'features/notifications/presentation/pages/notifications_page.dart';
+import 'features/teams_discovery/presentation/pages/team_dashboard_page.dart';
+
+
+
 
 void main() async {
   // 1. Aseguramos que Flutter esté listo
   WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
+
 
   // 2. Inicializamos GetIt ANTES de correr la app
   await di.init();
@@ -50,8 +60,20 @@ final _router = GoRouter(
       },
     ),
     GoRoute(path: '/hub', builder: (context, state) => const MainHubPage()),
+    GoRoute(path: '/crear-equipo', builder: (context, state) => const CreateTeamPage()),
+    GoRoute(path: '/notificaciones', builder: (context, state) => const NotificationsPage()),
+    GoRoute(
+      path: '/team-dashboard/:id',
+      builder: (context, state) {
+        final id = int.tryParse(state.pathParameters['id'] ?? '') ?? 0;
+        return TeamDashboardPage(teamId: id);
+      },
+    ),
   ],
+
+
 );
+
 
 class MatchDayApp extends StatelessWidget {
   const MatchDayApp({super.key});

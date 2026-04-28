@@ -9,6 +9,7 @@ class TeamModel extends TeamEntity {
     required super.maxMembers,
     required super.currentMembers,
     required super.isRecruiting,
+    required super.soyMiembro,
   });
 
   factory TeamModel.fromJson(Map<String, dynamic> json) {
@@ -20,6 +21,8 @@ class TeamModel extends TeamEntity {
       maxMembers: json['max_miembros'] ?? 11,
       currentMembers: json['miembros_actuales'] ?? 0,
       isRecruiting: json['esta_reclutando'] ?? true,
+      soyMiembro: json['soy_miembro'] ?? false,
     );
+
   }
 }

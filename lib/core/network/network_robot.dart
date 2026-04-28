@@ -8,7 +8,7 @@ class NetworkRobot {
   NetworkRobot(this._dio, this._storage) {
     // Configuraciones maestras de tu backend FastAPI
     // Nota: Si usas el emulador de Android para probar un localhost, la IP es 10.0.2.2
-    _dio.options.baseUrl = 'http://10.0.2.2:8000/api/v1'; 
+    _dio.options.baseUrl = 'https://matchday-backend-3qot.onrender.com/api/v1';
     _dio.options.connectTimeout = const Duration(seconds: 15);
     _dio.options.receiveTimeout = const Duration(seconds: 15);
 

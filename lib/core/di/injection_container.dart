@@ -21,10 +21,26 @@ import '../../features/auth/presentation/bloc/auth_bloc.dart';
 // Importaciones de Teams Discovery (NUEVO)
 import '../../features/teams_discovery/application/usecases/get_discoverable_teams_usecase.dart';
 import '../../features/teams_discovery/application/usecases/request_join_team_usecase.dart';
+import '../../features/teams_discovery/application/usecases/create_team_usecase.dart';
+import '../../features/teams_discovery/application/usecases/get_team_by_id_usecase.dart';
+import '../../features/teams_discovery/application/usecases/get_team_members_usecase.dart';
+import '../../features/teams_discovery/application/usecases/get_pending_requests_usecase.dart';
+
+
+
 import '../../features/teams_discovery/domain/repositories/i_teams_discovery_repository.dart';
 import '../../features/teams_discovery/infrastructure/datasources/teams_discovery_remote_data_source.dart';
 import '../../features/teams_discovery/infrastructure/repositories/teams_discovery_repository_impl.dart';
 import '../../features/teams_discovery/presentation/bloc/teams_discovery_bloc.dart';
+
+// Importaciones de Notificaciones (NUEVO)
+import '../../features/notifications/application/usecases/get_notifications_usecase.dart';
+import '../../features/notifications/application/usecases/mark_notification_as_read_usecase.dart';
+import '../../features/notifications/domain/repositories/i_notification_repository.dart';
+import '../../features/notifications/infrastructure/datasources/notification_remote_data_source.dart';
+import '../../features/notifications/infrastructure/repositories/notification_repository_impl.dart';
+import '../../features/notifications/presentation/bloc/notifications_bloc.dart';
+
 
 // sl = Service Locator
 final sl = GetIt.instance;
@@ -54,6 +70,11 @@ Future<void> init() async {
     () => TeamsDiscoveryRemoteDataSource(networkRobot: sl()),
   );
 
+  // Notificaciones
+  sl.registerLazySingleton(
+    () => NotificationRemoteDataSource(networkRobot: sl()),
+  );
+
   // ===========================================================================
   // 3. REPOSITORIOS
   // ===========================================================================
@@ -68,6 +89,12 @@ Future<void> init() async {
     () => TeamsDiscoveryRepositoryImpl(remoteDataSource: sl()),
   );
 
+  // Notificaciones
+  sl.registerLazySingleton<INotificationRepository>(
+    () => NotificationRepositoryImpl(remoteDataSource: sl()),
+  );
+
+
   // ===========================================================================
   // 2. CASOS DE USO
   // ===========================================================================
@@ -81,13 +108,32 @@ Future<void> init() async {
   // Teams Discovery (NUEVO)
   sl.registerLazySingleton(() => GetDiscoverableTeamsUseCase(sl()));
   sl.registerLazySingleton(() => RequestJoinTeamUseCase(sl()));
+  sl.registerLazySingleton(() => CreateTeamUseCase(sl()));
+  sl.registerLazySingleton(() => GetTeamByIdUseCase(sl()));
+  sl.registerLazySingleton(() => GetTeamMembersUseCase(sl()));
+  sl.registerLazySingleton(() => GetPendingRequestsUseCase(sl()));
+
+
+
+  // Notificaciones
+  sl.registerLazySingleton(() => GetNotificationsUseCase(sl()));
+  sl.registerLazySingleton(() => MarkNotificationAsReadUseCase(sl()));
 
   // ===========================================================================
   // 1. BLOCs
   // ===========================================================================
   sl.registerLazySingleton(() => ThemeBloc());
 
+  // Notificaciones
+  sl.registerFactory(
+    () => NotificationsBloc(
+      getNotificationsUseCase: sl(),
+      markNotificationAsReadUseCase: sl(),
+    ),
+  );
+
   // Auth
+
   sl.registerFactory(
     () => AuthBloc(
       signInWithGoogleUseCase: sl(),

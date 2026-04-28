@@ -28,4 +28,60 @@ class TeamsDiscoveryRepositoryImpl implements ITeamsDiscoveryRepository {
       return Left(ServerFailure(e.toString().replaceAll('Exception: ', '')));
     }
   }
+
+  @override
+  Future<Either<Failure, TeamEntity>> getTeamById(int teamId) async {
+    try {
+      final team = await remoteDataSource.getTeamById(teamId);
+      return Right(team);
+    } catch (e) {
+      return Left(ServerFailure(e.toString().replaceAll('Exception: ', '')));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<Map<String, dynamic>>>> getTeamMembers(int teamId) async {
+    try {
+      final members = await remoteDataSource.getTeamMembers(teamId);
+      return Right(members);
+    } catch (e) {
+      return Left(ServerFailure(e.toString().replaceAll('Exception: ', '')));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<Map<String, dynamic>>>> getPendingRequests(int teamId) async {
+    try {
+      final requests = await remoteDataSource.getPendingRequests(teamId);
+      return Right(requests);
+    } catch (e) {
+      return Left(ServerFailure(e.toString().replaceAll('Exception: ', '')));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> createTeam({
+
+    required String name,
+    required int sportId,
+    required String? logoUrl,
+    required String description,
+    required bool isRecruiting,
+    required int maxMembers,
+  }) async {
+    try {
+      await remoteDataSource.createTeam(
+        name: name,
+        sportId: sportId,
+        logoUrl: logoUrl,
+        description: description,
+        isRecruiting: isRecruiting,
+        maxMembers: maxMembers,
+      );
+      return const Right(null);
+    } catch (e) {
+      return Left(ServerFailure(e.toString().replaceAll('Exception: ', '')));
+    }
+  }
 }
+

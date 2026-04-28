@@ -75,19 +75,31 @@ class _TeamsDiscoveryViewState extends State<_TeamsDiscoveryView> {
                       ),
                     ],
                   ),
-                  BlocBuilder<ThemeBloc, ThemeMode>(
-                    builder: (context, themeMode) {
-                      final isDarkTheme = themeMode == ThemeMode.dark;
-                      return IconButton(
+                  Row(
+                    children: [
+                      BlocBuilder<ThemeBloc, ThemeMode>(
+                        builder: (context, themeMode) {
+                          final isDarkTheme = themeMode == ThemeMode.dark;
+                          return IconButton(
+                            icon: Icon(
+                              isDarkTheme ? Icons.light_mode : Icons.dark_mode,
+                              color: colorScheme.onSurface,
+                            ),
+                            onPressed: () =>
+                                context.read<ThemeBloc>().add(ToggleThemeEvent()),
+                          );
+                        },
+                      ),
+                      IconButton(
                         icon: Icon(
-                          isDarkTheme ? Icons.light_mode : Icons.dark_mode,
+                          Icons.notifications_none_outlined,
                           color: colorScheme.onSurface,
                         ),
-                        onPressed: () =>
-                            context.read<ThemeBloc>().add(ToggleThemeEvent()),
-                      );
-                    },
+                        onPressed: () => context.push('/notificaciones'),
+                      ),
+                    ],
                   ),
+
                 ],
               ),
             ),
@@ -231,39 +243,63 @@ class _TeamsDiscoveryViewState extends State<_TeamsDiscoveryView> {
                     );
                   } else if (state is TeamsDiscoveryLoaded) {
                     if (state.teams.isEmpty) {
-                      return const Center(
-                        child: Text(
-                          'No hay equipos disponibles en este momento.',
-                          style: TextStyle(color: AppColors.textMuted),
+                      return RefreshIndicator(
+                        onRefresh: () async {
+                          final bloc = context.read<TeamsDiscoveryBloc>();
+                          bloc.add(LoadTeamsEvent());
+                          await bloc.stream.firstWhere((state) =>
+                              state is TeamsDiscoveryLoaded ||
+                              state is TeamsDiscoveryError);
+                        },
+                        child: ListView(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          children: const [
+                            SizedBox(height: 100),
+                            Center(
+                              child: Text(
+                                'No hay equipos disponibles en este momento.',
+                                style: TextStyle(color: AppColors.textMuted),
+                              ),
+                            ),
+                          ],
                         ),
                       );
                     }
 
-                    return GridView.builder(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20.0,
-                        vertical: 8.0,
-                      ),
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
-                            childAspectRatio: 0.75,
-                            crossAxisSpacing: 16,
-                            mainAxisSpacing: 16,
-                          ),
-                      itemCount: state.teams.length,
-                      itemBuilder: (context, index) {
-                        final team = state.teams[index];
-                        return TeamDiscoveryCard(
-                          team: team,
-                          onRequestJoin: () {
-                            // Enviamos el ID real a la base de datos
-                            context.read<TeamsDiscoveryBloc>().add(
-                              RequestJoinTeamEvent(teamId: team.id),
-                            );
-                          },
-                        );
+                    return RefreshIndicator(
+                      onRefresh: () async {
+                        final bloc = context.read<TeamsDiscoveryBloc>();
+                        bloc.add(LoadTeamsEvent());
+                        await bloc.stream.firstWhere((state) =>
+                            state is TeamsDiscoveryLoaded ||
+                            state is TeamsDiscoveryError);
                       },
+                      child: GridView.builder(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20.0,
+                          vertical: 8.0,
+                        ),
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          childAspectRatio: 0.75,
+                          crossAxisSpacing: 16,
+                          mainAxisSpacing: 16,
+                        ),
+                        itemCount: state.teams.length,
+                        itemBuilder: (context, index) {
+                          final team = state.teams[index];
+                          return TeamDiscoveryCard(
+                            team: team,
+                            onRequestJoin: () {
+                              context.read<TeamsDiscoveryBloc>().add(
+                                    RequestJoinTeamEvent(teamId: team.id),
+                                  );
+                            },
+                          );
+                        },
+                      ),
                     );
                   }
                   return const SizedBox.shrink();
