@@ -10,8 +10,9 @@ class TeamsDiscoveryRemoteDataSource {
 
   Future<List<SportModel>> getSports() async {
     try {
-      final response = await networkRobot.get('/sports');
+      final response = await networkRobot.get('/catalogs/sports');
       final List<dynamic> data = response.data;
+
       return data.map((json) => SportModel.fromJson(json)).toList();
     } catch (e) {
       throw _handleError(e, 'Error al obtener la lista de deportes');

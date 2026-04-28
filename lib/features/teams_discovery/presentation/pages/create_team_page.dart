@@ -6,6 +6,8 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../application/usecases/create_team_usecase.dart';
+import '../../application/usecases/get_sports_usecase.dart';
+import '../../domain/entities/sport_entity.dart';
 
 class CreateTeamPage extends StatefulWidget {
   const CreateTeamPage({super.key});
@@ -19,17 +21,46 @@ class _CreateTeamPageState extends State<CreateTeamPage> {
   final _descriptionController = TextEditingController();
   final _maxMembersController = TextEditingController(text: '11');
 
-  int _selectedSportId = 1;
+  int? _selectedSportId;
   bool _isRecruiting = true;
   File? _imageFile;
   bool _isLoading = false;
+  bool _isLoadingSports = true;
 
-  final List<Map<String, dynamic>> _sports = [
-    {'id': 1, 'name': 'Fútbol'},
-    {'id': 2, 'name': 'Baloncesto'},
-    {'id': 3, 'name': 'Tenis'},
-    {'id': 4, 'name': 'Voleibol'},
-  ];
+  List<SportEntity> _sports = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSports();
+  }
+
+  Future<void> _loadSports() async {
+    final useCase = sl<GetSportsUseCase>();
+    final result = await useCase();
+    result.fold(
+      (failure) {
+        setState(() {
+          _isLoadingSports = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al cargar deportes: ${failure.message}'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      },
+      (sports) {
+        setState(() {
+          _sports = sports;
+          if (_sports.isNotEmpty) {
+            _selectedSportId = _sports.first.id;
+          }
+          _isLoadingSports = false;
+        });
+      },
+    );
+  }
 
   @override
   void dispose() {
@@ -83,6 +114,16 @@ class _CreateTeamPageState extends State<CreateTeamPage> {
       return;
     }
 
+    if (_selectedSportId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Por favor, selecciona un deporte.'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
+
     setState(() => _isLoading = true);
 
     try {
@@ -92,7 +133,7 @@ class _CreateTeamPageState extends State<CreateTeamPage> {
 
       final result = await createTeamUseCase(
         name: _nameController.text.trim(),
-        sportId: _selectedSportId,
+        sportId: _selectedSportId!,
         logoUrl: logoUrl,
         description: _descriptionController.text.trim(),
         isRecruiting: _isRecruiting,
@@ -303,37 +344,44 @@ class _CreateTeamPageState extends State<CreateTeamPage> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    decoration: BoxDecoration(
-                      color: colorScheme.surface,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: colorScheme.outlineVariant),
-                    ),
-                    child: DropdownButtonHideUnderline(
-                      child: DropdownButton<int>(
-                        value: _selectedSportId,
-                        dropdownColor: colorScheme.surface,
-                        icon: Icon(
-                          Icons.keyboard_arrow_down,
-                          color: colorScheme.onSurfaceVariant,
+                  _isLoadingSports
+                      ? const Center(
+                          child: Padding(
+                            padding: EdgeInsets.all(8.0),
+                            child: CircularProgressIndicator(color: AppColors.primary),
+                          ),
+                        )
+                      : Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          decoration: BoxDecoration(
+                            color: colorScheme.surface,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: colorScheme.outlineVariant),
+                          ),
+                          child: DropdownButtonHideUnderline(
+                            child: DropdownButton<int>(
+                              value: _selectedSportId,
+                              dropdownColor: colorScheme.surface,
+                              icon: Icon(
+                                Icons.keyboard_arrow_down,
+                                color: colorScheme.onSurfaceVariant,
+                              ),
+                              isExpanded: true,
+                              style: TextStyle(color: colorScheme.onSurface),
+                              items: _sports.map((sport) {
+                                return DropdownMenuItem<int>(
+                                  value: sport.id,
+                                  child: Text(sport.name),
+                                );
+                              }).toList(),
+                              onChanged: (val) {
+                                if (val != null) {
+                                  setState(() => _selectedSportId = val);
+                                }
+                              },
+                            ),
+                          ),
                         ),
-                        isExpanded: true,
-                        style: TextStyle(color: colorScheme.onSurface),
-                        items: _sports.map((sport) {
-                          return DropdownMenuItem<int>(
-                            value: sport['id'] as int,
-                            child: Text(sport['name'] as String),
-                          );
-                        }).toList(),
-                        onChanged: (val) {
-                          if (val != null) {
-                            setState(() => _selectedSportId = val);
-                          }
-                        },
-                      ),
-                    ),
-                  ),
                   const SizedBox(height: 24),
 
                   // Descripción Corta
