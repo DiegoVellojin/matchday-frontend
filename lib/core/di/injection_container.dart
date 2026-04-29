@@ -1,6 +1,8 @@
 import 'package:dio/dio.dart';
 import 'package:get_it/get_it.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:flutter/material.dart';
+
 
 // Importaciones Core
 import '../network/network_robot.dart';
@@ -45,6 +47,17 @@ import '../../features/notifications/infrastructure/datasources/notification_rem
 import '../../features/notifications/infrastructure/repositories/notification_repository_impl.dart';
 import '../../features/notifications/presentation/bloc/notifications_bloc.dart';
 
+// Importaciones de Perfil (NUEVO)
+import '../../features/profile/application/usecases/get_user_profile_usecase.dart';
+import '../../features/profile/application/usecases/get_my_teams_usecase.dart';
+import '../../features/profile/application/usecases/update_user_profile_usecase.dart';
+import '../../features/profile/domain/repositories/i_profile_repository.dart';
+
+import '../../features/profile/infrastructure/datasources/profile_remote_data_source.dart';
+import '../../features/profile/infrastructure/repositories/profile_repository_impl.dart';
+import '../../features/profile/presentation/bloc/profile_bloc.dart';
+
+
 
 // sl = Service Locator
 final sl = GetIt.instance;
@@ -79,6 +92,12 @@ Future<void> init() async {
     () => NotificationRemoteDataSource(networkRobot: sl()),
   );
 
+  // Perfil
+  sl.registerLazySingleton(
+    () => ProfileRemoteDataSource(networkRobot: sl()),
+  );
+
+
   // ===========================================================================
   // 3. REPOSITORIOS
   // ===========================================================================
@@ -97,6 +116,12 @@ Future<void> init() async {
   sl.registerLazySingleton<INotificationRepository>(
     () => NotificationRepositoryImpl(remoteDataSource: sl()),
   );
+
+  // Perfil
+  sl.registerLazySingleton<IProfileRepository>(
+    () => ProfileRepositoryImpl(remoteDataSource: sl()),
+  );
+
 
 
   // ===========================================================================
@@ -126,10 +151,23 @@ Future<void> init() async {
   sl.registerLazySingleton(() => GetNotificationsUseCase(sl()));
   sl.registerLazySingleton(() => MarkNotificationAsReadUseCase(sl()));
 
+  // Perfil
+  sl.registerLazySingleton(() => GetUserProfileUseCase(sl()));
+  sl.registerLazySingleton(() => GetMyTeamsUseCase(sl()));
+  sl.registerLazySingleton(() => UpdateUserProfileUseCase(sl()));
+
+
+
   // ===========================================================================
   // 1. BLOCs
   // ===========================================================================
-  sl.registerLazySingleton(() => ThemeBloc());
+  // Cargar el modo de tema guardado
+  final secureStorage = SecureStorageService(const FlutterSecureStorage());
+  final isDark = await secureStorage.isDarkMode();
+  final initialThemeMode = isDark ? ThemeMode.dark : ThemeMode.light;
+
+  sl.registerLazySingleton(() => ThemeBloc(initialThemeMode, sl()));
+
 
   // Notificaciones
   sl.registerFactory(
@@ -138,6 +176,18 @@ Future<void> init() async {
       markNotificationAsReadUseCase: sl(),
     ),
   );
+
+  // Perfil
+  sl.registerFactory(
+    () => ProfileBloc(
+      getUserProfileUseCase: sl(),
+      getMyTeamsUseCase: sl(),
+      updateUserProfileUseCase: sl(),
+      secureStorageService: sl(),
+    ),
+  );
+
+
 
   // Auth
 

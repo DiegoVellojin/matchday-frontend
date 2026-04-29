@@ -320,12 +320,17 @@ class _TeamsDiscoveryViewState extends State<_TeamsDiscoveryView> {
                     children: [
                       Row(
                         children: [
-                          const CircleAvatar(
-                            backgroundColor: AppColors.primary,
-                            radius: 20,
-                            child: Icon(Icons.person_outline, color: Colors.black),
+                          InkWell(
+                            onTap: () => context.push('/perfil'),
+                            borderRadius: BorderRadius.circular(20),
+                            child: const CircleAvatar(
+                              backgroundColor: AppColors.primary,
+                              radius: 20,
+                              child: Icon(Icons.person_outline, color: Colors.black),
+                            ),
                           ),
                           const SizedBox(width: 12),
+
                           Text(
                             'MatchDay',
                             style: TextStyle(
