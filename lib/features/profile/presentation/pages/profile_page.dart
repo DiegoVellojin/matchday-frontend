@@ -2,10 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../teams_discovery/domain/entities/team_entity.dart';
+import '../../../../core/di/injection_container.dart';
+import '../../../my_teams/presentation/bloc/my_teams_bloc.dart';
+import '../../../my_teams/presentation/bloc/my_teams_event.dart';
+import '../../../my_teams/presentation/bloc/my_teams_state.dart';
+import '../../../my_teams/domain/entities/my_team_entity.dart';
+import '../../../my_teams/presentation/pages/my_teams_page.dart';
+
 import '../bloc/profile_bloc.dart';
 import '../bloc/profile_event.dart';
 import '../bloc/profile_state.dart';
+
 import '../../domain/entities/profile_entity.dart';
 
 class ProfilePage extends StatefulWidget {
@@ -55,7 +62,18 @@ class _ProfilePageState extends State<ProfilePage> {
                     const SizedBox(height: 24),
                     _buildStatistics(state.profile.rating),
                     const SizedBox(height: 24),
-                    _buildMyTeamsSection(state.teams),
+                    BlocProvider<MyTeamsBloc>(
+                      create: (_) => sl<MyTeamsBloc>()..add(LoadMyTeamsEvent()),
+                      child: BlocBuilder<MyTeamsBloc, MyTeamsState>(
+                        builder: (context, myTeamsState) {
+                          if (myTeamsState is MyTeamsLoaded) {
+                            return _buildMyTeamsSection(myTeamsState.teams);
+                          }
+                          return const SizedBox.shrink();
+                        },
+                      ),
+                    ),
+
                     const SizedBox(height: 24),
                     _buildActionButtons(context, state.profile),
                   ],
@@ -199,7 +217,7 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget _buildMyTeamsSection(List<TeamEntity> teams) {
+  Widget _buildMyTeamsSection(List<MyTeamEntity> teams) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -216,13 +234,12 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
             TextButton.icon(
               onPressed: () {
-                // TODO: Navegar a /mis-equipos cuando esté implementado
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Módulo Mis Equipos próximamente'),
-                  ),
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const MyTeamsPage()),
                 );
               },
+
               icon: const Icon(
                 Icons.groups,
                 size: 18,
@@ -260,7 +277,8 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget _buildTeamCard(TeamEntity team) {
+  Widget _buildTeamCard(MyTeamEntity team) {
+
     return Container(
       width: 120,
       margin: const EdgeInsets.only(right: 12),

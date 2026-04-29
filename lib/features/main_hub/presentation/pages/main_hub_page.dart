@@ -4,7 +4,12 @@ import '../../../../core/di/injection_container.dart';
 import '../../../../core/network/network_robot.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../teams_discovery/presentation/pages/teams_discovery_page.dart';
+import '../../../my_teams/presentation/pages/my_teams_page.dart';
 import '../../../../core/widgets/matchday_app_bar.dart';
+
+
+
+
 
 
 class MainHubPage extends StatefulWidget {
@@ -55,7 +60,8 @@ class _MainHubPageState extends State<MainHubPage> {
 
     const TeamsDiscoveryPage(), // Reemplazamos el Skeleton con la página real
     const Center(child: Text('🏆 Partidos', style: TextStyle(fontSize: 24))),
-    const Center(child: Text('📋 Mis Equipos', style: TextStyle(fontSize: 24))),
+    const MyTeamsPage(),
+
     const Center(child: Text('🏅 Rankings', style: TextStyle(fontSize: 24))),
   ];
 

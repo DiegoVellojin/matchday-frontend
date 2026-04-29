@@ -1,7 +1,7 @@
 import '../../domain/entities/profile_entity.dart';
-import '../../../teams_discovery/domain/entities/team_entity.dart';
 
 abstract class ProfileState {}
+
 
 class ProfileInitial extends ProfileState {}
 
@@ -9,10 +9,10 @@ class ProfileLoading extends ProfileState {}
 
 class ProfileLoaded extends ProfileState {
   final UserProfileEntity profile;
-  final List<TeamEntity> teams;
 
-  ProfileLoaded({required this.profile, required this.teams});
+  ProfileLoaded({required this.profile});
 }
+
 
 class ProfileError extends ProfileState {
   final String message;

@@ -7,6 +7,7 @@ class TeamEntity {
   final int currentMembers;
   final bool isRecruiting;
   final bool soyMiembro;
+  final int? captainId;
 
   const TeamEntity({
     required this.id,
@@ -17,6 +18,7 @@ class TeamEntity {
     required this.currentMembers,
     required this.isRecruiting,
     required this.soyMiembro,
+    this.captainId,
   });
-
 }
+

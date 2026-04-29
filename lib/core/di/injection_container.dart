@@ -53,14 +53,29 @@ import '../../features/notifications/presentation/bloc/notifications_bloc.dart';
 
 // Importaciones de Perfil (NUEVO)
 import '../../features/profile/application/usecases/get_user_profile_usecase.dart';
-import '../../features/profile/application/usecases/get_my_teams_usecase.dart';
 import '../../features/profile/application/usecases/update_user_profile_usecase.dart';
+
 import '../../features/profile/domain/repositories/i_profile_repository.dart';
 
 import '../../features/profile/infrastructure/datasources/profile_remote_data_source.dart';
 import '../../features/profile/infrastructure/repositories/profile_repository_impl.dart';
 import '../../features/profile/presentation/bloc/profile_bloc.dart';
+// Importaciones de Mis Equipos (NUEVO)
+import '../../features/my_teams/application/usecases/get_my_teams_usecase.dart' as mt_usecase;
 
+import '../../features/my_teams/application/usecases/kick_member_usecase.dart';
+import '../../features/my_teams/domain/repositories/i_my_teams_repository.dart';
+import '../../features/my_teams/infrastructure/datasources/my_teams_remote_datasource.dart';
+import '../../features/my_teams/infrastructure/repositories/my_teams_repository_impl.dart';
+import '../../features/my_teams/presentation/bloc/my_teams_bloc.dart';
+
+// Importaciones de Pagos (NUEVO)
+import '../../features/payments/application/usecases/get_my_payments_usecase.dart';
+import '../../features/payments/application/usecases/upload_receipt_usecase.dart';
+import '../../features/payments/domain/repositories/i_payments_repository.dart';
+import '../../features/payments/infrastructure/datasources/payments_remote_data_source.dart';
+import '../../features/payments/infrastructure/repositories/payments_repository_impl.dart';
+import '../../features/payments/presentation/bloc/payments_bloc.dart';
 
 
 // sl = Service Locator
@@ -105,6 +120,13 @@ Future<void> init() async {
     () => ProfileRemoteDataSource(networkRobot: sl()),
   );
 
+  // Mis Equipos (NUEVO)
+  sl.registerLazySingleton(() => MyTeamsRemoteDataSource(sl()));
+
+  // Pagos (NUEVO)
+  sl.registerLazySingleton(() => PaymentsRemoteDataSource(sl()));
+
+
 
   // ===========================================================================
   // 3. REPOSITORIOS
@@ -129,6 +151,13 @@ Future<void> init() async {
   sl.registerLazySingleton<IProfileRepository>(
     () => ProfileRepositoryImpl(remoteDataSource: sl()),
   );
+
+  // Mis Equipos (NUEVO)
+  sl.registerLazySingleton<IMyTeamsRepository>(() => MyTeamsRepositoryImpl(sl()));
+
+  // Pagos (NUEVO)
+  sl.registerLazySingleton<IPaymentsRepository>(() => PaymentsRepositoryImpl(sl()));
+
 
 
 
@@ -163,8 +192,18 @@ Future<void> init() async {
 
   // Perfil
   sl.registerLazySingleton(() => GetUserProfileUseCase(sl()));
-  sl.registerLazySingleton(() => GetMyTeamsUseCase(sl()));
   sl.registerLazySingleton(() => UpdateUserProfileUseCase(sl()));
+
+
+  // Mis Equipos (NUEVO)
+  sl.registerLazySingleton(() => mt_usecase.GetMyTeamsUseCase(sl()));
+  sl.registerLazySingleton(() => KickMemberUseCase(sl()));
+
+  // Pagos (NUEVO)
+  sl.registerLazySingleton(() => GetMyPaymentsUseCase(sl()));
+  sl.registerLazySingleton(() => UploadReceiptUseCase(sl()));
+
+
 
 
 
@@ -193,10 +232,10 @@ Future<void> init() async {
   sl.registerFactory(
     () => ProfileBloc(
       getUserProfileUseCase: sl(),
-      getMyTeamsUseCase: sl(),
       updateUserProfileUseCase: sl(),
       secureStorageService: sl(),
     ),
+
   );
 
 
@@ -221,5 +260,22 @@ Future<void> init() async {
       getSportsUseCase: sl(),
     ),
   );
+
+  // Mis Equipos (NUEVO)
+  sl.registerFactory(
+    () => MyTeamsBloc(
+      getMyTeamsUseCase: sl(),
+      kickMemberUseCase: sl(),
+    ),
+  );
+
+  // Pagos (NUEVO)
+  sl.registerFactory(
+    () => PaymentsBloc(
+      getMyPaymentsUseCase: sl(),
+      uploadReceiptUseCase: sl(),
+    ),
+  );
+
 
 }
