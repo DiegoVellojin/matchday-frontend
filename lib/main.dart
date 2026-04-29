@@ -22,6 +22,13 @@ import 'features/profile/presentation/pages/profile_page.dart';
 import 'features/profile/presentation/pages/edit_profile_page.dart';
 import 'features/profile/domain/entities/profile_entity.dart';
 import 'features/profile/presentation/bloc/profile_bloc.dart';
+import 'features/profile/presentation/bloc/profile_event.dart';
+
+import 'features/notifications/presentation/bloc/notifications_bloc.dart';
+import 'features/notifications/presentation/bloc/notifications_event.dart';
+
+
+
 
 void main() async {
   // 1. Aseguramos que Flutter esté listo
@@ -75,12 +82,9 @@ final _router = GoRouter(
       builder: (context, state) {
         final extra = state.extra as Map<String, dynamic>;
         final profile = extra['profile'] as UserProfileEntity;
-        final bloc = extra['bloc'] as ProfileBloc;
-        return BlocProvider.value(
-          value: bloc,
-          child: EditProfilePage(profile: profile),
-        );
+        return EditProfilePage(profile: profile);
       },
+
     ),
 
     GoRoute(
@@ -99,14 +103,18 @@ class MatchDayApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Envolvemos la app en el BLoC del Tema para que reaccione al Switch
-    return BlocProvider(
-      create: (_) => di.sl<ThemeBloc>(),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(create: (_) => di.sl<ThemeBloc>()),
+        BlocProvider(create: (_) => di.sl<ProfileBloc>()..add(LoadProfileEvent())),
+        BlocProvider(create: (_) => di.sl<NotificationsBloc>()..add(LoadNotificationsEvent())),
+
+      ],
       child: BlocBuilder<ThemeBloc, ThemeMode>(
         builder: (context, currentThemeMode) {
           return MaterialApp.router(
             title: 'MatchDay',
             debugShowCheckedModeBanner: false,
-            // Aplicamos el tema dinámicamente basado en el estado del BLoC
             themeMode: currentThemeMode,
             theme: AppTheme.lightTheme,
             darkTheme: AppTheme.darkTheme,
@@ -115,5 +123,6 @@ class MatchDayApp extends StatelessWidget {
         },
       ),
     );
+
   }
 }

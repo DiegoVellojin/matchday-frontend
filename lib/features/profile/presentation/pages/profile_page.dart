@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import '../../../../core/di/injection_container.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../teams_discovery/domain/entities/team_entity.dart';
 import '../bloc/profile_bloc.dart';
 import '../bloc/profile_event.dart';
 import '../bloc/profile_state.dart';
 import '../../domain/entities/profile_entity.dart';
-
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -18,63 +16,59 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
-  late final ProfileBloc _profileBloc;
-
   @override
   void initState() {
     super.initState();
-    _profileBloc = sl<ProfileBloc>()..add(LoadProfileEvent());
+    context.read<ProfileBloc>().add(LoadProfileEvent());
   }
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-
-      create: (_) => _profileBloc,
-      child: BlocListener<ProfileBloc, ProfileState>(
-        listener: (context, state) {
-          if (state is LogoutSuccess) {
-            context.go('/welcome');
-          } else if (state is ProfileError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.message), backgroundColor: AppColors.error),
-            );
-          }
-        },
-        child: Scaffold(
-          backgroundColor: AppColors.background,
-          appBar: _buildAppBar(context),
-          body: BlocBuilder<ProfileBloc, ProfileState>(
-            builder: (context, state) {
-              if (state is ProfileLoading) {
-                return const Center(
-                  child: CircularProgressIndicator(color: AppColors.primary),
-                );
-              } else if (state is ProfileLoaded) {
-                return SingleChildScrollView(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    children: [
-                      _buildProfileHeader(state.profile),
-                      const SizedBox(height: 24),
-                      _buildStatistics(state.profile.rating),
-                      const SizedBox(height: 24),
-                      _buildMyTeamsSection(state.teams),
-                      const SizedBox(height: 24),
-                      _buildActionButtons(context, state.profile),
-                    ],
-
-                  ),
-                );
-              }
+    return BlocListener<ProfileBloc, ProfileState>(
+      listener: (context, state) {
+        if (state is LogoutSuccess) {
+          context.go('/welcome');
+        } else if (state is ProfileError) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(state.message),
+              backgroundColor: AppColors.error,
+            ),
+          );
+        }
+      },
+      child: Scaffold(
+        backgroundColor: AppColors.background,
+        appBar: _buildAppBar(context),
+        body: BlocBuilder<ProfileBloc, ProfileState>(
+          builder: (context, state) {
+            if (state is ProfileLoading) {
               return const Center(
-                child: Text(
-                  'No se pudo cargar el perfil.',
-                  style: TextStyle(color: Colors.white),
+                child: CircularProgressIndicator(color: AppColors.primary),
+              );
+            } else if (state is ProfileLoaded) {
+              return SingleChildScrollView(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  children: [
+                    _buildProfileHeader(state.profile),
+                    const SizedBox(height: 24),
+                    _buildStatistics(state.profile.rating),
+                    const SizedBox(height: 24),
+                    _buildMyTeamsSection(state.teams),
+                    const SizedBox(height: 24),
+                    _buildActionButtons(context, state.profile),
+                  ],
                 ),
               );
-            },
-          ),
+            }
+            return const Center(
+              child: Text(
+                'No se pudo cargar el perfil.',
+                style: TextStyle(color: Colors.white),
+              ),
+            );
+          },
         ),
       ),
     );
@@ -107,7 +101,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
   Widget _buildProfileHeader(dynamic profile) {
     final photoUrl = profile.photoUrl as String?;
-    
+
     return Column(
       children: [
         Container(
@@ -198,10 +192,7 @@ class _ProfilePageState extends State<ProfilePage> {
           Text(
             label,
             textAlign: TextAlign.center,
-            style: const TextStyle(
-              color: AppColors.textMuted,
-              fontSize: 11,
-            ),
+            style: const TextStyle(color: AppColors.textMuted, fontSize: 11),
           ),
         ],
       ),
@@ -227,13 +218,22 @@ class _ProfilePageState extends State<ProfilePage> {
               onPressed: () {
                 // TODO: Navegar a /mis-equipos cuando esté implementado
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Módulo Mis Equipos próximamente')),
+                  const SnackBar(
+                    content: Text('Módulo Mis Equipos próximamente'),
+                  ),
                 );
               },
-              icon: const Icon(Icons.groups, size: 18, color: AppColors.primary),
+              icon: const Icon(
+                Icons.groups,
+                size: 18,
+                color: AppColors.primary,
+              ),
               label: const Text(
                 'Ver Todos',
-                style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
           ],
@@ -312,11 +312,10 @@ class _ProfilePageState extends State<ProfilePage> {
       children: [
         _buildMenuButton(
           label: 'Editar Perfil',
-          onPressed: () => context.push('/editar-perfil', extra: {
-            'profile': profile,
-            'bloc': context.read<ProfileBloc>(),
-          }),
-
+          onPressed: () => context.push(
+            '/editar-perfil',
+            extra: {'profile': profile, 'bloc': context.read<ProfileBloc>()},
+          ),
         ),
         const SizedBox(height: 12),
 
@@ -341,7 +340,10 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget _buildMenuButton({required String label, required VoidCallback onPressed}) {
+  Widget _buildMenuButton({
+    required String label,
+    required VoidCallback onPressed,
+  }) {
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton(
@@ -369,7 +371,10 @@ class _ProfilePageState extends State<ProfilePage> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: AppColors.surface,
-        title: const Text('Cerrar Sesión', style: TextStyle(color: Colors.white)),
+        title: const Text(
+          'Cerrar Sesión',
+          style: TextStyle(color: Colors.white),
+        ),
         content: const Text(
           '¿Estás seguro de que quieres cerrar sesión?',
           style: TextStyle(color: AppColors.textMuted),
@@ -377,14 +382,20 @@ class _ProfilePageState extends State<ProfilePage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancelar', style: TextStyle(color: AppColors.textMuted)),
+            child: const Text(
+              'Cancelar',
+              style: TextStyle(color: AppColors.textMuted),
+            ),
           ),
           TextButton(
             onPressed: () {
               Navigator.pop(context);
-              _profileBloc.add(LogoutEvent());
+              context.read<ProfileBloc>().add(LogoutEvent());
             },
-            child: const Text('Cerrar Sesión', style: TextStyle(color: Colors.redAccent)),
+            child: const Text(
+              'Cerrar Sesión',
+              style: TextStyle(color: Colors.redAccent),
+            ),
           ),
         ],
       ),

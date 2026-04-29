@@ -28,4 +28,15 @@ class NotificationRepositoryImpl implements INotificationRepository {
       return Left(ServerFailure(e.toString().replaceAll('Exception: ', '')));
     }
   }
+
+  @override
+  Future<Either<Failure, void>> markAllAsRead() async {
+    try {
+      await remoteDataSource.markAllAsRead();
+      return const Right(null);
+    } catch (e) {
+      return Left(ServerFailure(e.toString().replaceAll('Exception: ', '')));
+    }
+  }
 }
+

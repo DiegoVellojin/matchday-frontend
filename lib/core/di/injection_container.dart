@@ -8,6 +8,8 @@ import 'package:flutter/material.dart';
 import '../network/network_robot.dart';
 import '../theme/bloc/theme_bloc.dart';
 import '../storage/secure_storage_service.dart';
+import '../storage/firebase_storage_service.dart';
+
 
 // Importaciones de Auth
 import '../../features/auth/application/usecases/sign_in_with_google_usecase.dart';
@@ -42,6 +44,8 @@ import '../../features/teams_discovery/presentation/bloc/teams_discovery_bloc.da
 // Importaciones de Notificaciones (NUEVO)
 import '../../features/notifications/application/usecases/get_notifications_usecase.dart';
 import '../../features/notifications/application/usecases/mark_notification_as_read_usecase.dart';
+import '../../features/notifications/application/usecases/mark_all_notifications_as_read_usecase.dart';
+
 import '../../features/notifications/domain/repositories/i_notification_repository.dart';
 import '../../features/notifications/infrastructure/datasources/notification_remote_data_source.dart';
 import '../../features/notifications/infrastructure/repositories/notification_repository_impl.dart';
@@ -69,9 +73,13 @@ Future<void> init() async {
   sl.registerLazySingleton<FlutterSecureStorage>(
     () => const FlutterSecureStorage(),
   );
+  sl.registerLazySingleton<FirebaseStorageService>(
+    () => FirebaseStorageService(),
+  );
   sl.registerLazySingleton<SecureStorageService>(
     () => SecureStorageService(sl()),
   );
+
 
   sl.registerLazySingleton<Dio>(() => Dio());
   sl.registerLazySingleton<NetworkRobot>(() => NetworkRobot(sl(), sl()));
@@ -150,6 +158,8 @@ Future<void> init() async {
   // Notificaciones
   sl.registerLazySingleton(() => GetNotificationsUseCase(sl()));
   sl.registerLazySingleton(() => MarkNotificationAsReadUseCase(sl()));
+  sl.registerLazySingleton(() => MarkAllNotificationsAsReadUseCase(sl()));
+
 
   // Perfil
   sl.registerLazySingleton(() => GetUserProfileUseCase(sl()));
@@ -174,6 +184,8 @@ Future<void> init() async {
     () => NotificationsBloc(
       getNotificationsUseCase: sl(),
       markNotificationAsReadUseCase: sl(),
+      markAllNotificationsAsReadUseCase: sl(),
+
     ),
   );
 

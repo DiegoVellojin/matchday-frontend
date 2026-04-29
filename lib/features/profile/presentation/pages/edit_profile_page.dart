@@ -1,6 +1,13 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
+
+import 'package:intl_phone_field/intl_phone_field.dart';
+import '../../../../core/di/injection_container.dart';
+import '../../../../core/storage/firebase_storage_service.dart';
+
 import '../../../../core/theme/app_colors.dart';
 import '../../domain/entities/profile_entity.dart';
 import '../bloc/profile_bloc.dart';
@@ -23,15 +30,43 @@ class _EditProfilePageState extends State<EditProfilePage> {
   late final TextEditingController _passwordController;
   final _formKey = GlobalKey<FormState>();
 
+  File? _imageFile;
+  bool _isUploadingImage = false;
+  String _completePhoneNumber = '';
+
+
 
   @override
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.profile.name);
-    _phoneController = TextEditingController(text: widget.profile.phone ?? '');
+    _phoneController = TextEditingController(text: _getInitialNumber());
     _photoUrlController = TextEditingController(text: widget.profile.photoUrl ?? '');
     _passwordController = TextEditingController();
+    _completePhoneNumber = widget.profile.phone ?? '';
   }
+
+  String _getInitialNumber() {
+    final phone = widget.profile.phone ?? '';
+    if (phone.startsWith('+58')) return phone.substring(3);
+    if (phone.startsWith('+57')) return phone.substring(3);
+    if (phone.startsWith('+1')) return phone.substring(2);
+    if (phone.startsWith('+34')) return phone.substring(3);
+    if (phone.startsWith('+')) {
+      return phone;
+    }
+    return phone;
+  }
+
+  String _getInitialCountryCode() {
+    final phone = widget.profile.phone ?? '';
+    if (phone.startsWith('+58')) return 'VE';
+    if (phone.startsWith('+57')) return 'CO';
+    if (phone.startsWith('+1')) return 'US';
+    if (phone.startsWith('+34')) return 'ES';
+    return 'VE';
+  }
+
 
   @override
   void dispose() {
@@ -43,46 +78,41 @@ class _EditProfilePageState extends State<EditProfilePage> {
   }
 
 
-  void _showChangePhotoDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppColors.surface,
-        title: const Text('Cambiar Foto de Perfil', style: TextStyle(color: Colors.white)),
-        content: TextField(
-          controller: _photoUrlController,
-          style: const TextStyle(color: Colors.white),
-          decoration: InputDecoration(
-            labelText: 'URL de la imagen',
-            labelStyle: const TextStyle(color: AppColors.textMuted),
-            hintText: 'https://...',
-            hintStyle: const TextStyle(color: Colors.grey),
-            enabledBorder: OutlineInputBorder(
-              borderSide: const BorderSide(color: AppColors.border),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderSide: const BorderSide(color: AppColors.primary),
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancelar', style: TextStyle(color: AppColors.textMuted)),
-          ),
-          TextButton(
-            onPressed: () {
-              setState(() {}); // Forzar redibujo para mostrar la nueva foto (si carga)
-              Navigator.pop(context);
-            },
-            child: const Text('Aplicar', style: TextStyle(color: AppColors.primary)),
-          ),
-        ],
-      ),
+  Future<void> _pickImage() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 600,
+      maxHeight: 600,
+      imageQuality: 80,
     );
+
+    if (pickedFile != null) {
+      setState(() {
+        _imageFile = File(pickedFile.path);
+      });
+    }
   }
+
+  Future<String?> _uploadImage() async {
+    if (_imageFile == null) return null;
+
+    setState(() => _isUploadingImage = true);
+
+    try {
+      final storageService = sl<FirebaseStorageService>();
+      final path = 'user_photos/photo_${widget.profile.id}_${DateTime.now().millisecondsSinceEpoch}.jpg';
+      final url = await storageService.uploadFile(file: _imageFile!, path: path);
+      return url;
+    } catch (e) {
+      debugPrint('Error subiendo imagen: $e');
+      return null;
+    } finally {
+      setState(() => _isUploadingImage = false);
+    }
+  }
+
+
 
   void _showChangePasswordDialog() {
     final confirmController = TextEditingController();
@@ -231,32 +261,37 @@ class _EditProfilePageState extends State<EditProfilePage> {
                       child: Column(
                         children: [
                           Container(
+
                             width: 100,
                             height: 100,
                             decoration: BoxDecoration(
-                              color: AppColors.primary.withOpacity(0.2),
+                              color: AppColors.primary.withValues(alpha: 0.2),
                               shape: BoxShape.circle,
                               border: Border.all(color: AppColors.primary, width: 2),
                             ),
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(50),
-                              child: _photoUrlController.text.isNotEmpty && _photoUrlController.text.startsWith('http')
-                                  ? Image.network(
-                                      _photoUrlController.text,
+                              child: _imageFile != null
+                                  ? Image.file(
+                                      _imageFile!,
                                       fit: BoxFit.cover,
-                                      errorBuilder: (context, error, stackTrace) => const Center(
-                                        child: Text('👤', style: TextStyle(fontSize: 48)),
-                                      ),
-
                                     )
-                                  : const Center(
-                                      child: Text('👤', style: TextStyle(fontSize: 48)),
-                                    ),
+                                  : _photoUrlController.text.isNotEmpty && _photoUrlController.text.startsWith('http')
+                                      ? Image.network(
+                                          _photoUrlController.text,
+                                          fit: BoxFit.cover,
+                                          errorBuilder: (context, error, stackTrace) => const Center(
+                                            child: Text('👤', style: TextStyle(fontSize: 48)),
+                                          ),
+                                        )
+                                      : const Center(
+                                          child: Text('👤', style: TextStyle(fontSize: 48)),
+                                        ),
                             ),
                           ),
                           const SizedBox(height: 12),
                           TextButton(
-                            onPressed: _showChangePhotoDialog,
+                            onPressed: _pickImage,
                             child: const Text(
                               'Cambiar foto',
                               style: TextStyle(
@@ -268,6 +303,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                           ),
                         ],
                       ),
+
                     ),
                     const SizedBox(height: 30),
 
@@ -314,13 +350,17 @@ class _EditProfilePageState extends State<EditProfilePage> {
                       style: TextStyle(color: AppColors.textMuted, fontSize: 14, fontWeight: FontWeight.w500),
                     ),
                     const SizedBox(height: 8),
-                    TextFormField(
+                    IntlPhoneField(
                       controller: _phoneController,
                       style: const TextStyle(color: Colors.white),
-                      keyboardType: TextInputType.phone,
+                      dropdownTextStyle: const TextStyle(color: Colors.white),
+                      dropdownIcon: const Icon(Icons.arrow_drop_down, color: Colors.white),
+                      initialCountryCode: _getInitialCountryCode(),
+
+
+                      languageCode: "es",
                       decoration: InputDecoration(
-                        prefixIcon: const Icon(Icons.phone_outlined, color: AppColors.textMuted),
-                        hintText: 'Ingresa tu número de teléfono',
+                        hintText: 'Número de teléfono',
                         hintStyle: const TextStyle(color: Colors.grey),
                         filled: true,
                         fillColor: AppColors.surface,
@@ -337,7 +377,11 @@ class _EditProfilePageState extends State<EditProfilePage> {
                           borderSide: const BorderSide(color: AppColors.primary),
                         ),
                       ),
+                      onChanged: (phone) {
+                        _completePhoneNumber = phone.completeNumber;
+                      },
                     ),
+
                     const SizedBox(height: 20),
 
                     // Botón Cambiar Contraseña
@@ -365,21 +409,33 @@ class _EditProfilePageState extends State<EditProfilePage> {
                       width: double.infinity,
                       height: 56,
                       child: ElevatedButton.icon(
-                        onPressed: isLoading
+                        onPressed: (isLoading || _isUploadingImage)
                             ? null
-                            : () {
+                            : () async {
                                 if (_formKey.currentState!.validate()) {
-                                  context.read<ProfileBloc>().add(
-                                        UpdateProfileEvent(
-                                          name: _nameController.text.trim(),
-                                          phone: _phoneController.text.trim(),
-                                          photoUrl: _photoUrlController.text.trim(),
-                                          password: _passwordController.text.isNotEmpty
-                                              ? _passwordController.text
-                                              : null,
-                                        ),
-                                      );
+                                  String? finalPhotoUrl = _photoUrlController.text.trim();
+                                  
+                                  if (_imageFile != null) {
+                                    final uploadedUrl = await _uploadImage();
+                                    if (uploadedUrl != null) {
+                                      finalPhotoUrl = uploadedUrl;
+                                    }
+                                  }
 
+                                  if (mounted) {
+                                    context.read<ProfileBloc>().add(
+                                          UpdateProfileEvent(
+                                            name: _nameController.text.trim(),
+                                            phone: _completePhoneNumber.isNotEmpty 
+                                                ? _completePhoneNumber 
+                                                : _phoneController.text.trim(),
+                                            photoUrl: finalPhotoUrl.isNotEmpty ? finalPhotoUrl : null,
+                                            password: _passwordController.text.isNotEmpty
+                                                ? _passwordController.text
+                                                : null,
+                                          ),
+                                        );
+                                  }
                                 }
                               },
                         style: ElevatedButton.styleFrom(
@@ -390,7 +446,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                           ),
                           elevation: 0,
                         ),
-                        icon: isLoading
+                        icon: (isLoading || _isUploadingImage)
                             ? const SizedBox(
                                 width: 20,
                                 height: 20,
@@ -398,9 +454,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
                               )
                             : const Icon(Icons.save_outlined),
                         label: Text(
-                          isLoading ? 'Guardando...' : 'Guardar Cambios',
+                          (isLoading || _isUploadingImage) ? 'Guardando...' : 'Guardar Cambios',
                           style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                         ),
+
                       ),
                     ),
                   ],

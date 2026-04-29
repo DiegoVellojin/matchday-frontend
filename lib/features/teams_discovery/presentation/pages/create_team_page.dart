@@ -1,10 +1,12 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
+
 import 'package:go_router/go_router.dart';
 import '../../../../core/di/injection_container.dart';
+import '../../../../core/storage/firebase_storage_service.dart';
 import '../../../../core/theme/app_colors.dart';
+
 import '../../application/usecases/create_team_usecase.dart';
 import '../../application/usecases/get_sports_usecase.dart';
 import '../../domain/entities/sport_entity.dart';
@@ -90,18 +92,16 @@ class _CreateTeamPageState extends State<CreateTeamPage> {
     if (_imageFile == null) return null;
 
     try {
-      final storageRef = FirebaseStorage.instance.ref();
-      final fileRef = storageRef.child(
-        'team_logos/logo_${DateTime.now().millisecondsSinceEpoch}.jpg',
-      );
-
-      final uploadTask = await fileRef.putFile(_imageFile!);
-      return await uploadTask.ref.getDownloadURL();
+      final storageService = sl<FirebaseStorageService>();
+      final path = 'team_logos/logo_${DateTime.now().millisecondsSinceEpoch}.jpg';
+      final url = await storageService.uploadFile(file: _imageFile!, path: path);
+      return url;
     } catch (e) {
-      debugPrint('Error subiendo imagen a Firebase: $e');
+      debugPrint('Error subiendo imagen: $e');
       return null;
     }
   }
+
 
   Future<void> _createTeam() async {
     if (_nameController.text.trim().isEmpty) {

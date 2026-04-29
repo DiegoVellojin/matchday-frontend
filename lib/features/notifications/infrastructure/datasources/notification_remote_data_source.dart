@@ -23,4 +23,13 @@ class NotificationRemoteDataSource {
       throw Exception('Error al marcar la notificación como leída');
     }
   }
+
+  Future<void> markAllAsRead() async {
+    try {
+      await networkRobot.put('/notifications/read-all');
+    } catch (e) {
+      throw Exception('Error al marcar todas las notificaciones como leídas');
+    }
+  }
 }
+

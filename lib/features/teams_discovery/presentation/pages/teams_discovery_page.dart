@@ -3,12 +3,13 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/bloc/theme_bloc.dart';
 import '../bloc/teams_discovery_bloc.dart';
 import '../bloc/teams_discovery_event.dart';
 import '../bloc/teams_discovery_state.dart';
 import '../../domain/entities/sport_entity.dart';
 import '../widgets/team_discovery_card.dart';
+
+
 
 
 class TeamsDiscoveryPage extends StatelessWidget {
@@ -313,60 +314,6 @@ class _TeamsDiscoveryViewState extends State<_TeamsDiscoveryView> {
 
             return Column(
               children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Row(
-                        children: [
-                          InkWell(
-                            onTap: () => context.push('/perfil'),
-                            borderRadius: BorderRadius.circular(20),
-                            child: const CircleAvatar(
-                              backgroundColor: AppColors.primary,
-                              radius: 20,
-                              child: Icon(Icons.person_outline, color: Colors.black),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-
-                          Text(
-                            'MatchDay',
-                            style: TextStyle(
-                              color: colorScheme.onSurface,
-                              fontSize: 22,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                      Row(
-                        children: [
-                          BlocBuilder<ThemeBloc, ThemeMode>(
-                            builder: (context, themeMode) {
-                              final isDarkTheme = themeMode == ThemeMode.dark;
-                              return IconButton(
-                                icon: Icon(
-                                  isDarkTheme ? Icons.light_mode : Icons.dark_mode,
-                                  color: colorScheme.onSurface,
-                                ),
-                                onPressed: () => context.read<ThemeBloc>().add(ToggleThemeEvent()),
-                              );
-                            },
-                          ),
-                          IconButton(
-                            icon: Icon(
-                              Icons.notifications_none_outlined,
-                              color: colorScheme.onSurface,
-                            ),
-                            onPressed: () => context.push('/notificaciones'),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
 
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20.0),

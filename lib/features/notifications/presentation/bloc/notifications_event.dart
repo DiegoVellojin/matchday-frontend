@@ -6,3 +6,6 @@ class MarkNotificationAsReadEvent extends NotificationsEvent {
   final int notificationId;
   MarkNotificationAsReadEvent(this.notificationId);
 }
+
+class MarkAllNotificationsAsReadEvent extends NotificationsEvent {}
+

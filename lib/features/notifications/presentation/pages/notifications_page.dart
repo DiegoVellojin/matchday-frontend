@@ -13,11 +13,12 @@ class NotificationsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => sl<NotificationsBloc>()..add(LoadNotificationsEvent()),
+      create: (_) => sl<NotificationsBloc>()..add(MarkAllNotificationsAsReadEvent()),
       child: const _NotificationsView(),
     );
   }
 }
+
 
 class _NotificationsView extends StatelessWidget {
   const _NotificationsView();
@@ -223,16 +224,24 @@ class _NotificationsView extends StatelessWidget {
   }
 
   String _formatDate(DateTime date) {
-    final now = DateTime.now();
-    final diff = now.difference(date);
+    final dateUtc = date.isUtc ? date : date.toUtc();
+    final nowUtc = DateTime.now().toUtc();
+    final diff = nowUtc.difference(dateUtc);
 
-    if (diff.inMinutes < 60) {
+    if (diff.isNegative) {
+      return 'Hace un momento';
+    }
+
+    if (diff.inMinutes < 1) {
+      return 'Hace un momento';
+    } else if (diff.inMinutes < 60) {
       return 'Hace ${diff.inMinutes} min';
     } else if (diff.inHours < 24) {
       return 'Hace ${diff.inHours} h';
     } else {
-      return '${date.day}/${date.month}/${date.year}';
+      final dateLocal = dateUtc.toLocal();
+      return '${dateLocal.day}/${dateLocal.month}/${dateLocal.year}';
     }
   }
-}
 
+}

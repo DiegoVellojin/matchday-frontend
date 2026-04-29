@@ -4,6 +4,8 @@ import '../../../../core/di/injection_container.dart';
 import '../../../../core/network/network_robot.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../teams_discovery/presentation/pages/teams_discovery_page.dart';
+import '../../../../core/widgets/matchday_app_bar.dart';
+
 
 class MainHubPage extends StatefulWidget {
   const MainHubPage({super.key});
@@ -63,7 +65,14 @@ class _MainHubPageState extends State<MainHubPage> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      body: _pages[_currentIndex],
+      body: SafeArea(
+        child: Column(
+          children: [
+            const MatchDayAppBar(),
+            Expanded(child: _pages[_currentIndex]),
+          ],
+        ),
+      ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           border: Border(
