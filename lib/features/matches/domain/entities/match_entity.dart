@@ -19,6 +19,12 @@ class MatchEntity extends Equatable {
   final DateTime? propuestaFechaB;
   final double? propuestaCostoB;
 
+  // Campos enriquecidos para visualización
+  final String? nombreEquipoA;
+  final String? logoEquipoA;
+  final String? nombreCapitanA;
+  final String? nombreCancha;
+
   const MatchEntity({
     required this.id,
     required this.fechaInicioEstimada,
@@ -35,6 +41,10 @@ class MatchEntity extends Equatable {
     this.propuestaCostoA,
     this.propuestaFechaB,
     this.propuestaCostoB,
+    this.nombreEquipoA,
+    this.logoEquipoA,
+    this.nombreCapitanA,
+    this.nombreCancha,
   });
 
   @override
@@ -54,5 +64,9 @@ class MatchEntity extends Equatable {
         propuestaCostoA,
         propuestaFechaB,
         propuestaCostoB,
+        nombreEquipoA,
+        logoEquipoA,
+        nombreCapitanA,
+        nombreCancha,
       ];
 }

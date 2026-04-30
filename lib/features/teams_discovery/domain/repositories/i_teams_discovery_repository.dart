@@ -46,6 +46,7 @@ abstract class ITeamsDiscoveryRepository {
     bool? isRecruiting,
     int? maxMembers,
     String? chatUrl,
+    int? sportId,
   });
 
   /// Elimina el equipo y todas sus relaciones de membresía. Reservado para el Capitán.

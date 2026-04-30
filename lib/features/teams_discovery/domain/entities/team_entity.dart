@@ -8,6 +8,7 @@ class TeamEntity {
   final bool isRecruiting;
   final bool soyMiembro;
   final int? captainId;
+  final int? sportId;
   final String description;
   final String? chatUrl;
 
@@ -16,6 +17,7 @@ class TeamEntity {
     required this.name,
     required this.logo,
     required this.sportName,
+    this.sportId,
     required this.maxMembers,
     required this.currentMembers,
     required this.isRecruiting,

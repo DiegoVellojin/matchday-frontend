@@ -126,6 +126,7 @@ class TeamsDiscoveryRemoteDataSource {
     bool? isRecruiting,
     int? maxMembers,
     String? chatUrl,
+    int? sportId,
   }) async {
     try {
       await networkRobot.put(
@@ -137,6 +138,7 @@ class TeamsDiscoveryRemoteDataSource {
           'esta_reclutando': isRecruiting,
           'max_miembros': maxMembers,
           'url_chat_equipo': chatUrl,
+          'fk_id_deporte': sportId,
         }..removeWhere((_, v) => v == null),
       );
     } catch (e) {

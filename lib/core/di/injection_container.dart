@@ -88,6 +88,14 @@ import '../../features/matches/infrastructure/repositories/matches_repository_im
 import '../../features/matches/application/usecases/matches_usecases.dart';
 import '../../features/matches/presentation/bloc/matches_bloc.dart';
 
+// Importaciones de Catalogs (NUEVO)
+import '../../features/catalogs/domain/repositories/i_catalogs_repository.dart';
+import '../../features/catalogs/infrastructure/datasources/catalogs_remote_datasource.dart';
+import '../../features/catalogs/infrastructure/repositories/catalogs_repository_impl.dart';
+import '../../features/catalogs/application/usecases/get_sports_usecase.dart' as cat_sports;
+import '../../features/catalogs/application/usecases/get_regions_usecase.dart';
+import '../../features/catalogs/application/usecases/get_canchas_usecase.dart';
+
 
 // sl = Service Locator
 final sl = GetIt.instance;
@@ -139,6 +147,9 @@ Future<void> init() async {
   // Partidos (NUEVO)
   sl.registerLazySingleton<MatchesRemoteDataSource>(() => MatchesRemoteDataSourceImpl(sl()));
 
+  // Catalogs (NUEVO)
+  sl.registerLazySingleton<CatalogsRemoteDataSource>(() => CatalogsRemoteDataSourceImpl(sl()));
+
 
 
   // ===========================================================================
@@ -172,6 +183,9 @@ Future<void> init() async {
   sl.registerLazySingleton<IPaymentsRepository>(() => PaymentsRepositoryImpl(sl()));
   // Partidos (NUEVO)
   sl.registerLazySingleton<IMatchesRepository>(() => MatchesRepositoryImpl(sl()));
+
+  // Catalogs (NUEVO)
+  sl.registerLazySingleton<ICatalogsRepository>(() => CatalogsRepositoryImpl(sl()));
 
 
 
@@ -229,6 +243,11 @@ Future<void> init() async {
   sl.registerLazySingleton(() => AcceptEncounterUseCase(sl()));
   sl.registerLazySingleton(() => ProposeTermsUseCase(sl()));
   sl.registerLazySingleton(() => JoinMatchUseCase(sl()));
+
+  // Catalogs (NUEVO)
+  sl.registerLazySingleton(() => cat_sports.GetSportsUseCase(sl()));
+  sl.registerLazySingleton(() => GetRegionsUseCase(sl()));
+  sl.registerLazySingleton(() => GetCanchasUseCase(sl()));
 
 
 

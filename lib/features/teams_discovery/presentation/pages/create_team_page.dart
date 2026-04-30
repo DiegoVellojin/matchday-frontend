@@ -10,7 +10,7 @@ import '../../../../core/storage/firebase_storage_service.dart';
 import '../../../../core/theme/app_colors.dart';
 
 import '../../application/usecases/create_team_usecase.dart';
-import '../../application/usecases/get_sports_usecase.dart';
+import '../../../catalogs/application/usecases/get_sports_usecase.dart' as cat_sports;
 import '../../domain/entities/sport_entity.dart';
 
 class CreateTeamPage extends StatefulWidget {
@@ -41,7 +41,7 @@ class _CreateTeamPageState extends State<CreateTeamPage> {
   }
 
   Future<void> _loadSports() async {
-    final useCase = sl<GetSportsUseCase>();
+    final useCase = sl<cat_sports.GetSportsUseCase>();
     final result = await useCase();
     result.fold(
       (failure) {

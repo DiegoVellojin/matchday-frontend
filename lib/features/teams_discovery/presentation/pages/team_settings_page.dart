@@ -6,6 +6,8 @@ import '../../../../core/storage/firebase_storage_service.dart';
 import '../../../../core/widgets/matchday_image_picker.dart';
 import '../../../../core/utils/image_picker_utils.dart';
 import '../../domain/entities/team_entity.dart';
+import '../../application/usecases/get_sports_usecase.dart';
+import '../../domain/entities/sport_entity.dart';
 import '../../application/usecases/update_team_usecase.dart';
 import '../../application/usecases/delete_team_usecase.dart';
 import '../../application/usecases/transfer_captain_usecase.dart';
@@ -44,6 +46,9 @@ class _TeamSettingsPageState extends State<TeamSettingsPage> {
   File? _imageFile;
   String? _currentLogoUrl;
   List<Map<String, dynamic>> _members = [];
+  List<SportEntity> _sports = [];
+  int? _selectedSportId;
+  bool _isLoadingSports = false;
 
   @override
   void initState() {
@@ -58,7 +63,9 @@ class _TeamSettingsPageState extends State<TeamSettingsPage> {
     );
     _chatUrlController = TextEditingController(text: widget.team.chatUrl);
     _isRecruiting = widget.team.isRecruiting;
+    _selectedSportId = widget.team.sportId;
     _loadMembers();
+    _loadSports();
   }
 
   /// Recupera el listado de miembros del equipo desde la API.
@@ -67,6 +74,25 @@ class _TeamSettingsPageState extends State<TeamSettingsPage> {
     result.fold(
       (failure) => null,
       (members) => setState(() => _members = members),
+    );
+  }
+
+  Future<void> _loadSports() async {
+    setState(() => _isLoadingSports = true);
+    final result = await sl<GetSportsUseCase>().call();
+    result.fold(
+      (failure) => null,
+      (sports) {
+        setState(() {
+          _sports = sports;
+          _isLoadingSports = false;
+          // Si el ID del deporte no estaba en la entidad, intentamos encontrarlo por nombre como fallback
+          if (_selectedSportId == null) {
+            final currentSport = _sports.where((s) => s.name == widget.team.sportName).firstOrNull;
+            if (currentSport != null) _selectedSportId = currentSport.id;
+          }
+        });
+      },
     );
   }
 
@@ -105,6 +131,7 @@ class _TeamSettingsPageState extends State<TeamSettingsPage> {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -155,6 +182,11 @@ class _TeamSettingsPageState extends State<TeamSettingsPage> {
                 maxLines: 3,
               ),
               const SizedBox(height: 16),
+              _buildSectionTitle('Deporte'),
+              _isLoadingSports 
+                ? const LinearProgressIndicator(color: AppColors.primary)
+                : _buildSportDropdown(isDark),
+              const SizedBox(height: 24),
               _buildTextField(
                 'URL del Grupo (WhatsApp/Telegram)',
                 _chatUrlController,
@@ -330,6 +362,36 @@ class _TeamSettingsPageState extends State<TeamSettingsPage> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildSportDropdown(bool isDark) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isDark ? AppColors.border : Colors.grey.shade300,
+        ),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<int>(
+          value: _selectedSportId,
+          isExpanded: true,
+          dropdownColor: Theme.of(context).colorScheme.surface,
+          items: _sports.map((sport) {
+            return DropdownMenuItem<int>(
+              value: sport.id,
+              child: Text(
+                sport.name,
+                style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
+              ),
+            );
+          }).toList(),
+          onChanged: (val) => setState(() => _selectedSportId = val),
+        ),
+      ),
     );
   }
 
@@ -513,6 +575,7 @@ class _TeamSettingsPageState extends State<TeamSettingsPage> {
       maxMembers: int.tryParse(_maxMembersController.text),
       isRecruiting: _isRecruiting,
       chatUrl: _chatUrlController.text.trim().isEmpty ? null : _chatUrlController.text.trim(),
+      sportId: _selectedSportId,
     );
 
     setState(() => _isLoading = false);

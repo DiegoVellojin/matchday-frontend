@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/di/injection_container.dart';
 import '../bloc/matches_bloc.dart';
 import '../../domain/entities/match_entity.dart';
 import '../../../../core/widgets/matchday_search_bar.dart';
@@ -23,6 +24,7 @@ class _MatchesPageState extends State<MatchesPage> {
   @override
   void initState() {
     super.initState();
+    initializeDateFormatting('es_VE', null);
     _searchController.addListener(() {
       setState(() {
         _searchQuery = _searchController.text.trim().toLowerCase();
@@ -40,10 +42,8 @@ class _MatchesPageState extends State<MatchesPage> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return BlocProvider(
-      create: (context) => sl<MatchesBloc>()..add(LoadMatchesEvent()),
-      child: Scaffold(
-        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+    return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         body: BlocBuilder<MatchesBloc, MatchesState>(
           builder: (context, state) {
             return Column(
@@ -87,8 +87,7 @@ class _MatchesPageState extends State<MatchesPage> {
           shape: const CircleBorder(),
           child: const Icon(Icons.add, color: Colors.black, size: 30),
         ),
-      ),
-    );
+      );
   }
 
   Widget _buildBody(MatchesState state, bool isDark) {
@@ -270,11 +269,19 @@ class _MatchesPageState extends State<MatchesPage> {
               color: isDark ? const Color(0xFF2A2A2A) : Colors.grey[100],
               shape: BoxShape.circle,
             ),
-            child: const Center(
-              child: Text(
-                '⚽', // Logo por defecto o mapeado por deporte
-                style: TextStyle(fontSize: 24),
-              ),
+            child: ClipOval(
+              child: match.logoEquipoA != null
+                  ? Image.network(
+                      match.logoEquipoA!,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => const Center(child: Text('⚽', style: TextStyle(fontSize: 24))),
+                    )
+                  : const Center(
+                      child: Text(
+                        '⚽',
+                        style: TextStyle(fontSize: 24),
+                      ),
+                    ),
             ),
           ),
           const SizedBox(width: 16),
@@ -283,7 +290,7 @@ class _MatchesPageState extends State<MatchesPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Partido #${match.id}', // O nombre del equipo si lo unimos en el backend
+                  match.nombreEquipoA ?? 'Partido #${match.id}',
                   style: TextStyle(
                     color: isDark ? Colors.white : Colors.black,
                     fontSize: 18,
@@ -299,9 +306,13 @@ class _MatchesPageState extends State<MatchesPage> {
                   ),
                 ),
                 const SizedBox(height: 12),
-                _buildInfoRow(Icons.access_time, _formatTime(match.fechaInicioEstimada), isDark),
+                _buildInfoRow(Icons.access_time, _formatFullDate(match.fechaInicioEstimada), isDark),
+                const SizedBox(height: 4),
+                _buildInfoRow(Icons.timer_outlined, _formatTimeRange(match.fechaInicioEstimada, match.fechaFinEstimada), isDark),
                 const SizedBox(height: 8),
-                _buildInfoRow(Icons.location_on_outlined, 'Ubicación #${match.idCancha}', isDark),
+                _buildInfoRow(Icons.location_on_outlined, match.nombreCancha ?? 'Ubicación no especificada', isDark),
+                const SizedBox(height: 4),
+                _buildInfoRow(Icons.person_outline, 'Organizador: ${match.nombreCapitanA ?? 'Capi'}', isDark),
                 const SizedBox(height: 16),
                 SizedBox(
                   width: double.infinity,
@@ -335,8 +346,16 @@ class _MatchesPageState extends State<MatchesPage> {
     return 'Deporte';
   }
 
-  String _formatTime(DateTime date) {
-    return '${date.day}/${date.month} - ${date.hour}:${date.minute.toString().padLeft(2, '0')}';
+  String _formatFullDate(DateTime date) {
+    // Ejemplo: Jueves 16 de abril del 2026
+    final formatter = DateFormat("EEEE d 'de' MMMM 'del' y", 'es_VE');
+    String formatted = formatter.format(date);
+    return formatted[0].toUpperCase() + formatted.substring(1);
+  }
+
+  String _formatTimeRange(DateTime start, DateTime end) {
+    final format = DateFormat('jm'); // Usa am/pm según locale
+    return '${format.format(start).toLowerCase()} a ${format.format(end).toLowerCase()}';
   }
 
   Widget _buildInfoRow(IconData icon, String text, bool isDark) {

@@ -29,6 +29,8 @@ import 'features/notifications/presentation/bloc/notifications_event.dart';
 import 'features/payments/presentation/pages/payment_management_page.dart';
 import 'features/matches/presentation/pages/create_match_page.dart';
 import 'features/matches/presentation/pages/match_details_page.dart';
+import 'features/auth/presentation/bloc/auth_bloc.dart';
+import 'features/matches/presentation/bloc/matches_bloc.dart';
 
 
 
@@ -126,7 +128,8 @@ class MatchDayApp extends StatelessWidget {
         BlocProvider(create: (_) => di.sl<ThemeBloc>()),
         BlocProvider(create: (_) => di.sl<ProfileBloc>()..add(LoadProfileEvent())),
         BlocProvider(create: (_) => di.sl<NotificationsBloc>()..add(LoadNotificationsEvent())),
-
+        BlocProvider(create: (_) => di.sl<AuthBloc>()),
+        BlocProvider(create: (_) => di.sl<MatchesBloc>()..add(LoadMatchesEvent())),
       ],
       child: BlocBuilder<ThemeBloc, ThemeMode>(
         builder: (context, currentThemeMode) {

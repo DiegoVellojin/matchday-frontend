@@ -117,6 +117,7 @@ class TeamsDiscoveryRepositoryImpl implements ITeamsDiscoveryRepository {
     bool? isRecruiting,
     int? maxMembers,
     String? chatUrl,
+    int? sportId,
   }) async {
     try {
       await remoteDataSource.updateTeam(
@@ -127,6 +128,7 @@ class TeamsDiscoveryRepositoryImpl implements ITeamsDiscoveryRepository {
         isRecruiting: isRecruiting,
         maxMembers: maxMembers,
         chatUrl: chatUrl,
+        sportId: sportId,
       );
       return const Right(null);
     } catch (e) {

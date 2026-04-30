@@ -11,6 +11,7 @@ class TeamModel extends TeamEntity {
     required super.isRecruiting,
     required super.soyMiembro,
     super.captainId,
+    super.sportId,
     super.description = '',
     super.chatUrl,
   });
@@ -26,6 +27,7 @@ class TeamModel extends TeamEntity {
       isRecruiting: json['esta_reclutando'] ?? true,
       soyMiembro: json['soy_miembro'] ?? false,
       captainId: json['fk_id_usuario_capitan'],
+      sportId: json['fk_id_deporte'],
       description: json['descripcion_equipo'] ?? '',
       chatUrl: json['url_chat_equipo'],
     );

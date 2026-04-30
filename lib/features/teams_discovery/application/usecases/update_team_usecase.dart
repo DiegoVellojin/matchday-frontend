@@ -24,6 +24,7 @@ class UpdateTeamUseCase {
     bool? isRecruiting,
     int? maxMembers,
     String? chatUrl,
+    int? sportId,
   }) {
     return repository.updateTeam(
       teamId: teamId,
@@ -33,6 +34,7 @@ class UpdateTeamUseCase {
       isRecruiting: isRecruiting,
       maxMembers: maxMembers,
       chatUrl: chatUrl,
+      sportId: sportId,
     );
   }
 }

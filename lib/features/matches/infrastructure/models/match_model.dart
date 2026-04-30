@@ -17,6 +17,10 @@ class MatchModel extends MatchEntity {
     super.propuestaCostoA,
     super.propuestaFechaB,
     super.propuestaCostoB,
+    super.nombreEquipoA,
+    super.logoEquipoA,
+    super.nombreCapitanA,
+    super.nombreCancha,
   });
 
   factory MatchModel.fromJson(Map<String, dynamic> json) {
@@ -46,6 +50,10 @@ class MatchModel extends MatchEntity {
       propuestaCostoB: json['propuesta_costo_b'] != null 
           ? (json['propuesta_costo_b'] as num).toDouble() 
           : null,
+      nombreEquipoA: json['nombre_equipo_a'],
+      logoEquipoA: json['logo_equipo_a'],
+      nombreCapitanA: json['nombre_capitan_a'],
+      nombreCancha: json['nombre_cancha'],
     );
   }
 
@@ -66,6 +74,10 @@ class MatchModel extends MatchEntity {
       'propuesta_costo_a': propuestaCostoA,
       'propuesta_fecha_b': propuestaFechaB?.toIso8601String(),
       'propuesta_costo_b': propuestaCostoB,
+      'nombre_equipo_a': nombreEquipoA,
+      'logo_equipo_a': logoEquipoA,
+      'nombre_capitan_a': nombreCapitanA,
+      'nombre_cancha': nombreCancha,
     };
   }
 }
