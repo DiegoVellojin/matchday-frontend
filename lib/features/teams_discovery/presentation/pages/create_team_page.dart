@@ -24,6 +24,7 @@ class _CreateTeamPageState extends State<CreateTeamPage> {
   final _nameController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _maxMembersController = TextEditingController(text: '11');
+  final _chatUrlController = TextEditingController();
 
   int? _selectedSportId;
   bool _isRecruiting = true;
@@ -71,6 +72,7 @@ class _CreateTeamPageState extends State<CreateTeamPage> {
     _nameController.dispose();
     _descriptionController.dispose();
     _maxMembersController.dispose();
+    _chatUrlController.dispose();
     super.dispose();
   }
 
@@ -131,6 +133,7 @@ class _CreateTeamPageState extends State<CreateTeamPage> {
         description: _descriptionController.text.trim(),
         isRecruiting: _isRecruiting,
         maxMembers: int.tryParse(_maxMembersController.text) ?? 11,
+        chatUrl: _chatUrlController.text.trim().isEmpty ? null : _chatUrlController.text.trim(),
       );
 
       result.fold(
@@ -400,9 +403,48 @@ class _CreateTeamPageState extends State<CreateTeamPage> {
                     style: TextStyle(color: colorScheme.onSurface),
                     decoration: InputDecoration(
                       hintText: 'Ej. 11 para Fútbol',
-                      hintStyle: TextStyle(color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5)),
+                      hintStyle: TextStyle(
+                        color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+                      ),
                       filled: true,
                       fillColor: colorScheme.surface,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: colorScheme.outlineVariant),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: colorScheme.outlineVariant),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(color: AppColors.primary),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+
+                  // URL del Grupo de Chat
+                  Text(
+                    'URL del Grupo de Chat (Opcional)',
+                    style: TextStyle(
+                      color: colorScheme.onSurfaceVariant,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: _chatUrlController,
+                    style: TextStyle(color: colorScheme.onSurface),
+                    decoration: InputDecoration(
+                      hintText: 'Link de WhatsApp o Telegram',
+                      hintStyle: TextStyle(
+                        color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+                      ),
+                      filled: true,
+                      fillColor: colorScheme.surface,
+                      prefixIcon: Icon(Icons.link, color: colorScheme.onSurfaceVariant),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide(color: colorScheme.outlineVariant),

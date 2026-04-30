@@ -13,6 +13,7 @@ import '../../../profile/presentation/bloc/profile_bloc.dart';
 import '../../../profile/presentation/bloc/profile_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import './team_settings_page.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 
 class TeamDashboardPage extends StatefulWidget {
@@ -109,6 +110,60 @@ class _TeamDashboardPageState extends State<TeamDashboardPage> {
           );
         },
       ),
+      bottomNavigationBar: FutureBuilder<TeamEntity>(
+        future: _teamFuture,
+        builder: (context, snapshot) {
+          if (!snapshot.hasData || snapshot.data!.soyMiembro) return const SizedBox.shrink();
+          final team = snapshot.data!;
+          return Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: colorScheme.surface,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.1),
+                  blurRadius: 10,
+                  offset: const Offset(0, -5),
+                ),
+              ],
+            ),
+            child: SafeArea(
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.black,
+                  minimumSize: const Size(double.infinity, 50),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                onPressed: () async {
+                  final result = await sl<RequestJoinTeamUseCase>().call(team.id);
+                  result.fold(
+                    (failure) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Error: ${failure.message}')),
+                      );
+                    },
+                    (_) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Solicitud enviada con éxito')),
+                      );
+                      setState(() {
+                        _loadTeam();
+                      });
+                    },
+                  );
+                },
+                child: const Text(
+                  'Solicitar Unirse al Equipo',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ),
+          );
+        },
+      ),
     );
   }
 
@@ -123,7 +178,13 @@ class _TeamDashboardPageState extends State<TeamDashboardPage> {
             children: [
               IconButton(
                 icon: Icon(Icons.arrow_back, color: colorScheme.onSurface),
-                onPressed: () => context.pop(),
+                onPressed: () {
+                  if (context.canPop()) {
+                    context.pop();
+                  } else {
+                    context.go('/hub');
+                  }
+                },
               ),
               IconButton(
                 icon: const Icon(Icons.share, color: AppColors.primary),
@@ -206,6 +267,30 @@ class _TeamDashboardPageState extends State<TeamDashboardPage> {
               child: Text(
                 '¡Buscando nuevos miembros!',
                 style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 12),
+              ),
+            ),
+          if (team.chatUrl != null && team.soyMiembro)
+            Padding(
+              padding: const EdgeInsets.only(top: 12.0),
+              child: SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () async {
+                    final url = Uri.parse(team.chatUrl!);
+                    if (await canLaunchUrl(url)) {
+                      await launchUrl(url, mode: LaunchMode.externalApplication);
+                    }
+                  },
+                  icon: const Icon(Icons.chat, size: 18),
+                  label: const Text('Ir al Chat del Equipo'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.primary,
+                    side: const BorderSide(color: AppColors.primary),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
               ),
             ),
           const SizedBox(height: 16),
@@ -355,7 +440,6 @@ class _TeamDashboardPageState extends State<TeamDashboardPage> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildActionSection(team, colorScheme),
             const SizedBox(height: 16),
 
             if (team.soyMiembro && requests.isNotEmpty) ...[
@@ -445,71 +529,6 @@ class _TeamDashboardPageState extends State<TeamDashboardPage> {
     );
   }
 
-  Widget _buildActionSection(TeamEntity team, ColorScheme colorScheme) {
-    if (team.soyMiembro) {
-      return Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: AppColors.primary.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
-        ),
-        child: Row(
-          children: [
-            const Icon(Icons.check_circle, color: AppColors.primary),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                'Eres miembro activo de este equipo.',
-                style: TextStyle(
-                  color: colorScheme.onSurface,
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
-    return SizedBox(
-      width: double.infinity,
-      height: 48,
-      child: ElevatedButton(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.primary,
-          foregroundColor: Colors.black,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
-        onPressed: () async {
-          final result = await sl<RequestJoinTeamUseCase>().call(team.id);
-          result.fold(
-            (failure) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Error: ${failure.message}')),
-              );
-            },
-            (_) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Solicitud enviada con éxito')),
-              );
-              setState(() {
-                _loadTeam();
-              });
-            },
-          );
-        },
-        child: const Text(
-          'Solicitar Unirse',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-        ),
-      ),
-    );
-  }
 
   Widget _buildPendingRequestRow(Map<String, dynamic> req, ColorScheme colorScheme) {
     final name = req['nombre_usuario'] ?? 'Usuario';

@@ -84,13 +84,13 @@ class TeamsDiscoveryRepositoryImpl implements ITeamsDiscoveryRepository {
 
   @override
   Future<Either<Failure, void>> createTeam({
-
     required String name,
     required int sportId,
     required String? logoUrl,
     required String description,
     required bool isRecruiting,
     required int maxMembers,
+    String? chatUrl,
   }) async {
     try {
       await remoteDataSource.createTeam(
@@ -100,6 +100,7 @@ class TeamsDiscoveryRepositoryImpl implements ITeamsDiscoveryRepository {
         description: description,
         isRecruiting: isRecruiting,
         maxMembers: maxMembers,
+        chatUrl: chatUrl,
       );
       return const Right(null);
     } catch (e) {
@@ -115,6 +116,7 @@ class TeamsDiscoveryRepositoryImpl implements ITeamsDiscoveryRepository {
     String? description,
     bool? isRecruiting,
     int? maxMembers,
+    String? chatUrl,
   }) async {
     try {
       await remoteDataSource.updateTeam(
@@ -124,6 +126,7 @@ class TeamsDiscoveryRepositoryImpl implements ITeamsDiscoveryRepository {
         description: description,
         isRecruiting: isRecruiting,
         maxMembers: maxMembers,
+        chatUrl: chatUrl,
       );
       return const Right(null);
     } catch (e) {

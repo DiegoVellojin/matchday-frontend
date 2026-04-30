@@ -98,6 +98,7 @@ class TeamsDiscoveryRemoteDataSource {
     required String description,
     required bool isRecruiting,
     required int maxMembers,
+    String? chatUrl,
   }) async {
     try {
       await networkRobot.post(
@@ -109,6 +110,7 @@ class TeamsDiscoveryRemoteDataSource {
           'descripcion_equipo': description,
           'esta_reclutando': isRecruiting,
           'max_miembros': maxMembers,
+          'url_chat_equipo': chatUrl,
         },
       );
     } catch (e) {
@@ -123,16 +125,18 @@ class TeamsDiscoveryRemoteDataSource {
     String? description,
     bool? isRecruiting,
     int? maxMembers,
+    String? chatUrl,
   }) async {
     try {
       await networkRobot.put(
         '/teams/$teamId',
         data: {
-          'nombre_equipo': ?name,
-          'url_logo_equipo': ?logoUrl,
-          'descripcion_equipo': ?description,
-          'esta_reclutando': ?isRecruiting,
-          'max_miembros': ?maxMembers,
+          if (name != null) 'nombre_equipo': name,
+          if (logoUrl != null) 'url_logo_equipo': logoUrl,
+          if (description != null) 'descripcion_equipo': description,
+          if (isRecruiting != null) 'esta_reclutando': isRecruiting,
+          if (maxMembers != null) 'max_miembros': maxMembers,
+          if (chatUrl != null) 'url_chat_equipo': chatUrl,
         },
       );
     } catch (e) {

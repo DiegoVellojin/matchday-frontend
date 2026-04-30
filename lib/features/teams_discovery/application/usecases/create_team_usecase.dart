@@ -13,6 +13,7 @@ class CreateTeamUseCase {
     required String description,
     required bool isRecruiting,
     required int maxMembers,
+    String? chatUrl,
   }) async {
     return await repository.createTeam(
       name: name,
@@ -21,6 +22,7 @@ class CreateTeamUseCase {
       description: description,
       isRecruiting: isRecruiting,
       maxMembers: maxMembers,
+      chatUrl: chatUrl,
     );
   }
 }

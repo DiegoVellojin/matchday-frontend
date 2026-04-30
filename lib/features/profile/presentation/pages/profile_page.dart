@@ -45,9 +45,9 @@ class _ProfilePageState extends State<ProfilePage> {
         }
       },
       child: Scaffold(
-        backgroundColor: AppColors.background,
         appBar: _buildAppBar(context),
         body: BlocBuilder<ProfileBloc, ProfileState>(
+
           builder: (context, state) {
             if (state is ProfileLoading) {
               return const Center(
@@ -93,16 +93,17 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   PreferredSizeWidget _buildAppBar(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return AppBar(
-      backgroundColor: AppColors.surface,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       elevation: 0,
       leading: IconButton(
-        icon: const Icon(Icons.arrow_back, color: Colors.white),
+        icon: Icon(Icons.arrow_back, color: Theme.of(context).colorScheme.onSurface),
         onPressed: () => context.pop(),
       ),
-      title: const Text(
+      title: Text(
         'Perfil',
-        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontWeight: FontWeight.bold),
       ),
       actions: [
         IconButton(
@@ -112,10 +113,14 @@ class _ProfilePageState extends State<ProfilePage> {
       ],
       bottom: PreferredSize(
         preferredSize: const Size.fromHeight(1),
-        child: Container(color: AppColors.border, height: 1),
+        child: Container(
+          color: isDark ? AppColors.border : Colors.grey.shade300,
+          height: 1,
+        ),
       ),
     );
   }
+
 
   Widget _buildProfileHeader(dynamic profile) {
     final photoUrl = profile.photoUrl as String?;
@@ -143,12 +148,13 @@ class _ProfilePageState extends State<ProfilePage> {
         const SizedBox(height: 16),
         Text(
           profile.name,
-          style: const TextStyle(
-            color: Colors.white,
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.onSurface,
             fontSize: 24,
             fontWeight: FontWeight.bold,
           ),
         ),
+
         const SizedBox(height: 8),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
@@ -188,13 +194,17 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Widget _buildStatCard(IconData icon, String value, String label) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(
+          color: isDark ? AppColors.border : Colors.grey.shade300,
+        ),
       ),
+
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -202,12 +212,13 @@ class _ProfilePageState extends State<ProfilePage> {
           const SizedBox(height: 8),
           Text(
             value,
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurface,
               fontSize: 20,
               fontWeight: FontWeight.bold,
             ),
           ),
+
           const SizedBox(height: 4),
           Text(
             label,
@@ -226,14 +237,15 @@ class _ProfilePageState extends State<ProfilePage> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text(
+            Text(
               'Mis Equipos',
               style: TextStyle(
-                color: Colors.white,
+                color: Theme.of(context).colorScheme.onSurface,
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
               ),
             ),
+
             TextButton.icon(
               onPressed: () {
                 Navigator.push(
@@ -281,25 +293,30 @@ class _ProfilePageState extends State<ProfilePage> {
 
   Widget _buildTeamCard(MyTeamEntity team) {
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       width: 120,
       margin: const EdgeInsets.only(right: 12),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(
+          color: isDark ? AppColors.border : Colors.grey.shade300,
+        ),
       ),
+
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
             width: 40,
             height: 40,
-            decoration: const BoxDecoration(
-              color: AppColors.background,
+            decoration: BoxDecoration(
+              color: isDark ? AppColors.background : Colors.grey.shade100,
               shape: BoxShape.circle,
             ),
+
             child: ClipRRect(
               borderRadius: BorderRadius.circular(20),
               child: team.logo.startsWith('http')
@@ -316,12 +333,13 @@ class _ProfilePageState extends State<ProfilePage> {
           Text(
             team.name,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurface,
               fontSize: 12,
               fontWeight: FontWeight.bold,
             ),
           ),
+
         ],
       ),
     );
@@ -364,20 +382,24 @@ class _ProfilePageState extends State<ProfilePage> {
     required String label,
     required VoidCallback onPressed,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton(
         onPressed: onPressed,
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.surface,
-          foregroundColor: Colors.white,
+          backgroundColor: Theme.of(context).colorScheme.surface,
+          foregroundColor: Theme.of(context).colorScheme.onSurface,
           padding: const EdgeInsets.symmetric(vertical: 16),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
-            side: const BorderSide(color: AppColors.border),
+            side: BorderSide(
+              color: isDark ? AppColors.border : Colors.grey.shade300,
+            ),
           ),
           elevation: 0,
         ),
+
         child: Text(
           label,
           style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
@@ -390,11 +412,12 @@ class _ProfilePageState extends State<ProfilePage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppColors.surface,
-        title: const Text(
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        title: Text(
           'Cerrar Sesión',
-          style: TextStyle(color: Colors.white),
+          style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
         ),
+
         content: const Text(
           '¿Estás seguro de que quieres cerrar sesión?',
           style: TextStyle(color: AppColors.textMuted),

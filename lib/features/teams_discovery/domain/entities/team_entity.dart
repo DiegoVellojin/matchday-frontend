@@ -9,6 +9,7 @@ class TeamEntity {
   final bool soyMiembro;
   final int? captainId;
   final String description;
+  final String? chatUrl;
 
   const TeamEntity({
     required this.id,
@@ -21,6 +22,7 @@ class TeamEntity {
     required this.soyMiembro,
     this.captainId,
     this.description = '',
+    this.chatUrl,
   });
 
 }

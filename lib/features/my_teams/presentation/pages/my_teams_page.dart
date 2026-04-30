@@ -67,13 +67,13 @@ class _MyTeamsPageState extends State<MyTeamsPage> {
                   if (myTeamsState is MyTeamsLoading ||
                       paymentsState is PaymentsLoading) {
                     return const Scaffold(
-                      backgroundColor: AppColors.background,
                       body: Center(
                         child: CircularProgressIndicator(
                           color: AppColors.primary,
                         ),
                       ),
                     );
+
                   }
 
                   if (myTeamsState is MyTeamsLoaded) {
@@ -88,7 +88,6 @@ class _MyTeamsPageState extends State<MyTeamsPage> {
                         .length;
 
                     return Scaffold(
-                      backgroundColor: AppColors.background,
                       body: SafeArea(
                         child: Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -96,10 +95,10 @@ class _MyTeamsPageState extends State<MyTeamsPage> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               const SizedBox(height: 12),
-                              const Text(
+                              Text(
                                 'Mis Equipos',
                                 style: TextStyle(
-                                  color: Colors.white,
+                                  color: Theme.of(context).colorScheme.onSurface,
                                   fontSize: 24,
                                   fontWeight: FontWeight.bold,
                                   letterSpacing: 0.5,
@@ -108,11 +107,12 @@ class _MyTeamsPageState extends State<MyTeamsPage> {
                               const SizedBox(height: 6),
                               Text(
                                 '${myTeamsState.teams.length} equipos • $pendingPaymentsCount pagos pendientes',
-                                style: const TextStyle(
-                                  color: AppColors.textMuted,
+                                style: TextStyle(
+                                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
                                   fontSize: 14,
                                 ),
                               ),
+
                               const SizedBox(height: 20),
                               _buildMicroFilters(),
                               const SizedBox(height: 20),
@@ -161,9 +161,9 @@ class _MyTeamsPageState extends State<MyTeamsPage> {
                   }
 
                   return const Scaffold(
-                    backgroundColor: AppColors.background,
                     body: SizedBox.shrink(),
                   );
+
                 },
               );
             },
@@ -205,16 +205,17 @@ class _MyTeamsPageState extends State<MyTeamsPage> {
 
   Widget _buildFilterButton(String text, TeamFilter filter) {
     final isSelected = _activeFilter == filter;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return GestureDetector(
       onTap: () => setState(() => _activeFilter = filter),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 250),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.primary : AppColors.surface,
+          color: isSelected ? AppColors.primary : Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected ? AppColors.primary : AppColors.border,
+            color: isSelected ? AppColors.primary : (isDark ? AppColors.border : Colors.grey.shade300),
           ),
           boxShadow: isSelected
               ? [
@@ -229,13 +230,14 @@ class _MyTeamsPageState extends State<MyTeamsPage> {
         child: Text(
           text,
           style: TextStyle(
-            color: isSelected ? AppColors.background : Colors.white,
+            color: isSelected ? Colors.black : Theme.of(context).colorScheme.onSurface,
             fontSize: 13,
             fontWeight: FontWeight.bold,
           ),
         ),
       ),
     );
+
   }
 
   Widget _buildTeamCard(
@@ -251,20 +253,24 @@ class _MyTeamsPageState extends State<MyTeamsPage> {
         team.logo != '🏀' &&
         team.logo != '🎾';
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(
+          color: isDark ? AppColors.border : Colors.grey.shade300,
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
+            color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
         ],
       ),
+
       child: Column(
         children: [
           Row(
@@ -280,7 +286,7 @@ class _MyTeamsPageState extends State<MyTeamsPage> {
                 ),
                 child: CircleAvatar(
                   radius: 26,
-                  backgroundColor: AppColors.background,
+                  backgroundColor: isDark ? AppColors.background : Colors.grey.shade100,
                   backgroundImage: hasLogo ? NetworkImage(team.logo) : null,
                   child: !hasLogo
                       ? Text(
@@ -288,6 +294,7 @@ class _MyTeamsPageState extends State<MyTeamsPage> {
                           style: const TextStyle(fontSize: 24),
                         )
                       : null,
+
                 ),
               ),
               const SizedBox(width: 14),
@@ -297,12 +304,13 @@ class _MyTeamsPageState extends State<MyTeamsPage> {
                   children: [
                     Text(
                       team.name,
-                      style: const TextStyle(
-                        color: Colors.white,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurface,
                         fontSize: 17,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
+
                     const SizedBox(height: 4),
                     Row(
                       children: [
@@ -366,12 +374,13 @@ class _MyTeamsPageState extends State<MyTeamsPage> {
                       ),
                       Text(
                         '\$${debtAmount.toStringAsFixed(2)}',
-                        style: const TextStyle(
-                          color: Colors.white,
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurface,
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
+
                     ],
                   ),
                 ),
@@ -453,13 +462,14 @@ class _MyTeamsPageState extends State<MyTeamsPage> {
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
-                    foregroundColor: AppColors.background,
+                    foregroundColor: Colors.black,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(20),
                     ),
                     padding: const EdgeInsets.symmetric(vertical: 10),
                     elevation: 0,
                   ),
+
                   child: Text(
                     isCaptain ? 'Gestionar' : 'Ver Equipo',
                     style: const TextStyle(fontWeight: FontWeight.bold),

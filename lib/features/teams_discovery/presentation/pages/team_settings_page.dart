@@ -37,6 +37,7 @@ class _TeamSettingsPageState extends State<TeamSettingsPage> {
   late TextEditingController _descriptionController;
 
   late TextEditingController _maxMembersController;
+  late TextEditingController _chatUrlController;
   late bool _isRecruiting;
   bool _isLoading = false;
   bool _isUploadingImage = false;
@@ -55,6 +56,7 @@ class _TeamSettingsPageState extends State<TeamSettingsPage> {
     _maxMembersController = TextEditingController(
       text: widget.team.maxMembers.toString(),
     );
+    _chatUrlController = TextEditingController(text: widget.team.chatUrl);
     _isRecruiting = widget.team.isRecruiting;
     _loadMembers();
   }
@@ -153,6 +155,11 @@ class _TeamSettingsPageState extends State<TeamSettingsPage> {
                 maxLines: 3,
               ),
               const SizedBox(height: 16),
+              _buildTextField(
+                'URL del Grupo (WhatsApp/Telegram)',
+                _chatUrlController,
+              ),
+              const SizedBox(height: 16),
               Row(
                 children: [
                   Expanded(
@@ -203,25 +210,28 @@ class _TeamSettingsPageState extends State<TeamSettingsPage> {
   }
 
   Widget _buildTeamHeader() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: isDark ? AppColors.border : Colors.grey.shade300),
       ),
+
       child: Row(
         children: [
           Container(
             width: 60,
             height: 60,
             decoration: BoxDecoration(
-              color: AppColors.background,
+              color: isDark ? AppColors.background : Colors.grey.shade100,
               shape: BoxShape.circle,
               border: Border.all(
                 color: AppColors.primary.withValues(alpha: 0.3),
               ),
             ),
+
             child: ClipRRect(
               borderRadius: BorderRadius.circular(30),
               child:
@@ -242,12 +252,13 @@ class _TeamSettingsPageState extends State<TeamSettingsPage> {
               children: [
                 Text(
                   widget.team.name,
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurface,
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
+
                 const SizedBox(height: 4),
                 Text(
                   widget.team.description,
@@ -287,6 +298,7 @@ class _TeamSettingsPageState extends State<TeamSettingsPage> {
     int maxLines = 1,
     TextInputType keyboardType = TextInputType.text,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -299,17 +311,21 @@ class _TeamSettingsPageState extends State<TeamSettingsPage> {
           controller: controller,
           maxLines: maxLines,
           keyboardType: keyboardType,
-          style: const TextStyle(color: Colors.white),
+          style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
           decoration: InputDecoration(
-            fillColor: AppColors.surface,
+            fillColor: Theme.of(context).colorScheme.surface,
             filled: true,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: AppColors.border),
+              borderSide: BorderSide(
+                color: isDark ? AppColors.border : Colors.grey.shade300,
+              ),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: AppColors.border),
+              borderSide: BorderSide(
+                color: isDark ? AppColors.border : Colors.grey.shade300,
+              ),
             ),
           ),
         ),
@@ -319,24 +335,28 @@ class _TeamSettingsPageState extends State<TeamSettingsPage> {
 
   /// Construye la lista visual de miembros con acciones administrativas condicionales.
   Widget _buildMembersList(ColorScheme colorScheme) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     if (_members.isEmpty) {
       return const Center(
         child: CircularProgressIndicator(color: AppColors.primary),
       );
     }
 
+
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: isDark ? AppColors.border : Colors.grey.shade300),
       ),
+
       child: ListView.separated(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         itemCount: _members.length,
         separatorBuilder: (_, _) =>
-            const Divider(color: AppColors.border, height: 1),
+            Divider(color: isDark ? AppColors.border : Colors.grey.shade300, height: 1),
+
         itemBuilder: (context, index) {
           final member = _members[index];
           final mId = member['fk_id_usuario'] ?? member['id_usuario'];
@@ -345,7 +365,7 @@ class _TeamSettingsPageState extends State<TeamSettingsPage> {
 
           return ListTile(
             leading: CircleAvatar(
-              backgroundColor: AppColors.background,
+              backgroundColor: isDark ? AppColors.background : Colors.grey.shade100,
               backgroundImage:
                   member['url_foto_perfil'] != null &&
                       member['url_foto_perfil'].toString().startsWith('http')
@@ -355,13 +375,15 @@ class _TeamSettingsPageState extends State<TeamSettingsPage> {
                   ? const Icon(Icons.person, color: AppColors.textMuted)
                   : null,
             ),
+
             title: Text(
               member['nombre_usuario'] ?? 'Usuario',
-              style: const TextStyle(
-                color: Colors.white,
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurface,
                 fontWeight: FontWeight.bold,
               ),
             ),
+
             subtitle: Text(
               role,
               style: TextStyle(
@@ -490,6 +512,7 @@ class _TeamSettingsPageState extends State<TeamSettingsPage> {
       logoUrl: logoUrl,
       maxMembers: int.tryParse(_maxMembersController.text),
       isRecruiting: _isRecruiting,
+      chatUrl: _chatUrlController.text.trim().isEmpty ? null : _chatUrlController.text.trim(),
     );
 
     setState(() => _isLoading = false);
@@ -514,13 +537,18 @@ class _TeamSettingsPageState extends State<TeamSettingsPage> {
 
   /// Muestra un diálogo de confirmación para ceder la capitanía.
   void _confirmTransferCaptain(int userId, String name) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Transferir Capitanía'),
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        title: Text('Transferir Capitanía', style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
         content: Text(
           '¿Estás seguro de que quieres transferir la capitanía a $name? Perderás el control administrativo del equipo.',
+          style: TextStyle(color: isDark ? Colors.white70 : Colors.black87),
         ),
+
+
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -559,11 +587,18 @@ class _TeamSettingsPageState extends State<TeamSettingsPage> {
 
   /// Muestra un diálogo para confirmar la expulsión de un miembro.
   void _confirmKickMember(int userId, String name) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Expulsar Miembro'),
-        content: Text('¿Quieres expulsar a $name del equipo?'),
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        title: Text('Expulsar Miembro', style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
+        content: Text(
+          '¿Quieres expulsar a $name del equipo?',
+          style: TextStyle(color: isDark ? Colors.white70 : Colors.black87),
+        ),
+
+
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -597,13 +632,18 @@ class _TeamSettingsPageState extends State<TeamSettingsPage> {
 
   /// Diálogo crítico para la eliminación total del equipo.
   void _confirmDeleteTeam() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Eliminar Equipo'),
-        content: const Text(
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        title: Text('Eliminar Equipo', style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
+        content: Text(
           'Esta acción es irreversible. Se eliminarán todos los miembros y datos del equipo. ¿Continuar?',
+          style: TextStyle(color: isDark ? Colors.white70 : Colors.black87),
         ),
+
+
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -639,13 +679,18 @@ class _TeamSettingsPageState extends State<TeamSettingsPage> {
 
   /// Diálogo para confirmar el abandono voluntario de un jugador.
   void _confirmLeaveTeam() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Salir del Equipo'),
-        content: const Text(
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        title: Text('Salir del Equipo', style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
+        content: Text(
           '¿Estás seguro de que quieres salir de este equipo?',
+          style: TextStyle(color: isDark ? Colors.white70 : Colors.black87),
         ),
+
+
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -684,6 +729,7 @@ class _TeamSettingsPageState extends State<TeamSettingsPage> {
     _nameController.dispose();
     _descriptionController.dispose();
     _maxMembersController.dispose();
+    _chatUrlController.dispose();
     super.dispose();
   }
 }

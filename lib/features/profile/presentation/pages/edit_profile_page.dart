@@ -109,11 +109,12 @@ class _EditProfilePageState extends State<EditProfilePage> {
     final confirmController = TextEditingController();
     final dialogFormKey = GlobalKey<FormState>();
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppColors.surface,
-        title: const Text('Cambiar Contraseña', style: TextStyle(color: Colors.white)),
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        title: Text('Cambiar Contraseña', style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
         content: Form(
           key: dialogFormKey,
           child: Column(
@@ -122,12 +123,12 @@ class _EditProfilePageState extends State<EditProfilePage> {
               TextFormField(
                 controller: _passwordController,
                 obscureText: true,
-                style: const TextStyle(color: Colors.white),
+                style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
                 decoration: InputDecoration(
                   labelText: 'Nueva Contraseña',
                   labelStyle: const TextStyle(color: AppColors.textMuted),
                   enabledBorder: OutlineInputBorder(
-                    borderSide: const BorderSide(color: AppColors.border),
+                    borderSide: BorderSide(color: isDark ? AppColors.border : Colors.grey.shade300),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   focusedBorder: OutlineInputBorder(
@@ -135,6 +136,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
+
                 validator: (value) {
                   if (value == null || value.length < 6) {
                     return 'Mínimo 6 caracteres';
@@ -146,12 +148,12 @@ class _EditProfilePageState extends State<EditProfilePage> {
               TextFormField(
                 controller: confirmController,
                 obscureText: true,
-                style: const TextStyle(color: Colors.white),
+                style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
                 decoration: InputDecoration(
                   labelText: 'Confirmar Contraseña',
                   labelStyle: const TextStyle(color: AppColors.textMuted),
                   enabledBorder: OutlineInputBorder(
-                    borderSide: const BorderSide(color: AppColors.border),
+                    borderSide: BorderSide(color: isDark ? AppColors.border : Colors.grey.shade300),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   focusedBorder: OutlineInputBorder(
@@ -159,6 +161,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
+
                 validator: (value) {
                   if (value != _passwordController.text) {
                     return 'Las contraseñas no coinciden';
@@ -199,6 +202,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return BlocListener<ProfileBloc, ProfileState>(
       listener: (context, state) {
         if (state is ProfileUpdateSuccess) {
@@ -219,23 +223,27 @@ class _EditProfilePageState extends State<EditProfilePage> {
         }
       },
       child: Scaffold(
-        backgroundColor: AppColors.background,
+
         appBar: AppBar(
-          backgroundColor: AppColors.surface,
+          backgroundColor: Theme.of(context).colorScheme.surface,
           elevation: 0,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back, color: Colors.white),
+            icon: Icon(Icons.arrow_back, color: Theme.of(context).colorScheme.onSurface),
             onPressed: () => context.pop(),
           ),
-          title: const Text(
+          title: Text(
             'Editar Perfil',
-            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontWeight: FontWeight.bold),
           ),
           bottom: PreferredSize(
             preferredSize: const Size.fromHeight(1),
-            child: Container(color: AppColors.border, height: 1),
+            child: Container(
+              color: isDark ? AppColors.border : Colors.grey.shade300,
+              height: 1,
+            ),
           ),
         ),
+
         body: BlocBuilder<ProfileBloc, ProfileState>(
           builder: (context, state) {
             final isLoading = state is ProfileUpdating;
@@ -267,26 +275,27 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     const SizedBox(height: 8),
                     TextFormField(
                       controller: _nameController,
-                      style: const TextStyle(color: Colors.white),
+                      style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
                       decoration: InputDecoration(
                         prefixIcon: const Icon(Icons.person_outline, color: AppColors.textMuted),
                         hintText: 'Ingresa tu nombre completo',
                         hintStyle: const TextStyle(color: Colors.grey),
                         filled: true,
-                        fillColor: AppColors.surface,
+                        fillColor: Theme.of(context).colorScheme.surface,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide.none,
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: AppColors.border),
+                          borderSide: BorderSide(color: isDark ? AppColors.border : Colors.grey.shade300),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: const BorderSide(color: AppColors.primary),
                         ),
                       ),
+
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) {
                           return 'El nombre es obligatorio';
@@ -304,25 +313,23 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     const SizedBox(height: 8),
                     IntlPhoneField(
                       controller: _phoneController,
-                      style: const TextStyle(color: Colors.white),
-                      dropdownTextStyle: const TextStyle(color: Colors.white),
-                      dropdownIcon: const Icon(Icons.arrow_drop_down, color: Colors.white),
+                      style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
+                      dropdownTextStyle: TextStyle(color: Theme.of(context).colorScheme.onSurface),
+                      dropdownIcon: Icon(Icons.arrow_drop_down, color: Theme.of(context).colorScheme.onSurface),
                       initialCountryCode: _getInitialCountryCode(),
-
-
                       languageCode: "es",
                       decoration: InputDecoration(
                         hintText: 'Número de teléfono',
                         hintStyle: const TextStyle(color: Colors.grey),
                         filled: true,
-                        fillColor: AppColors.surface,
+                        fillColor: Theme.of(context).colorScheme.surface,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide.none,
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: AppColors.border),
+                          borderSide: BorderSide(color: isDark ? AppColors.border : Colors.grey.shade300),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -342,13 +349,14 @@ class _EditProfilePageState extends State<EditProfilePage> {
                       child: OutlinedButton.icon(
                         onPressed: _showChangePasswordDialog,
                         style: OutlinedButton.styleFrom(
-                          foregroundColor: Colors.white,
-                          side: const BorderSide(color: AppColors.border),
+                          foregroundColor: Theme.of(context).colorScheme.onSurface,
+                          side: BorderSide(color: isDark ? AppColors.border : Colors.grey.shade300),
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
                         ),
+
                         icon: const Icon(Icons.lock_outline, color: AppColors.primary),
                         label: const Text('Cambiar Contraseña'),
                       ),

@@ -34,6 +34,7 @@ abstract class ITeamsDiscoveryRepository {
     required String description,
     required bool isRecruiting,
     required int maxMembers,
+    String? chatUrl,
   });
 
   /// Modifica los atributos de un equipo existente. Reservado para el Capitán.
@@ -44,6 +45,7 @@ abstract class ITeamsDiscoveryRepository {
     String? description,
     bool? isRecruiting,
     int? maxMembers,
+    String? chatUrl,
   });
 
   /// Elimina el equipo y todas sus relaciones de membresía. Reservado para el Capitán.
