@@ -8,6 +8,8 @@ import '../bloc/teams_discovery_event.dart';
 import '../bloc/teams_discovery_state.dart';
 import '../../domain/entities/sport_entity.dart';
 import '../widgets/team_discovery_card.dart';
+import '../../../../core/widgets/matchday_search_bar.dart';
+import '../../../../core/widgets/matchday_filter_chips.dart';
 
 class TeamsDiscoveryPage extends StatelessWidget {
   const TeamsDiscoveryPage({super.key});
@@ -285,9 +287,6 @@ class _TeamsDiscoveryViewState extends State<_TeamsDiscoveryView> {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
     return Scaffold(
       body: SafeArea(
         child: BlocConsumer<TeamsDiscoveryBloc, TeamsDiscoveryState>(
@@ -324,131 +323,27 @@ class _TeamsDiscoveryViewState extends State<_TeamsDiscoveryView> {
               children: [
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                  child: Container(
-                    height: 50,
-                    decoration: BoxDecoration(
-                      color: colorScheme.surface,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: isDark
-                            ? Colors.transparent
-                            : Colors.grey.shade300,
-                      ),
-                    ),
-                    child: TextField(
-                      controller: _searchController,
-                      style: TextStyle(color: colorScheme.onSurface),
-                      decoration: InputDecoration(
-                        icon: Padding(
-                          padding: const EdgeInsets.only(left: 16.0),
-                          child: Icon(
-                            Icons.search,
-                            color: isDark
-                                ? const Color(0xFF9CA3AF)
-                                : Colors.grey.shade600,
-                          ),
-                        ),
-                        hintText: 'Buscar equipos...',
-                        hintStyle: TextStyle(
-                          color: isDark
-                              ? const Color(0xFF9CA3AF)
-                              : Colors.grey.shade500,
-                        ),
-                        border: InputBorder.none,
-                        contentPadding: const EdgeInsets.symmetric(
-                          vertical: 15,
-                        ),
-                      ),
-                    ),
+                  child: MatchDaySearchBar(
+                    controller: _searchController,
+                    hintText: 'Buscar equipos...',
                   ),
                 ),
                 const SizedBox(height: 16),
-
-                if (dynamicFilters.length > 1)
-                  SizedBox(
-                    height: 40,
-                    child: ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                      itemCount: dynamicFilters.length + 1,
-                      itemBuilder: (context, index) {
-                        if (index == dynamicFilters.length) {
-                          return Padding(
-                            padding: const EdgeInsets.only(
-                              left: 4.0,
-                              right: 16.0,
-                            ),
-                            child: ActionChip(
-                              backgroundColor: colorScheme.surface,
-                              side: BorderSide(
-                                color: isDark
-                                    ? AppColors.border
-                                    : Colors.grey.shade300,
-                              ),
-                              label: Row(
-                                children: [
-                                  Icon(
-                                    Icons.tune,
-                                    size: 16,
-                                    color: colorScheme.onSurface,
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    'Filtros',
-                                    style: TextStyle(
-                                      color: colorScheme.onSurface,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              onPressed: () =>
-                                  _openFiltersBottomSheet(context, sportsList),
-                            ),
-                          );
-                        }
-
-                        final filterName = dynamicFilters[index];
-                        final isSelected = _selectedFilter == filterName;
-
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                          child: ChoiceChip(
-                            selected: isSelected,
-                            showCheckmark: false,
-                            backgroundColor: colorScheme.surface,
-                            selectedColor: AppColors.primary,
-                            side: BorderSide(
-                              color: isSelected
-                                  ? AppColors.primary
-                                  : (isDark
-                                        ? Colors.transparent
-                                        : Colors.grey.shade300),
-                            ),
-                            label: Text(
-                              filterName,
-                              style: TextStyle(
-                                color: isSelected
-                                    ? Colors.black
-                                    : colorScheme.onSurface,
-                                fontWeight: isSelected
-                                    ? FontWeight.bold
-                                    : FontWeight.normal,
-                              ),
-                            ),
-                            onSelected: (selected) {
-                              setState(() {
-                                _selectedFilter = filterName;
-                                if (filterName != 'Todos') {
-                                  _recentSports.remove(filterName);
-                                  _recentSports.insert(0, filterName);
-                                }
-                              });
-                            },
-                          ),
-                        );
-                      },
-                    ),
-                  ),
+                MatchDayFilterChips<String>(
+                  options: dynamicFilters.map((f) => FilterOption(label: f, value: f)).toList(),
+                  selectedValue: _selectedFilter,
+                  onSelected: (val) {
+                    if (val == null) return;
+                    setState(() {
+                      _selectedFilter = val;
+                      if (val != 'Todos') {
+                        _recentSports.remove(val);
+                        _recentSports.insert(0, val);
+                      }
+                    });
+                  },
+                  onAdvancedFiltersPressed: () => _openFiltersBottomSheet(context, sportsList),
+                ),
                 const SizedBox(height: 16),
 
                 Expanded(

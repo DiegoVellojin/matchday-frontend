@@ -10,6 +10,7 @@ import '../../../my_teams/presentation/pages/my_teams_page.dart';
 import '../../../../core/widgets/matchday_app_bar.dart';
 import '../../../profile/presentation/bloc/profile_bloc.dart';
 import '../../../profile/presentation/bloc/profile_event.dart';
+import '../../../matches/presentation/pages/matches_page.dart';
 
 class MainHubPage extends StatefulWidget {
   const MainHubPage({super.key});
@@ -60,8 +61,8 @@ class _MainHubPageState extends State<MainHubPage> {
   }
 
   final List<Widget> _pages = [
-    const TeamsDiscoveryPage(), // Reemplazamos el Skeleton con la página real
-    const Center(child: Text('🏆 Partidos', style: TextStyle(fontSize: 24))),
+    const TeamsDiscoveryPage(), 
+    const MatchesPage(),
     const MyTeamsPage(),
 
     const Center(child: Text('🏅 Rankings', style: TextStyle(fontSize: 24))),

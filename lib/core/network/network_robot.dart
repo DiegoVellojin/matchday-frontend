@@ -44,8 +44,8 @@ class NetworkRobot {
   }
 
   /// Realiza una petición POST enviando [data] en el cuerpo.
-  Future<Response> post(String path, {dynamic data}) async {
-    return await _dio.post(path, data: data);
+  Future<Response> post(String path, {dynamic data, Map<String, dynamic>? queryParameters}) async {
+    return await _dio.post(path, data: data, queryParameters: queryParameters);
   }
 
   /// Realiza una petición PUT para actualizar recursos.

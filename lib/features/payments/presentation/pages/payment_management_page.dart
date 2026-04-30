@@ -22,17 +22,23 @@ class _PaymentManagementPageState extends State<PaymentManagementPage> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return BlocProvider<PaymentsBloc>(
       create: (context) => sl<PaymentsBloc>()..add(LoadMyPaymentsEvent()),
       child: Scaffold(
-        backgroundColor: AppColors.background,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         appBar: AppBar(
-          backgroundColor: AppColors.surface,
-          title: const Text(
+          backgroundColor: colorScheme.surface,
+          title: Text(
             'Gestión de Pagos',
-            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              color: colorScheme.onSurface,
+              fontWeight: FontWeight.bold,
+            ),
           ),
-          iconTheme: const IconThemeData(color: Colors.white),
+          iconTheme: IconThemeData(color: colorScheme.onSurface),
           elevation: 0,
         ),
         body: BlocConsumer<PaymentsBloc, PaymentsState>(
@@ -67,7 +73,7 @@ class _PaymentManagementPageState extends State<PaymentManagementPage> {
                   children: [
                     _buildSummaryCard(totalDebt),
                     const SizedBox(height: 20),
-                    _buildMicroFilters(),
+                    _buildMicroFilters(colorScheme),
                     const SizedBox(height: 16),
                     Expanded(
                       child: payments.isEmpty
@@ -80,6 +86,8 @@ class _PaymentManagementPageState extends State<PaymentManagementPage> {
                                 return _buildPaymentCard(
                                   context,
                                   payments[index],
+                                  colorScheme,
+                                  isDark,
                                 );
                               },
                             ),
@@ -157,35 +165,35 @@ class _PaymentManagementPageState extends State<PaymentManagementPage> {
     );
   }
 
-  Widget _buildMicroFilters() {
+  Widget _buildMicroFilters(ColorScheme colorScheme) {
     return Row(
       children: [
-        _buildFilterButton('Todos', PaymentFilter.all),
+        _buildFilterButton('Todos', PaymentFilter.all, colorScheme),
         const SizedBox(width: 8),
-        _buildFilterButton('Pendientes', PaymentFilter.pending),
+        _buildFilterButton('Pendientes', PaymentFilter.pending, colorScheme),
         const SizedBox(width: 8),
-        _buildFilterButton('Completados', PaymentFilter.paid),
+        _buildFilterButton('Completados', PaymentFilter.paid, colorScheme),
       ],
     );
   }
 
-  Widget _buildFilterButton(String text, PaymentFilter filter) {
+  Widget _buildFilterButton(String text, PaymentFilter filter, ColorScheme colorScheme) {
     final isSelected = _activeFilter == filter;
     return GestureDetector(
       onTap: () => setState(() => _activeFilter = filter),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.primary : AppColors.surface,
+          color: isSelected ? AppColors.primary : colorScheme.surface,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected ? AppColors.primary : AppColors.border,
+            color: isSelected ? AppColors.primary : colorScheme.outlineVariant,
           ),
         ),
         child: Text(
           text,
           style: TextStyle(
-            color: isSelected ? AppColors.background : Colors.white,
+            color: isSelected ? Colors.black : colorScheme.onSurfaceVariant,
             fontSize: 13,
             fontWeight: FontWeight.bold,
           ),
@@ -194,13 +202,13 @@ class _PaymentManagementPageState extends State<PaymentManagementPage> {
     );
   }
 
-  Widget _buildPaymentCard(BuildContext context, PaymentEntity payment) {
+  Widget _buildPaymentCard(BuildContext context, PaymentEntity payment, ColorScheme colorScheme, bool isDark) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: colorScheme.outlineVariant),
       ),
       child: Row(
         children: [
@@ -222,8 +230,8 @@ class _PaymentManagementPageState extends State<PaymentManagementPage> {
               children: [
                 Text(
                   payment.teamName,
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: colorScheme.onSurface,
                     fontSize: 15,
                     fontWeight: FontWeight.bold,
                   ),
@@ -231,8 +239,8 @@ class _PaymentManagementPageState extends State<PaymentManagementPage> {
                 const SizedBox(height: 2),
                 Text(
                   payment.concepto,
-                  style: const TextStyle(
-                    color: AppColors.textMuted,
+                  style: TextStyle(
+                    color: colorScheme.onSurfaceVariant,
                     fontSize: 13,
                   ),
                 ),
@@ -250,13 +258,13 @@ class _PaymentManagementPageState extends State<PaymentManagementPage> {
               ],
             ),
           ),
-          _buildActionButton(context, payment),
+          _buildActionButton(context, payment, colorScheme),
         ],
       ),
     );
   }
 
-  Widget _buildActionButton(BuildContext context, PaymentEntity payment) {
+  Widget _buildActionButton(BuildContext context, PaymentEntity payment, ColorScheme colorScheme) {
     if (payment.isPaid) {
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -274,6 +282,7 @@ class _PaymentManagementPageState extends State<PaymentManagementPage> {
         ),
       );
     }
+// ... [No changes to the logic, just passing colorScheme to _showUploadDialog if needed or ensuring consistent styling]
 
     if (payment.estatusPago == 'reportado') {
       return Container(

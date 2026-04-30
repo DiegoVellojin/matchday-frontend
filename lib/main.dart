@@ -26,6 +26,9 @@ import 'features/profile/presentation/bloc/profile_event.dart';
 
 import 'features/notifications/presentation/bloc/notifications_bloc.dart';
 import 'features/notifications/presentation/bloc/notifications_event.dart';
+import 'features/payments/presentation/pages/payment_management_page.dart';
+import 'features/matches/presentation/pages/create_match_page.dart';
+import 'features/matches/presentation/pages/match_details_page.dart';
 
 
 
@@ -92,6 +95,21 @@ final _router = GoRouter(
       builder: (context, state) {
         final id = int.tryParse(state.pathParameters['id'] ?? '') ?? 0;
         return TeamDashboardPage(teamId: id);
+      },
+    ),
+    GoRoute(
+      path: '/pagos',
+      builder: (context, state) => const PaymentManagementPage(),
+    ),
+    GoRoute(
+      path: '/crear-partido',
+      builder: (context, state) => const CreateMatchPage(),
+    ),
+    GoRoute(
+      path: '/match-details/:id',
+      builder: (context, state) {
+        final id = int.parse(state.pathParameters['id']!);
+        return MatchDetailsPage(matchId: id);
       },
     ),
   ],

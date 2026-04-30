@@ -81,6 +81,12 @@ import '../../features/payments/domain/repositories/i_payments_repository.dart';
 import '../../features/payments/infrastructure/datasources/payments_remote_data_source.dart';
 import '../../features/payments/infrastructure/repositories/payments_repository_impl.dart';
 import '../../features/payments/presentation/bloc/payments_bloc.dart';
+// Importaciones de Partidos (NUEVO)
+import '../../features/matches/domain/repositories/matches_repository.dart';
+import '../../features/matches/infrastructure/datasources/matches_remote_datasource.dart';
+import '../../features/matches/infrastructure/repositories/matches_repository_impl.dart';
+import '../../features/matches/application/usecases/matches_usecases.dart';
+import '../../features/matches/presentation/bloc/matches_bloc.dart';
 
 
 // sl = Service Locator
@@ -130,6 +136,8 @@ Future<void> init() async {
 
   // Pagos (NUEVO)
   sl.registerLazySingleton(() => PaymentsRemoteDataSource(sl()));
+  // Partidos (NUEVO)
+  sl.registerLazySingleton<MatchesRemoteDataSource>(() => MatchesRemoteDataSourceImpl(sl()));
 
 
 
@@ -162,6 +170,8 @@ Future<void> init() async {
 
   // Pagos (NUEVO)
   sl.registerLazySingleton<IPaymentsRepository>(() => PaymentsRepositoryImpl(sl()));
+  // Partidos (NUEVO)
+  sl.registerLazySingleton<IMatchesRepository>(() => MatchesRepositoryImpl(sl()));
 
 
 
@@ -212,6 +222,13 @@ Future<void> init() async {
   // Pagos (NUEVO)
   sl.registerLazySingleton(() => GetMyPaymentsUseCase(sl()));
   sl.registerLazySingleton(() => UploadReceiptUseCase(sl()));
+  // Partidos (NUEVO)
+  sl.registerLazySingleton(() => GetMatchesUseCase(sl()));
+  sl.registerLazySingleton(() => GetMatchDetailsUseCase(sl()));
+  sl.registerLazySingleton(() => CreateMatchUseCase(sl()));
+  sl.registerLazySingleton(() => AcceptEncounterUseCase(sl()));
+  sl.registerLazySingleton(() => ProposeTermsUseCase(sl()));
+  sl.registerLazySingleton(() => JoinMatchUseCase(sl()));
 
 
 
@@ -284,6 +301,15 @@ Future<void> init() async {
     () => PaymentsBloc(
       getMyPaymentsUseCase: sl(),
       uploadReceiptUseCase: sl(),
+    ),
+  );
+  // Partidos (NUEVO)
+  sl.registerFactory(
+    () => MatchesBloc(
+      getMatchesUseCase: sl(),
+      getMatchDetailsUseCase: sl(),
+      createMatchUseCase: sl(),
+      proposeTermsUseCase: sl(),
     ),
   );
 

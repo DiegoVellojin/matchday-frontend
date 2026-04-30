@@ -306,11 +306,7 @@ class _TeamDashboardPageState extends State<TeamDashboardPage> {
                 const SizedBox(width: 8),
                 Expanded(
                   child: GestureDetector(
-                    onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Módulo de Pagos próximamente.')),
-                      );
-                    },
+                    onTap: () => context.push('/pagos'),
                     child: Container(
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       decoration: BoxDecoration(

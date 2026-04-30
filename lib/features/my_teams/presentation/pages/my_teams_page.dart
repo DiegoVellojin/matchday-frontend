@@ -11,6 +11,7 @@ import '../../domain/entities/my_team_entity.dart';
 import '../bloc/my_teams_bloc.dart';
 import '../bloc/my_teams_event.dart';
 import '../bloc/my_teams_state.dart';
+import '../../../../core/widgets/matchday_filter_chips.dart';
 
 import '../../../payments/presentation/bloc/payments_bloc.dart';
 import '../../../payments/presentation/bloc/payments_event.dart';
@@ -114,7 +115,17 @@ class _MyTeamsPageState extends State<MyTeamsPage> {
                               ),
 
                               const SizedBox(height: 20),
-                              _buildMicroFilters(),
+                              MatchDayFilterChips<TeamFilter>(
+                                options: const [
+                                  FilterOption(label: 'Todos', value: TeamFilter.all),
+                                  FilterOption(label: 'Como Jugador', value: TeamFilter.player),
+                                  FilterOption(label: 'Como Organizador', value: TeamFilter.organizer),
+                                ],
+                                selectedValue: _activeFilter,
+                                onSelected: (val) {
+                                  if (val != null) setState(() => _activeFilter = val);
+                                },
+                              ),
                               const SizedBox(height: 20),
                               Expanded(
                                 child: teams.isEmpty
@@ -188,57 +199,7 @@ class _MyTeamsPageState extends State<MyTeamsPage> {
     }
   }
 
-  Widget _buildMicroFilters() {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        children: [
-          _buildFilterButton('Todos', TeamFilter.all),
-          const SizedBox(width: 8),
-          _buildFilterButton('Como Jugador', TeamFilter.player),
-          const SizedBox(width: 8),
-          _buildFilterButton('Como Organizador', TeamFilter.organizer),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFilterButton(String text, TeamFilter filter) {
-    final isSelected = _activeFilter == filter;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return GestureDetector(
-      onTap: () => setState(() => _activeFilter = filter),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 250),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        decoration: BoxDecoration(
-          color: isSelected ? AppColors.primary : Theme.of(context).colorScheme.surface,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: isSelected ? AppColors.primary : (isDark ? AppColors.border : Colors.grey.shade300),
-          ),
-          boxShadow: isSelected
-              ? [
-                  BoxShadow(
-                    color: AppColors.primary.withValues(alpha: 0.3),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ]
-              : [],
-        ),
-        child: Text(
-          text,
-          style: TextStyle(
-            color: isSelected ? Colors.black : Theme.of(context).colorScheme.onSurface,
-            fontSize: 13,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ),
-    );
-
-  }
+  // Replaced by MatchDayFilterChips
 
   Widget _buildTeamCard(
     BuildContext context,
