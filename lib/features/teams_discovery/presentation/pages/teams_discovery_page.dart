@@ -9,9 +9,6 @@ import '../bloc/teams_discovery_state.dart';
 import '../../domain/entities/sport_entity.dart';
 import '../widgets/team_discovery_card.dart';
 
-
-
-
 class TeamsDiscoveryPage extends StatelessWidget {
   const TeamsDiscoveryPage({super.key});
 
@@ -59,7 +56,9 @@ class _TeamsDiscoveryViewState extends State<_TeamsDiscoveryView> {
 
   List<String> _getDynamicFilters(List<SportEntity> sportsFromState) {
     final allSportNames = sportsFromState.map((s) => s.name).toList();
-    final remainingSports = allSportNames.where((s) => !_recentSports.contains(s)).toList();
+    final remainingSports = allSportNames
+        .where((s) => !_recentSports.contains(s))
+        .toList();
     return ['Todos', ..._recentSports, ...remainingSports];
   }
 
@@ -83,7 +82,9 @@ class _TeamsDiscoveryViewState extends State<_TeamsDiscoveryView> {
               ),
               decoration: BoxDecoration(
                 color: isDark ? const Color(0xFF1E293B) : Colors.white,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(20),
+                ),
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -204,7 +205,7 @@ class _TeamsDiscoveryViewState extends State<_TeamsDiscoveryView> {
                       ),
                       Switch(
                         value: _filterOnlyRecruiting,
-                        activeColor: AppColors.primary,
+                        activeThumbColor: AppColors.primary,
                         onChanged: (val) {
                           setModalState(() {
                             _filterOnlyRecruiting = val;
@@ -232,7 +233,10 @@ class _TeamsDiscoveryViewState extends State<_TeamsDiscoveryView> {
                       onPressed: () => Navigator.pop(modalContext),
                       child: const Text(
                         'Aplicar Filtros',
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
                       ),
                     ),
                   ),
@@ -260,7 +264,9 @@ class _TeamsDiscoveryViewState extends State<_TeamsDiscoveryView> {
       backgroundColor: colorScheme.surface,
       selectedColor: AppColors.primary,
       side: BorderSide(
-        color: isSelected ? AppColors.primary : (isDark ? Colors.transparent : Colors.grey.shade300),
+        color: isSelected
+            ? AppColors.primary
+            : (isDark ? Colors.transparent : Colors.grey.shade300),
       ),
       label: Text(
         label,
@@ -309,12 +315,13 @@ class _TeamsDiscoveryViewState extends State<_TeamsDiscoveryView> {
               );
             }
 
-            final List<SportEntity> sportsList = state is TeamsDiscoveryLoaded ? state.sports : [];
+            final List<SportEntity> sportsList = state is TeamsDiscoveryLoaded
+                ? state.sports
+                : [];
             final List<String> dynamicFilters = _getDynamicFilters(sportsList);
 
             return Column(
               children: [
-
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20.0),
                   child: Container(
@@ -323,7 +330,9 @@ class _TeamsDiscoveryViewState extends State<_TeamsDiscoveryView> {
                       color: colorScheme.surface,
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: isDark ? Colors.transparent : Colors.grey.shade300,
+                        color: isDark
+                            ? Colors.transparent
+                            : Colors.grey.shade300,
                       ),
                     ),
                     child: TextField(
@@ -334,15 +343,21 @@ class _TeamsDiscoveryViewState extends State<_TeamsDiscoveryView> {
                           padding: const EdgeInsets.only(left: 16.0),
                           child: Icon(
                             Icons.search,
-                            color: isDark ? const Color(0xFF9CA3AF) : Colors.grey.shade600,
+                            color: isDark
+                                ? const Color(0xFF9CA3AF)
+                                : Colors.grey.shade600,
                           ),
                         ),
                         hintText: 'Buscar equipos...',
                         hintStyle: TextStyle(
-                          color: isDark ? const Color(0xFF9CA3AF) : Colors.grey.shade500,
+                          color: isDark
+                              ? const Color(0xFF9CA3AF)
+                              : Colors.grey.shade500,
                         ),
                         border: InputBorder.none,
-                        contentPadding: const EdgeInsets.symmetric(vertical: 15),
+                        contentPadding: const EdgeInsets.symmetric(
+                          vertical: 15,
+                        ),
                       ),
                     ),
                   ),
@@ -359,23 +374,35 @@ class _TeamsDiscoveryViewState extends State<_TeamsDiscoveryView> {
                       itemBuilder: (context, index) {
                         if (index == dynamicFilters.length) {
                           return Padding(
-                            padding: const EdgeInsets.only(left: 4.0, right: 16.0),
+                            padding: const EdgeInsets.only(
+                              left: 4.0,
+                              right: 16.0,
+                            ),
                             child: ActionChip(
                               backgroundColor: colorScheme.surface,
                               side: BorderSide(
-                                color: isDark ? AppColors.border : Colors.grey.shade300,
+                                color: isDark
+                                    ? AppColors.border
+                                    : Colors.grey.shade300,
                               ),
                               label: Row(
                                 children: [
-                                  Icon(Icons.tune, size: 16, color: colorScheme.onSurface),
+                                  Icon(
+                                    Icons.tune,
+                                    size: 16,
+                                    color: colorScheme.onSurface,
+                                  ),
                                   const SizedBox(width: 4),
                                   Text(
                                     'Filtros',
-                                    style: TextStyle(color: colorScheme.onSurface),
+                                    style: TextStyle(
+                                      color: colorScheme.onSurface,
+                                    ),
                                   ),
                                 ],
                               ),
-                              onPressed: () => _openFiltersBottomSheet(context, sportsList),
+                              onPressed: () =>
+                                  _openFiltersBottomSheet(context, sportsList),
                             ),
                           );
                         }
@@ -391,13 +418,21 @@ class _TeamsDiscoveryViewState extends State<_TeamsDiscoveryView> {
                             backgroundColor: colorScheme.surface,
                             selectedColor: AppColors.primary,
                             side: BorderSide(
-                              color: isSelected ? AppColors.primary : (isDark ? Colors.transparent : Colors.grey.shade300),
+                              color: isSelected
+                                  ? AppColors.primary
+                                  : (isDark
+                                        ? Colors.transparent
+                                        : Colors.grey.shade300),
                             ),
                             label: Text(
                               filterName,
                               style: TextStyle(
-                                color: isSelected ? Colors.black : colorScheme.onSurface,
-                                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                color: isSelected
+                                    ? Colors.black
+                                    : colorScheme.onSurface,
+                                fontWeight: isSelected
+                                    ? FontWeight.bold
+                                    : FontWeight.normal,
                               ),
                             ),
                             onSelected: (selected) {
@@ -421,21 +456,31 @@ class _TeamsDiscoveryViewState extends State<_TeamsDiscoveryView> {
                     builder: (context) {
                       if (state is TeamsDiscoveryLoaded) {
                         final filteredTeams = state.teams.where((team) {
-                          final matchesSport = _selectedFilter == 'Todos' ||
-                              team.sportName.toLowerCase() == _selectedFilter.toLowerCase();
-                          final matchesSearch = _searchQuery.isEmpty ||
+                          final matchesSport =
+                              _selectedFilter == 'Todos' ||
+                              team.sportName.toLowerCase() ==
+                                  _selectedFilter.toLowerCase();
+                          final matchesSearch =
+                              _searchQuery.isEmpty ||
                               team.name.toLowerCase().contains(_searchQuery);
-                          final matchesMembers = _filterMaxMembers == null ||
+                          final matchesMembers =
+                              _filterMaxMembers == null ||
                               team.maxMembers == _filterMaxMembers;
-                          final matchesRecruiting = !_filterOnlyRecruiting || team.isRecruiting;
+                          final matchesRecruiting =
+                              !_filterOnlyRecruiting || team.isRecruiting;
 
-                          return matchesSport && matchesSearch && matchesMembers && matchesRecruiting;
+                          return matchesSport &&
+                              matchesSearch &&
+                              matchesMembers &&
+                              matchesRecruiting;
                         }).toList();
 
                         if (filteredTeams.isEmpty) {
                           return RefreshIndicator(
                             onRefresh: () async {
-                              context.read<TeamsDiscoveryBloc>().add(LoadTeamsEvent());
+                              context.read<TeamsDiscoveryBloc>().add(
+                                LoadTeamsEvent(),
+                              );
                             },
                             child: ListView(
                               physics: const AlwaysScrollableScrollPhysics(),
@@ -446,7 +491,9 @@ class _TeamsDiscoveryViewState extends State<_TeamsDiscoveryView> {
                                     state.teams.isEmpty
                                         ? 'No hay equipos disponibles en este momento.'
                                         : 'No se encontraron equipos para estos filtros.',
-                                    style: const TextStyle(color: AppColors.textMuted),
+                                    style: const TextStyle(
+                                      color: AppColors.textMuted,
+                                    ),
                                   ),
                                 ),
                               ],
@@ -456,24 +503,32 @@ class _TeamsDiscoveryViewState extends State<_TeamsDiscoveryView> {
 
                         return RefreshIndicator(
                           onRefresh: () async {
-                            context.read<TeamsDiscoveryBloc>().add(LoadTeamsEvent());
+                            context.read<TeamsDiscoveryBloc>().add(
+                              LoadTeamsEvent(),
+                            );
                           },
                           child: GridView.builder(
                             physics: const AlwaysScrollableScrollPhysics(),
-                            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0),
-                            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 2,
-                              childAspectRatio: 0.75,
-                              crossAxisSpacing: 16,
-                              mainAxisSpacing: 16,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 20.0,
+                              vertical: 8.0,
                             ),
+                            gridDelegate:
+                                const SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: 2,
+                                  childAspectRatio: 0.75,
+                                  crossAxisSpacing: 16,
+                                  mainAxisSpacing: 16,
+                                ),
                             itemCount: filteredTeams.length,
                             itemBuilder: (context, index) {
                               final team = filteredTeams[index];
                               return TeamDiscoveryCard(
                                 team: team,
                                 onRequestJoin: () {
-                                  context.read<TeamsDiscoveryBloc>().add(RequestJoinTeamEvent(teamId: team.id));
+                                  context.read<TeamsDiscoveryBloc>().add(
+                                    RequestJoinTeamEvent(teamId: team.id),
+                                  );
                                 },
                               );
                             },
@@ -503,5 +558,3 @@ class _TeamsDiscoveryViewState extends State<_TeamsDiscoveryView> {
     );
   }
 }
-
-

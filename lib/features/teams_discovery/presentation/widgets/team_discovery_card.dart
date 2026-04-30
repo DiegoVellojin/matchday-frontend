@@ -70,9 +70,10 @@ class TeamDiscoveryCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: AppColors.primary.withOpacity(0.1),
+                    color: AppColors.primary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
+
                   child: Text(
                     team.sportName,
                     style: const TextStyle(
@@ -123,13 +124,14 @@ class TeamDiscoveryCard extends StatelessWidget {
                         context.push('/team-dashboard/${team.id}');
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary.withOpacity(0.2),
+                        backgroundColor: AppColors.primary.withValues(alpha: 0.2),
                         foregroundColor: AppColors.primary,
                         elevation: 0,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),
                       ),
+
                       child: const Text(
                         'Ver mi equipo',
                         style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),

@@ -367,6 +367,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
                                 if (_formKey.currentState!.validate()) {
                                   String? finalPhotoUrl = _photoUrlController.text.trim();
                                   
+                                  final profileBloc = context.read<ProfileBloc>();
+
                                   if (_imageFile != null) {
                                     final uploadedUrl = await _uploadImage();
                                     if (uploadedUrl != null) {
@@ -374,20 +376,19 @@ class _EditProfilePageState extends State<EditProfilePage> {
                                     }
                                   }
 
-                                  if (mounted) {
-                                    context.read<ProfileBloc>().add(
-                                          UpdateProfileEvent(
-                                            name: _nameController.text.trim(),
-                                            phone: _completePhoneNumber.isNotEmpty 
-                                                ? _completePhoneNumber 
-                                                : _phoneController.text.trim(),
-                                            photoUrl: finalPhotoUrl.isNotEmpty ? finalPhotoUrl : null,
-                                            password: _passwordController.text.isNotEmpty
-                                                ? _passwordController.text
-                                                : null,
-                                          ),
-                                        );
-                                  }
+                                  profileBloc.add(
+                                    UpdateProfileEvent(
+                                      name: _nameController.text.trim(),
+                                      phone: _completePhoneNumber.isNotEmpty 
+                                          ? _completePhoneNumber 
+                                          : _phoneController.text.trim(),
+                                      photoUrl: finalPhotoUrl.isNotEmpty ? finalPhotoUrl : null,
+                                      password: _passwordController.text.isNotEmpty
+                                          ? _passwordController.text
+                                          : null,
+                                    ),
+                                  );
+
                                 }
                               },
                         style: ElevatedButton.styleFrom(

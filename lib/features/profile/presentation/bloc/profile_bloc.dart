@@ -48,8 +48,10 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
     });
     on<LogoutEvent>((event, emit) async {
       await secureStorageService.deleteToken();
+      emit(ProfileInitial()); // Limpiamos el estado del perfil
       emit(LogoutSuccess());
     });
+
   }
 }
 

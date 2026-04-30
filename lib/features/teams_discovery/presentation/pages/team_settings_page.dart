@@ -138,8 +138,8 @@ class _TeamSettingsPageState extends State<TeamSettingsPage> {
                 imageFile: _imageFile,
                 imageUrl: _currentLogoUrl,
                 onPickImage: _pickImage,
-                placeholder: widget.team.logo.length < 4 
-                    ? widget.team.logo 
+                placeholder: widget.team.logo.length < 4
+                    ? widget.team.logo
                     : Icons.camera_alt_outlined,
                 label: 'Cambiar logo',
               ),
@@ -176,7 +176,7 @@ class _TeamSettingsPageState extends State<TeamSettingsPage> {
                       Switch(
                         value: _isRecruiting,
                         onChanged: (val) => setState(() => _isRecruiting = val),
-                        activeColor: AppColors.primary,
+                        activeThumbColor: AppColors.primary,
                       ),
                     ],
                   ),
@@ -335,7 +335,7 @@ class _TeamSettingsPageState extends State<TeamSettingsPage> {
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         itemCount: _members.length,
-        separatorBuilder: (_, __) =>
+        separatorBuilder: (_, _) =>
             const Divider(color: AppColors.border, height: 1),
         itemBuilder: (context, index) {
           final member = _members[index];

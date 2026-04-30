@@ -8,7 +8,11 @@ import '../../../../core/theme/widgets/theme_toggle_button.dart';
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
 import '../bloc/auth_state.dart';
+import '../../../profile/presentation/bloc/profile_bloc.dart';
+import '../../../profile/presentation/bloc/profile_event.dart';
+
 import '../widgets/custom_text_field.dart';
+
 import '../widgets/google_sign_in_button.dart';
 
 class LoginPage extends StatelessWidget {
@@ -52,6 +56,10 @@ class _LoginViewState extends State<_LoginView> {
             SnackBar(content: Text(state.message), backgroundColor: Colors.red),
           );
         } else if (state is AuthAuthenticated) {
+          // IMPORTANTE: Recargar perfil y notificaciones al entrar con un nuevo usuario
+          context.read<ProfileBloc>().add(LoadProfileEvent());
+          // context.read<NotificationsBloc>().add(LoadNotificationsEvent()); // Descomentar si se usa globalmente
+          
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('¡Bienvenido a MatchDay!'),
@@ -60,6 +68,7 @@ class _LoginViewState extends State<_LoginView> {
           );
           context.go('/hub');
         }
+
       },
       builder: (context, state) {
         final isLoading = state is AuthLoading;
@@ -206,12 +215,15 @@ class _LoginViewState extends State<_LoginView> {
       padding: const EdgeInsets.symmetric(vertical: 24.0),
       child: Row(
         children: [
-          const Expanded(child: Divider()),
+          Expanded(child: Divider(color: AppColors.border.withValues(alpha: 0.5))),
+
+
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
             child: Text(
               'O',
-              style: TextStyle(color: AppColors.textMuted.withOpacity(0.8)),
+              style: TextStyle(color: AppColors.textMuted.withValues(alpha: 0.8)),
+
             ),
           ),
           const Expanded(child: Divider()),

@@ -1,16 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/network/network_robot.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../teams_discovery/presentation/pages/teams_discovery_page.dart';
 import '../../../my_teams/presentation/pages/my_teams_page.dart';
 import '../../../../core/widgets/matchday_app_bar.dart';
-
-
-
-
-
+import '../../../profile/presentation/bloc/profile_bloc.dart';
+import '../../../profile/presentation/bloc/profile_event.dart';
 
 class MainHubPage extends StatefulWidget {
   const MainHubPage({super.key});
@@ -25,6 +24,8 @@ class _MainHubPageState extends State<MainHubPage> {
   @override
   void initState() {
     super.initState();
+    // Aseguramos que el perfil esté cargado para que los roles (Capitán/Jugador) sean correctos
+    context.read<ProfileBloc>().add(LoadProfileEvent());
     _setupPushNotifications();
   }
 
@@ -38,18 +39,20 @@ class _MainHubPageState extends State<MainHubPage> {
         sound: true,
       );
 
-      if (settings.authorizationStatus == AuthorizationStatus.authorized || 
+      if (settings.authorizationStatus == AuthorizationStatus.authorized ||
           settings.authorizationStatus == AuthorizationStatus.provisional) {
-        
         String? fcmToken = await messaging.getToken();
 
         if (fcmToken != null) {
-          print('🔑 FCM_TOKEN_DISPOSITIVO: $fcmToken');
+          debugPrint('🔑 FCM_TOKEN_DISPOSITIVO: $fcmToken');
+
           final networkRobot = sl<NetworkRobot>();
-          await networkRobot.post('/users/fcm-token', data: {'fcm_token': fcmToken});
+          await networkRobot.post(
+            '/users/fcm-token',
+            data: {'fcm_token': fcmToken},
+          );
           debugPrint('Token FCM enviado exitosamente al backend.');
         }
-
       }
     } catch (e) {
       debugPrint('Error al configurar notificaciones push: $e');
@@ -57,7 +60,6 @@ class _MainHubPageState extends State<MainHubPage> {
   }
 
   final List<Widget> _pages = [
-
     const TeamsDiscoveryPage(), // Reemplazamos el Skeleton con la página real
     const Center(child: Text('🏆 Partidos', style: TextStyle(fontSize: 24))),
     const MyTeamsPage(),

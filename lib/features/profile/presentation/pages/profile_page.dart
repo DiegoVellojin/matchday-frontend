@@ -126,7 +126,8 @@ class _ProfilePageState extends State<ProfilePage> {
           width: 96,
           height: 96,
           decoration: BoxDecoration(
-            color: AppColors.primary.withOpacity(0.2),
+            color: AppColors.primary.withValues(alpha: 0.2),
+
             shape: BoxShape.circle,
             border: Border.all(color: AppColors.primary, width: 2),
           ),
@@ -152,9 +153,10 @@ class _ProfilePageState extends State<ProfilePage> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
           decoration: BoxDecoration(
-            color: AppColors.primary.withOpacity(0.15),
+            color: AppColors.primary.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: AppColors.primary.withOpacity(0.3)),
+            border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
+
           ),
           child: Text(
             profile.role,

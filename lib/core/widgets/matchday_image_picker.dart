@@ -3,28 +3,27 @@ import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 
 /// Widget reutilizable para la selección y previsualización de imágenes (fotos de perfil, logos, etc.).
-/// 
+///
 /// Gestiona la visualización de una imagen local ([imageFile]) o remota ([imageUrl]),
 /// mostrando un marcador de posición si ninguna está disponible.
 class MatchDayImagePicker extends StatelessWidget {
   /// Archivo seleccionado localmente.
   final File? imageFile;
-  
+
   /// URL de la imagen ya persistida en el servidor.
   final String? imageUrl;
-  
+
   /// Acción a ejecutar cuando el usuario presiona el botón de cambio.
   final VoidCallback onPickImage;
-  
+
   /// Texto del botón de acción.
   final String label;
-  
+
   /// Tamaño (diámetro) del contenedor circular.
   final double size;
-  
+
   /// Icono (IconData) o Emoji (String) a mostrar si no hay imagen disponible.
   final dynamic placeholder;
-
 
   const MatchDayImagePicker({
     super.key,
@@ -75,15 +74,15 @@ class MatchDayImagePicker extends StatelessWidget {
     if (imageFile != null) {
       return Image.file(imageFile!, fit: BoxFit.cover);
     }
-    
+
     if (imageUrl != null && imageUrl!.startsWith('http')) {
       return Image.network(
         imageUrl!,
         fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => _buildPlaceholder(),
+        errorBuilder: (_, _, _) => _buildPlaceholder(),
       );
     }
-    
+
     return _buildPlaceholder();
   }
 
@@ -103,5 +102,4 @@ class MatchDayImagePicker extends StatelessWidget {
             ),
     );
   }
-
 }

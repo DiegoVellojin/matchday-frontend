@@ -20,7 +20,6 @@ class TeamsDiscoveryRemoteDataSource {
   }
 
   Exception _handleError(dynamic e, String defaultMessage) {
-
     if (e is DioException) {
       if (e.response != null && e.response!.data != null) {
         final data = e.response!.data;
@@ -83,12 +82,14 @@ class TeamsDiscoveryRemoteDataSource {
 
   Future<void> respondToJoinRequest(int teamId, int userId, bool accept) async {
     try {
-      await networkRobot.put('/teams/$teamId/requests/$userId', data: {'accept': accept});
+      await networkRobot.put(
+        '/teams/$teamId/requests/$userId',
+        data: {'accept': accept},
+      );
     } catch (e) {
       throw _handleError(e, 'Error al procesar la solicitud');
     }
   }
-
 
   Future<void> createTeam({
     required String name,
@@ -127,15 +128,14 @@ class TeamsDiscoveryRemoteDataSource {
       await networkRobot.put(
         '/teams/$teamId',
         data: {
-          if (name != null) 'nombre_equipo': name,
-          if (logoUrl != null) 'url_logo_equipo': logoUrl,
-          if (description != null) 'descripcion_equipo': description,
-          if (isRecruiting != null) 'esta_reclutando': isRecruiting,
-          if (maxMembers != null) 'max_miembros': maxMembers,
+          'nombre_equipo': ?name,
+          'url_logo_equipo': ?logoUrl,
+          'descripcion_equipo': ?description,
+          'esta_reclutando': ?isRecruiting,
+          'max_miembros': ?maxMembers,
         },
       );
     } catch (e) {
-
       throw _handleError(e, 'Error al actualizar el equipo');
     }
   }
@@ -148,8 +148,10 @@ class TeamsDiscoveryRemoteDataSource {
     }
   }
 
-  Future<void> transferCaptain(
-      {required int teamId, required int newCaptainId}) async {
+  Future<void> transferCaptain({
+    required int teamId,
+    required int newCaptainId,
+  }) async {
     try {
       await networkRobot.put('/teams/$teamId/transfer-captain/$newCaptainId');
     } catch (e) {
@@ -173,5 +175,3 @@ class TeamsDiscoveryRemoteDataSource {
     }
   }
 }
-
-

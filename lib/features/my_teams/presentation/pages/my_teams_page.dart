@@ -49,9 +49,8 @@ class _MyTeamsPageState extends State<MyTeamsPage> {
 
           return BlocBuilder<PaymentsBloc, PaymentsState>(
             builder: (context, paymentsState) {
-              final List<PaymentEntity> paymentsList = paymentsState is PaymentsLoaded
-                  ? paymentsState.payments
-                  : [];
+              final List<PaymentEntity> paymentsList =
+                  paymentsState is PaymentsLoaded ? paymentsState.payments : [];
 
               return BlocConsumer<MyTeamsBloc, MyTeamsState>(
                 listener: (context, state) {
@@ -122,7 +121,7 @@ class _MyTeamsPageState extends State<MyTeamsPage> {
                                     ? _buildEmptyState()
                                     : ListView.separated(
                                         itemCount: teams.length,
-                                        separatorBuilder: (_, __) =>
+                                        separatorBuilder: (_, _) =>
                                             const SizedBox(height: 16),
                                         itemBuilder: (context, index) {
                                           final team = teams[index];
@@ -141,7 +140,8 @@ class _MyTeamsPageState extends State<MyTeamsPage> {
                                           }
 
                                           final hasDebt = teamDebt != null;
-                                          final debtAmount = teamDebt?.monto ?? 0.0;
+                                          final debtAmount =
+                                              teamDebt?.monto ?? 0.0;
 
                                           return _buildTeamCard(
                                             context,
@@ -174,7 +174,9 @@ class _MyTeamsPageState extends State<MyTeamsPage> {
   }
 
   List<MyTeamEntity> _getFilteredTeams(
-      List<MyTeamEntity> teams, int? currentUserId) {
+    List<MyTeamEntity> teams,
+    int? currentUserId,
+  ) {
     if (currentUserId == null) return teams;
     switch (_activeFilter) {
       case TeamFilter.all:
@@ -236,9 +238,15 @@ class _MyTeamsPageState extends State<MyTeamsPage> {
     );
   }
 
-  Widget _buildTeamCard(BuildContext context, MyTeamEntity team, bool isCaptain,
-      bool hasDebt, double debtAmount) {
-    final hasLogo = team.logo.isNotEmpty &&
+  Widget _buildTeamCard(
+    BuildContext context,
+    MyTeamEntity team,
+    bool isCaptain,
+    bool hasDebt,
+    double debtAmount,
+  ) {
+    final hasLogo =
+        team.logo.isNotEmpty &&
         team.logo != '⚽' &&
         team.logo != '🏀' &&
         team.logo != '🎾';
@@ -275,8 +283,10 @@ class _MyTeamsPageState extends State<MyTeamsPage> {
                   backgroundColor: AppColors.background,
                   backgroundImage: hasLogo ? NetworkImage(team.logo) : null,
                   child: !hasLogo
-                      ? Text(team.logo.isNotEmpty ? team.logo : '⚽',
-                          style: const TextStyle(fontSize: 24))
+                      ? Text(
+                          team.logo.isNotEmpty ? team.logo : '⚽',
+                          style: const TextStyle(fontSize: 24),
+                        )
                       : null,
                 ),
               ),

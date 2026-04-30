@@ -8,7 +8,11 @@ import '../../../../core/theme/widgets/theme_toggle_button.dart';
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
 import '../bloc/auth_state.dart';
+import '../../../profile/presentation/bloc/profile_bloc.dart';
+import '../../../profile/presentation/bloc/profile_event.dart';
+
 import '../widgets/custom_text_field.dart';
+
 import '../widgets/google_sign_in_button.dart';
 
 class RegisterPage extends StatelessWidget {
@@ -58,8 +62,11 @@ class _RegisterViewState extends State<_RegisterView> {
             SnackBar(content: Text(state.message), backgroundColor: Colors.red),
           );
         } else if (state is AuthAuthenticated) {
+          // IMPORTANTE: Cargar perfil del nuevo usuario
+          context.read<ProfileBloc>().add(LoadProfileEvent());
           context.go('/hub');
         }
+
       },
       builder: (context, state) {
         final isLoading = state is AuthLoading;
