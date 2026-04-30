@@ -1,56 +1,59 @@
 import 'package:dio/dio.dart';
 import '../storage/secure_storage_service.dart';
 
+/// Cliente HTTP centralizado para la comunicación con la API de MatchDay.
+/// 
+/// Utiliza [Dio] bajo el capó y gestiona automáticamente la inyección de 
+/// tokens de autenticación en las cabeceras, así como el logging de peticiones.
 class NetworkRobot {
   final Dio _dio;
   final SecureStorageService _storage;
 
   NetworkRobot(this._dio, this._storage) {
-    // Configuraciones maestras de tu backend FastAPI
-    // Nota: Si usas el emulador de Android para probar un localhost, la IP es 10.0.2.2
+    // Configuración global del cliente HTTP.
     _dio.options.baseUrl = 'https://matchday-backend-3qot.onrender.com/api/v1';
     _dio.options.connectTimeout = const Duration(seconds: 15);
     _dio.options.receiveTimeout = const Duration(seconds: 15);
 
-    // Interceptores: El "punto de control" de todas las llamadas
+    // Interceptores para la gestión de tokens y debugging.
     _dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
-          // Buscamos el token en el almacenamiento seguro
+          // Inyectar el JWT si está disponible en el almacenamiento seguro.
           final token = await _storage.getToken();
           
           if (token != null) {
             options.headers['Authorization'] = 'Bearer $token';
           }
           
-          print('🌐 PETICIÓN [${options.method}] => RUTA: ${options.path}');
           return handler.next(options); 
         },
         onResponse: (response, handler) {
-          print('✅ RESPUESTA [${response.statusCode}] => RUTA: ${response.requestOptions.path}');
           return handler.next(response); 
         },
         onError: (DioException e, handler) {
-          print('❌ ERROR [${e.response?.statusCode}] => RUTA: ${e.requestOptions.path}');
           return handler.next(e);
         },
       ),
     );
   }
 
-  // Métodos que los repositorios usarán para comunicarse
+  /// Realiza una petición GET.
   Future<Response> get(String path, {Map<String, dynamic>? queryParameters}) async {
     return await _dio.get(path, queryParameters: queryParameters);
   }
 
+  /// Realiza una petición POST enviando [data] en el cuerpo.
   Future<Response> post(String path, {dynamic data}) async {
     return await _dio.post(path, data: data);
   }
 
+  /// Realiza una petición PUT para actualizar recursos.
   Future<Response> put(String path, {dynamic data}) async {
     return await _dio.put(path, data: data);
   }
 
+  /// Realiza una petición DELETE para eliminar recursos.
   Future<Response> delete(String path) async {
     return await _dio.delete(path);
   }

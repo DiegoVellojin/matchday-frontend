@@ -11,21 +11,23 @@ class TeamModel extends TeamEntity {
     required super.isRecruiting,
     required super.soyMiembro,
     super.captainId,
+    super.description = '',
   });
-
 
   factory TeamModel.fromJson(Map<String, dynamic> json) {
     return TeamModel(
       id: json['id_equipo'] ?? 0,
       name: json['nombre_equipo'] ?? 'Sin Nombre',
-      logo: json['url_logo_equipo'] ?? '⚽', // Valor por defecto visual
+      logo: json['url_logo_equipo'] ?? '⚽',
       sportName: json['deporte']?['nombre_deporte'] ?? 'Deporte',
       maxMembers: json['max_miembros'] ?? 11,
       currentMembers: json['miembros_actuales'] ?? 0,
       isRecruiting: json['esta_reclutando'] ?? true,
       soyMiembro: json['soy_miembro'] ?? false,
       captainId: json['fk_id_usuario_capitan'],
+      description: json['descripcion_equipo'] ?? '',
     );
   }
+
 }
 

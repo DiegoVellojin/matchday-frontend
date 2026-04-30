@@ -3,33 +3,30 @@ import '../../../../core/error/failures.dart';
 import '../entities/team_entity.dart';
 import '../entities/sport_entity.dart';
 
+/// Contrato que define las operaciones de descubrimiento y administración de equipos.
 abstract class ITeamsDiscoveryRepository {
-  /// Obtiene la lista de todos los deportes
+  /// Recupera el catálogo completo de deportes disponibles en el sistema.
   Future<Either<Failure, List<SportEntity>>> getSports();
 
-  /// Obtiene la lista de todos los equipos disponibles para unirse
-
+  /// Obtiene una lista de equipos con el flag de reclutamiento activo.
   Future<Either<Failure, List<TeamEntity>>> getDiscoverableTeams();
 
-  /// Envía la solicitud manual para unirse a un equipo
+  /// Registra una intención de unión del usuario actual a un equipo específico.
   Future<Either<Failure, void>> requestJoinTeam(int teamId);
 
-  /// Acepta o rechaza una solicitud de unión
+  /// Permite al capitán aprobar o denegar una solicitud de acceso al equipo.
   Future<Either<Failure, void>> respondToJoinRequest(int teamId, int userId, bool accept);
 
-  /// Obtiene los detalles de un equipo específico
+  /// Consulta la información detallada de un equipo por su ID.
   Future<Either<Failure, TeamEntity>> getTeamById(int teamId);
 
-
-  /// Obtiene los miembros reales de un equipo
+  /// Recupera el listado de usuarios que son miembros aceptados de un equipo.
   Future<Either<Failure, List<Map<String, dynamic>>>> getTeamMembers(int teamId);
 
-  /// Obtiene las solicitudes pendientes reales
+  /// Obtiene las solicitudes de unión que aún no han sido procesadas por el capitán.
   Future<Either<Failure, List<Map<String, dynamic>>>> getPendingRequests(int teamId);
 
-
-
-  /// Crea un nuevo equipo con todos sus parámetros
+  /// Crea un nuevo equipo persistiendo sus metadatos y configuraciones iniciales.
   Future<Either<Failure, void>> createTeam({
     required String name,
     required int sportId,
@@ -38,5 +35,32 @@ abstract class ITeamsDiscoveryRepository {
     required bool isRecruiting,
     required int maxMembers,
   });
-}
 
+  /// Modifica los atributos de un equipo existente. Reservado para el Capitán.
+  Future<Either<Failure, void>> updateTeam({
+    required int teamId,
+    String? name,
+    String? logoUrl,
+    String? description,
+    bool? isRecruiting,
+    int? maxMembers,
+  });
+
+  /// Elimina el equipo y todas sus relaciones de membresía. Reservado para el Capitán.
+  Future<Either<Failure, void>> deleteTeam(int teamId);
+
+  /// Cede el rol administrativo a otro miembro aceptado del equipo.
+  Future<Either<Failure, void>> transferCaptain({
+    required int teamId,
+    required int newCaptainId,
+  });
+
+  /// Elimina la relación de membresía del usuario actual con el equipo.
+  Future<Either<Failure, void>> leaveTeam(int teamId);
+
+  /// Remueve forzosamente a un miembro del equipo. Reservado para el Capitán.
+  Future<Either<Failure, void>> kickMember({
+    required int teamId,
+    required int userId,
+  });
+}

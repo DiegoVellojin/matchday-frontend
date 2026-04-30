@@ -28,7 +28,10 @@ class _PaymentManagementPageState extends State<PaymentManagementPage> {
         backgroundColor: AppColors.background,
         appBar: AppBar(
           backgroundColor: AppColors.surface,
-          title: const Text('Gestión de Pagos', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          title: const Text(
+            'Gestión de Pagos',
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          ),
           iconTheme: const IconThemeData(color: Colors.white),
           elevation: 0,
         ),
@@ -36,13 +39,18 @@ class _PaymentManagementPageState extends State<PaymentManagementPage> {
           listener: (context, state) {
             if (state is PaymentsError) {
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(state.message), backgroundColor: Colors.redAccent),
+                SnackBar(
+                  content: Text(state.message),
+                  backgroundColor: Colors.redAccent,
+                ),
               );
             }
           },
           builder: (context, state) {
             if (state is PaymentsLoading) {
-              return const Center(child: CircularProgressIndicator(color: AppColors.primary));
+              return const Center(
+                child: CircularProgressIndicator(color: AppColors.primary),
+              );
             }
 
             if (state is PaymentsLoaded) {
@@ -50,7 +58,10 @@ class _PaymentManagementPageState extends State<PaymentManagementPage> {
               final totalDebt = _calculateTotalDebt(state.payments);
 
               return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16.0,
+                  vertical: 12.0,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -63,9 +74,13 @@ class _PaymentManagementPageState extends State<PaymentManagementPage> {
                           ? _buildEmptyState()
                           : ListView.separated(
                               itemCount: payments.length,
-                              separatorBuilder: (_, __) => const SizedBox(height: 12),
+                              separatorBuilder: (_, _) =>
+                                  const SizedBox(height: 12),
                               itemBuilder: (context, index) {
-                                return _buildPaymentCard(context, payments[index]);
+                                return _buildPaymentCard(
+                                  context,
+                                  payments[index],
+                                );
                               },
                             ),
                     ),
@@ -93,7 +108,9 @@ class _PaymentManagementPageState extends State<PaymentManagementPage> {
   }
 
   double _calculateTotalDebt(List<PaymentEntity> list) {
-    return list.where((p) => !p.isPaid).fold(0.0, (sum, item) => sum + item.monto);
+    return list
+        .where((p) => !p.isPaid)
+        .fold(0.0, (sum, item) => sum + item.monto);
   }
 
   Widget _buildSummaryCard(double totalDebt) {
@@ -120,12 +137,20 @@ class _PaymentManagementPageState extends State<PaymentManagementPage> {
         children: [
           const Text(
             'Deuda Total Pendiente',
-            style: TextStyle(color: AppColors.background, fontSize: 14, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              color: AppColors.background,
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const SizedBox(height: 8),
           Text(
             '\$${totalDebt.toStringAsFixed(2)}',
-            style: const TextStyle(color: AppColors.background, fontSize: 32, fontWeight: FontWeight.bold),
+            style: const TextStyle(
+              color: AppColors.background,
+              fontSize: 32,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ],
       ),
@@ -153,7 +178,9 @@ class _PaymentManagementPageState extends State<PaymentManagementPage> {
         decoration: BoxDecoration(
           color: isSelected ? AppColors.primary : AppColors.surface,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: isSelected ? AppColors.primary : AppColors.border),
+          border: Border.all(
+            color: isSelected ? AppColors.primary : AppColors.border,
+          ),
         ),
         child: Text(
           text,
@@ -180,7 +207,8 @@ class _PaymentManagementPageState extends State<PaymentManagementPage> {
           CircleAvatar(
             radius: 24,
             backgroundColor: AppColors.primary.withValues(alpha: 0.1),
-            backgroundImage: payment.teamLogo != null && payment.teamLogo!.isNotEmpty
+            backgroundImage:
+                payment.teamLogo != null && payment.teamLogo!.isNotEmpty
                 ? NetworkImage(payment.teamLogo!)
                 : null,
             child: payment.teamLogo == null || payment.teamLogo!.isEmpty
@@ -192,17 +220,32 @@ class _PaymentManagementPageState extends State<PaymentManagementPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(payment.teamName,
-                    style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold)),
+                Text(
+                  payment.teamName,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
                 const SizedBox(height: 2),
-                Text(payment.concepto, style: const TextStyle(color: AppColors.textMuted, fontSize: 13)),
+                Text(
+                  payment.concepto,
+                  style: const TextStyle(
+                    color: AppColors.textMuted,
+                    fontSize: 13,
+                  ),
+                ),
                 const SizedBox(height: 6),
                 Text(
                   '\$${payment.monto.toStringAsFixed(2)}',
                   style: TextStyle(
-                      color: payment.isPaid ? AppColors.primary : Colors.redAccent,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14),
+                    color: payment.isPaid
+                        ? AppColors.primary
+                        : Colors.redAccent,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
                 ),
               ],
             ),
@@ -221,8 +264,14 @@ class _PaymentManagementPageState extends State<PaymentManagementPage> {
           color: AppColors.primary.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(12),
         ),
-        child: const Text('Pagado',
-            style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 12)),
+        child: const Text(
+          'Pagado',
+          style: TextStyle(
+            color: AppColors.primary,
+            fontWeight: FontWeight.bold,
+            fontSize: 12,
+          ),
+        ),
       );
     }
 
@@ -233,8 +282,14 @@ class _PaymentManagementPageState extends State<PaymentManagementPage> {
           color: Colors.orangeAccent.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(12),
         ),
-        child: const Text('Reportado',
-            style: TextStyle(color: Colors.orangeAccent, fontWeight: FontWeight.bold, fontSize: 12)),
+        child: const Text(
+          'Reportado',
+          style: TextStyle(
+            color: Colors.orangeAccent,
+            fontWeight: FontWeight.bold,
+            fontSize: 12,
+          ),
+        ),
       );
     }
 
@@ -246,7 +301,10 @@ class _PaymentManagementPageState extends State<PaymentManagementPage> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       ),
-      child: const Text('Pagar', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+      child: const Text(
+        'Pagar',
+        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+      ),
     );
   }
 
@@ -257,32 +315,48 @@ class _PaymentManagementPageState extends State<PaymentManagementPage> {
       builder: (ctx) {
         return AlertDialog(
           backgroundColor: AppColors.surface,
-          title: const Text('Subir Comprobante', style: TextStyle(color: Colors.white)),
+          title: const Text(
+            'Subir Comprobante',
+            style: TextStyle(color: Colors.white),
+          ),
           content: TextField(
             controller: controller,
             style: const TextStyle(color: Colors.white),
             decoration: const InputDecoration(
               labelText: 'URL de la imagen del comprobante',
               labelStyle: TextStyle(color: AppColors.textMuted),
-              enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppColors.border)),
-              focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppColors.primary)),
+              enabledBorder: UnderlineInputBorder(
+                borderSide: BorderSide(color: AppColors.border),
+              ),
+              focusedBorder: UnderlineInputBorder(
+                borderSide: BorderSide(color: AppColors.primary),
+              ),
             ),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx),
-              child: const Text('Cancelar', style: TextStyle(color: Colors.redAccent)),
+              child: const Text(
+                'Cancelar',
+                style: TextStyle(color: Colors.redAccent),
+              ),
             ),
             TextButton(
               onPressed: () {
                 if (controller.text.isNotEmpty) {
                   context.read<PaymentsBloc>().add(
-                        UploadReceiptEvent(partidaId: idPartida, urlReciboPago: controller.text),
-                      );
+                    UploadReceiptEvent(
+                      partidaId: idPartida,
+                      urlReciboPago: controller.text,
+                    ),
+                  );
                   Navigator.pop(ctx);
                 }
               },
-              child: const Text('Guardar', style: TextStyle(color: AppColors.primary)),
+              child: const Text(
+                'Guardar',
+                style: TextStyle(color: AppColors.primary),
+              ),
             ),
           ],
         );
@@ -292,7 +366,10 @@ class _PaymentManagementPageState extends State<PaymentManagementPage> {
 
   Widget _buildEmptyState() {
     return const Center(
-      child: Text('No hay pagos en esta categoría.', style: TextStyle(color: AppColors.textMuted)),
+      child: Text(
+        'No hay pagos en esta categoría.',
+        style: TextStyle(color: AppColors.textMuted),
+      ),
     );
   }
 }

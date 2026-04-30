@@ -1,6 +1,8 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
+import '../../../../core/utils/image_picker_utils.dart';
+import '../../../../core/widgets/matchday_image_picker.dart';
+
 
 import 'package:go_router/go_router.dart';
 import '../../../../core/di/injection_container.dart';
@@ -73,18 +75,9 @@ class _CreateTeamPageState extends State<CreateTeamPage> {
   }
 
   Future<void> _pickImage() async {
-    final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(
-      source: ImageSource.gallery,
-      maxWidth: 600,
-      maxHeight: 600,
-      imageQuality: 80,
-    );
-
-    if (pickedFile != null) {
-      setState(() {
-        _imageFile = File(pickedFile.path);
-      });
+    final file = await ImagePickerUtils.pickImageFromGallery();
+    if (file != null) {
+      setState(() => _imageFile = file);
     }
   }
 
@@ -213,91 +206,14 @@ class _CreateTeamPageState extends State<CreateTeamPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Logo del Equipo
-                  Text(
-                    'Logo del Equipo',
-                    style: TextStyle(
-                      color: colorScheme.onSurfaceVariant,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                    ),
+                  MatchDayImagePicker(
+                    imageFile: _imageFile,
+                    onPickImage: _pickImage,
+                    placeholder: Icons.camera_alt_outlined,
+                    label: 'Subir Logo del Equipo',
+                    size: 120,
                   ),
-                  const SizedBox(height: 12),
-                  GestureDetector(
-                    onTap: _pickImage,
-                    child: Container(
-                      width: double.infinity,
-                      height: 160,
-                      decoration: BoxDecoration(
-                        color: colorScheme.surface,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: _imageFile != null
-                              ? AppColors.primary
-                              : colorScheme.outlineVariant,
-                          width: 2,
-                        ),
-                      ),
-                      child: _imageFile != null
-                          ? Stack(
-                              alignment: Alignment.center,
-                              children: [
-                                ClipRRect(
-                                  borderRadius: BorderRadius.circular(16),
-                                  child: Image.file(
-                                    _imageFile!,
-                                    width: double.infinity,
-                                    height: double.infinity,
-                                    fit: BoxFit.cover,
-                                  ),
-                                ),
-                                Container(
-                                  color: Colors.black.withValues(alpha: 0.4),
-                                  child: const Icon(
-                                    Icons.camera_alt,
-                                    color: Colors.white,
-                                    size: 32,
-                                  ),
-                                ),
-                              ],
-                            )
-                          : Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Container(
-                                  width: 64,
-                                  height: 64,
-                                  decoration: BoxDecoration(
-                                    color: colorScheme.surfaceContainerHighest,
-                                    borderRadius: BorderRadius.circular(32),
-                                  ),
-                                  child: Icon(
-                                    Icons.camera_alt_outlined,
-                                    color: colorScheme.onSurfaceVariant,
-                                    size: 32,
-                                  ),
-                                ),
-                                const SizedBox(height: 12),
-                                Text(
-                                  'Subir Logo del Equipo',
-                                  style: TextStyle(
-                                    color: colorScheme.onSurfaceVariant,
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  'PNG, JPG hasta 5MB',
-                                  style: TextStyle(
-                                    color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ],
-                            ),
-                    ),
-                  ),
+
                   const SizedBox(height: 24),
 
                   // Nombre del Equipo

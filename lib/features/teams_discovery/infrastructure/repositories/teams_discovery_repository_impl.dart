@@ -106,5 +106,72 @@ class TeamsDiscoveryRepositoryImpl implements ITeamsDiscoveryRepository {
       return Left(ServerFailure(e.toString().replaceAll('Exception: ', '')));
     }
   }
+
+  @override
+  Future<Either<Failure, void>> updateTeam({
+    required int teamId,
+    String? name,
+    String? logoUrl,
+    String? description,
+    bool? isRecruiting,
+    int? maxMembers,
+  }) async {
+    try {
+      await remoteDataSource.updateTeam(
+        teamId: teamId,
+        name: name,
+        logoUrl: logoUrl,
+        description: description,
+        isRecruiting: isRecruiting,
+        maxMembers: maxMembers,
+      );
+      return const Right(null);
+    } catch (e) {
+      return Left(ServerFailure(e.toString().replaceAll('Exception: ', '')));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> deleteTeam(int teamId) async {
+    try {
+      await remoteDataSource.deleteTeam(teamId);
+      return const Right(null);
+    } catch (e) {
+      return Left(ServerFailure(e.toString().replaceAll('Exception: ', '')));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> transferCaptain(
+      {required int teamId, required int newCaptainId}) async {
+    try {
+      await remoteDataSource.transferCaptain(
+          teamId: teamId, newCaptainId: newCaptainId);
+      return const Right(null);
+    } catch (e) {
+      return Left(ServerFailure(e.toString().replaceAll('Exception: ', '')));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> leaveTeam(int teamId) async {
+    try {
+      await remoteDataSource.leaveTeam(teamId);
+      return const Right(null);
+    } catch (e) {
+      return Left(ServerFailure(e.toString().replaceAll('Exception: ', '')));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> kickMember(
+      {required int teamId, required int userId}) async {
+    try {
+      await remoteDataSource.kickMember(teamId: teamId, userId: userId);
+      return const Right(null);
+    } catch (e) {
+      return Left(ServerFailure(e.toString().replaceAll('Exception: ', '')));
+    }
+  }
 }
 

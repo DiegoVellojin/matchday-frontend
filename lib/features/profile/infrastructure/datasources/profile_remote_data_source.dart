@@ -37,21 +37,19 @@ class ProfileRemoteDataSource {
       final response = await networkRobot.put(
         '/users/me',
         data: {
-          if (name != null) 'nombre_usuario': name,
-          if (phone != null) 'telefono_usuario': phone,
-          if (photoUrl != null) 'url_foto_perfil': photoUrl,
-          if (password != null) 'password': password,
+          'nombre_usuario': ?name,
+          'telefono_usuario': ?phone,
+          'url_foto_perfil': ?photoUrl,
+          'password': ?password,
         },
       );
       return UserProfileModel.fromJson(response.data);
-
     } catch (e) {
       throw _handleError(e, 'Error al actualizar el perfil');
     }
   }
 
   Exception _handleError(dynamic e, String defaultMessage) {
-
     if (e is DioException) {
       if (e.response != null && e.response!.data != null) {
         final data = e.response!.data;

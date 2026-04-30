@@ -9,6 +9,11 @@ import '../../application/usecases/request_join_team_usecase.dart';
 import '../../application/usecases/respond_to_join_request_usecase.dart';
 import '../../domain/entities/team_entity.dart';
 import 'package:share_plus/share_plus.dart';
+import '../../../profile/presentation/bloc/profile_bloc.dart';
+import '../../../profile/presentation/bloc/profile_state.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import './team_settings_page.dart';
+
 
 class TeamDashboardPage extends StatefulWidget {
   final int teamId;
@@ -130,7 +135,29 @@ class _TeamDashboardPageState extends State<TeamDashboardPage> {
                   );
                 },
               ),
-
+              if (team.soyMiembro)
+                BlocBuilder<ProfileBloc, ProfileState>(
+                  builder: (context, profileState) {
+                    final currentUserId = profileState is ProfileLoaded ? profileState.profile.id : null;
+                    return IconButton(
+                      icon: const Icon(Icons.settings, color: AppColors.textMuted),
+                      onPressed: currentUserId == null ? null : () async {
+                        final updated = await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => TeamSettingsPage(
+                              team: team,
+                              currentUserId: currentUserId,
+                            ),
+                          ),
+                        );
+                        if (updated == true) {
+                          _loadTeam();
+                        }
+                      },
+                    );
+                  },
+                ),
             ],
           ),
           const SizedBox(height: 8),

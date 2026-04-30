@@ -2,12 +2,12 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:image_picker/image_picker.dart';
-
-import 'package:intl_phone_field/intl_phone_field.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/storage/firebase_storage_service.dart';
+import '../../../../core/widgets/matchday_image_picker.dart';
+import '../../../../core/utils/image_picker_utils.dart';
 
+import 'package:intl_phone_field/intl_phone_field.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../domain/entities/profile_entity.dart';
 import '../bloc/profile_bloc.dart';
@@ -79,18 +79,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
 
   Future<void> _pickImage() async {
-    final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(
-      source: ImageSource.gallery,
-      maxWidth: 600,
-      maxHeight: 600,
-      imageQuality: 80,
-    );
-
-    if (pickedFile != null) {
-      setState(() {
-        _imageFile = File(pickedFile.path);
-      });
+    final file = await ImagePickerUtils.pickImageFromGallery();
+    if (file != null) {
+      setState(() => _imageFile = file);
     }
   }
 
@@ -257,54 +248,15 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Foto de Perfil
-                    Center(
-                      child: Column(
-                        children: [
-                          Container(
-
-                            width: 100,
-                            height: 100,
-                            decoration: BoxDecoration(
-                              color: AppColors.primary.withValues(alpha: 0.2),
-                              shape: BoxShape.circle,
-                              border: Border.all(color: AppColors.primary, width: 2),
-                            ),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(50),
-                              child: _imageFile != null
-                                  ? Image.file(
-                                      _imageFile!,
-                                      fit: BoxFit.cover,
-                                    )
-                                  : _photoUrlController.text.isNotEmpty && _photoUrlController.text.startsWith('http')
-                                      ? Image.network(
-                                          _photoUrlController.text,
-                                          fit: BoxFit.cover,
-                                          errorBuilder: (context, error, stackTrace) => const Center(
-                                            child: Text('👤', style: TextStyle(fontSize: 48)),
-                                          ),
-                                        )
-                                      : const Center(
-                                          child: Text('👤', style: TextStyle(fontSize: 48)),
-                                        ),
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          TextButton(
-                            onPressed: _pickImage,
-                            child: const Text(
-                              'Cambiar foto',
-                              style: TextStyle(
-                                color: AppColors.primary,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-
+                    MatchDayImagePicker(
+                      imageFile: _imageFile,
+                      imageUrl: _photoUrlController.text,
+                      onPickImage: _pickImage,
+                      placeholder: Icons.camera_alt_outlined,
+                      label: 'Cambiar foto',
                     ),
+
+
                     const SizedBox(height: 30),
 
                     // Nombre Completo

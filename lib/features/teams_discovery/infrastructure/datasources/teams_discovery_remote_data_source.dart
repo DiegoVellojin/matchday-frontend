@@ -114,6 +114,64 @@ class TeamsDiscoveryRemoteDataSource {
       throw _handleError(e, 'Error al crear el equipo en el servidor');
     }
   }
+
+  Future<void> updateTeam({
+    required int teamId,
+    String? name,
+    String? logoUrl,
+    String? description,
+    bool? isRecruiting,
+    int? maxMembers,
+  }) async {
+    try {
+      await networkRobot.put(
+        '/teams/$teamId',
+        data: {
+          if (name != null) 'nombre_equipo': name,
+          if (logoUrl != null) 'url_logo_equipo': logoUrl,
+          if (description != null) 'descripcion_equipo': description,
+          if (isRecruiting != null) 'esta_reclutando': isRecruiting,
+          if (maxMembers != null) 'max_miembros': maxMembers,
+        },
+      );
+    } catch (e) {
+
+      throw _handleError(e, 'Error al actualizar el equipo');
+    }
+  }
+
+  Future<void> deleteTeam(int teamId) async {
+    try {
+      await networkRobot.delete('/teams/$teamId');
+    } catch (e) {
+      throw _handleError(e, 'Error al eliminar el equipo');
+    }
+  }
+
+  Future<void> transferCaptain(
+      {required int teamId, required int newCaptainId}) async {
+    try {
+      await networkRobot.put('/teams/$teamId/transfer-captain/$newCaptainId');
+    } catch (e) {
+      throw _handleError(e, 'Error al transferir la capitanía');
+    }
+  }
+
+  Future<void> leaveTeam(int teamId) async {
+    try {
+      await networkRobot.delete('/teams/$teamId/leave');
+    } catch (e) {
+      throw _handleError(e, 'Error al salir del equipo');
+    }
+  }
+
+  Future<void> kickMember({required int teamId, required int userId}) async {
+    try {
+      await networkRobot.delete('/teams/$teamId/members/$userId');
+    } catch (e) {
+      throw _handleError(e, 'Error al expulsar al miembro');
+    }
+  }
 }
 
 

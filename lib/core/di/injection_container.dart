@@ -31,6 +31,11 @@ import '../../features/teams_discovery/application/usecases/get_team_members_use
 import '../../features/teams_discovery/application/usecases/get_pending_requests_usecase.dart';
 import '../../features/teams_discovery/application/usecases/respond_to_join_request_usecase.dart';
 import '../../features/teams_discovery/application/usecases/get_sports_usecase.dart';
+import '../../features/teams_discovery/application/usecases/update_team_usecase.dart';
+import '../../features/teams_discovery/application/usecases/delete_team_usecase.dart';
+import '../../features/teams_discovery/application/usecases/transfer_captain_usecase.dart';
+import '../../features/teams_discovery/application/usecases/leave_team_usecase.dart';
+import '../../features/teams_discovery/application/usecases/kick_member_usecase.dart' as discovery_kick;
 
 
 
@@ -180,6 +185,11 @@ Future<void> init() async {
   sl.registerLazySingleton(() => GetPendingRequestsUseCase(sl()));
   sl.registerLazySingleton(() => RespondToJoinRequestUseCase(sl()));
   sl.registerLazySingleton(() => GetSportsUseCase(sl()));
+  sl.registerLazySingleton(() => UpdateTeamUseCase(sl()));
+  sl.registerLazySingleton(() => DeleteTeamUseCase(sl()));
+  sl.registerLazySingleton(() => TransferCaptainUseCase(sl()));
+  sl.registerLazySingleton(() => LeaveTeamUseCase(sl()));
+  sl.registerLazySingleton(() => discovery_kick.KickMemberUseCase(sl()));
 
 
 
