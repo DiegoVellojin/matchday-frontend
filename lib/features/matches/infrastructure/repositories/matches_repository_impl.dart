@@ -11,9 +11,21 @@ class MatchesRepositoryImpl implements IMatchesRepository {
   MatchesRepositoryImpl(this.remoteDataSource);
 
   @override
-  Future<Either<Failure, List<MatchEntity>>> getMatches({int? sportId, String? status}) async {
+  Future<Either<Failure, List<MatchEntity>>> getMatches({
+    int? sportId, 
+    String? status,
+    int? regionId,
+    int? canchaId,
+    DateTime? date,
+  }) async {
     try {
-      final results = await remoteDataSource.getMatches(sportId: sportId, status: status);
+      final results = await remoteDataSource.getMatches(
+        sportId: sportId, 
+        status: status,
+        regionId: regionId,
+        canchaId: canchaId,
+        date: date,
+      );
       return Right(results);
     } catch (e) {
       return Left(ServerFailure(e.toString()));

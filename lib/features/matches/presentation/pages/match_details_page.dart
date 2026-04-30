@@ -115,8 +115,24 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Organizador: ${match.idUsuarioOrg}', style: _titleStyle(isDark)),
-                const Text('Fútbol Match', style: TextStyle(color: AppColors.primary, fontSize: 13)),
+                Text('Organizador: ${match.nombreCapitanA ?? 'Capi'}', style: _titleStyle(isDark)),
+                GestureDetector(
+                  onTap: () {
+                    if (match.idEquipoA != null) {
+                      context.push('/team-dashboard/${match.idEquipoA}');
+                    }
+                  },
+                  child: Text(
+                    'Equipo: ${match.nombreEquipoA ?? 'Sin Equipo'}',
+                    style: const TextStyle(
+                      color: AppColors.primary,
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      decoration: TextDecoration.underline,
+                    ),
+                  ),
+                ),
+                Text(match.sportName ?? 'Deporte Match', style: const TextStyle(color: Colors.grey, fontSize: 13)),
               ],
             ),
           ],
@@ -124,7 +140,7 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> {
         const SizedBox(height: 16),
         _buildDetailRow(Icons.calendar_today, DateFormat('EEEE, d MMMM').format(match.fechaInicioEstimada), isDark),
         const SizedBox(height: 10),
-        _buildDetailRow(Icons.location_on_outlined, 'Cancha #${match.idCancha}', isDark),
+        _buildDetailRow(Icons.location_on_outlined, match.nombreCancha ?? 'Cancha #${match.idCancha}', isDark),
       ],
     ));
   }

@@ -21,6 +21,7 @@ class MatchModel extends MatchEntity {
     super.logoEquipoA,
     super.nombreCapitanA,
     super.nombreCancha,
+    super.sportName,
   });
 
   factory MatchModel.fromJson(Map<String, dynamic> json) {
@@ -54,6 +55,7 @@ class MatchModel extends MatchEntity {
       logoEquipoA: json['logo_equipo_a'],
       nombreCapitanA: json['nombre_capitan_a'],
       nombreCancha: json['nombre_cancha'],
+      sportName: json['nombre_deporte'],
     );
   }
 
@@ -78,6 +80,7 @@ class MatchModel extends MatchEntity {
       'logo_equipo_a': logoEquipoA,
       'nombre_capitan_a': nombreCapitanA,
       'nombre_cancha': nombreCancha,
+      'nombre_deporte': sportName,
     };
   }
 }

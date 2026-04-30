@@ -12,7 +12,20 @@ abstract class MatchesEvent extends Equatable {
 class LoadMatchesEvent extends MatchesEvent {
   final int? sportId;
   final String? status;
-  LoadMatchesEvent({this.sportId, this.status});
+  final int? regionId;
+  final int? canchaId;
+  final DateTime? date;
+
+  LoadMatchesEvent({
+    this.sportId, 
+    this.status,
+    this.regionId,
+    this.canchaId,
+    this.date,
+  });
+
+  @override
+  List<Object?> get props => [sportId, status, regionId, canchaId, date];
 }
 
 class LoadMatchDetailsEvent extends MatchesEvent {
@@ -94,7 +107,13 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
 
   Future<void> _onLoadMatches(LoadMatchesEvent event, Emitter<MatchesState> emit) async {
     emit(MatchesLoading());
-    final result = await getMatchesUseCase.execute(sportId: event.sportId, status: event.status);
+    final result = await getMatchesUseCase.execute(
+      sportId: event.sportId, 
+      status: event.status,
+      regionId: event.regionId,
+      canchaId: event.canchaId,
+      date: event.date,
+    );
     result.fold(
       (failure) => emit(MatchesError(failure.message)),
       (matches) => emit(MatchesLoaded(matches)),

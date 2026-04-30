@@ -7,8 +7,20 @@ class GetMatchesUseCase {
   final IMatchesRepository repository;
   GetMatchesUseCase(this.repository);
 
-  Future<Either<Failure, List<MatchEntity>>> execute({int? sportId, String? status}) {
-    return repository.getMatches(sportId: sportId, status: status);
+  Future<Either<Failure, List<MatchEntity>>> execute({
+    int? sportId, 
+    String? status,
+    int? regionId,
+    int? canchaId,
+    DateTime? date,
+  }) {
+    return repository.getMatches(
+      sportId: sportId, 
+      status: status,
+      regionId: regionId,
+      canchaId: canchaId,
+      date: date,
+    );
   }
 }
 

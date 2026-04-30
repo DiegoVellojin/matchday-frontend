@@ -24,6 +24,7 @@ class MatchEntity extends Equatable {
   final String? logoEquipoA;
   final String? nombreCapitanA;
   final String? nombreCancha;
+  final String? sportName;
 
   const MatchEntity({
     required this.id,
@@ -45,6 +46,7 @@ class MatchEntity extends Equatable {
     this.logoEquipoA,
     this.nombreCapitanA,
     this.nombreCancha,
+    this.sportName,
   });
 
   @override
@@ -68,5 +70,6 @@ class MatchEntity extends Equatable {
         logoEquipoA,
         nombreCapitanA,
         nombreCancha,
+        sportName,
       ];
 }

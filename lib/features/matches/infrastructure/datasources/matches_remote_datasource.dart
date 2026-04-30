@@ -2,7 +2,13 @@ import '../../../../core/network/network_robot.dart';
 import '../models/match_model.dart';
 
 abstract class MatchesRemoteDataSource {
-  Future<List<MatchModel>> getMatches({int? sportId, String? status});
+  Future<List<MatchModel>> getMatches({
+    int? sportId, 
+    String? status,
+    int? regionId,
+    int? canchaId,
+    DateTime? date,
+  });
   Future<MatchModel> createMatch(MatchModel match);
   Future<MatchModel> getMatchDetails(int id);
   Future<MatchModel> acceptEncounter(int matchId, int teamId);
@@ -16,17 +22,26 @@ class MatchesRemoteDataSourceImpl implements MatchesRemoteDataSource {
   MatchesRemoteDataSourceImpl(this.network);
 
   @override
-  Future<List<MatchModel>> getMatches({int? sportId, String? status}) async {
-    final response = await network.get('/matches', queryParameters: {
+  Future<List<MatchModel>> getMatches({
+    int? sportId, 
+    String? status,
+    int? regionId,
+    int? canchaId,
+    DateTime? date,
+  }) async {
+    final response = await network.get('/matches/', queryParameters: {
       'sport_id': sportId,
       'status': status,
+      'region_id': regionId,
+      'cancha_id': canchaId,
+      'fecha': date?.toIso8601String(),
     }..removeWhere((_, v) => v == null));
     return (response.data as List).map((e) => MatchModel.fromJson(e)).toList();
   }
 
   @override
   Future<MatchModel> createMatch(MatchModel match) async {
-    final response = await network.post('/matches', data: match.toJson());
+    final response = await network.post('/matches/', data: match.toJson());
     return MatchModel.fromJson(response.data);
   }
 

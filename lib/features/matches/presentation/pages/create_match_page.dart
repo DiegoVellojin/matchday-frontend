@@ -200,7 +200,19 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
                 : _buildDropdown<int>(
                     value: selectedSportId,
                     items: _sports.map((s) => DropdownMenuItem(value: s.id, child: Text(s.name))).toList(),
-                    onChanged: (val) => setState(() => selectedSportId = val),
+                    onChanged: (val) {
+                      setState(() {
+                        selectedSportId = val;
+                        // Resetear equipo seleccionado al cambiar de deporte
+                        final selectedSport = _sports.where((s) => s.id == val).firstOrNull;
+                        final filteredTeams = _myTeams.where((t) => t.sportName == selectedSport?.name).toList();
+                        if (filteredTeams.isNotEmpty) {
+                          selectedTeamId = filteredTeams.first.id;
+                        } else {
+                          selectedTeamId = null;
+                        }
+                      });
+                    },
                     isDark: isDark,
                   ),
               
@@ -210,40 +222,49 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
               _buildLabel('Tu Equipo Organizador'),
               _isLoadingTeams
                 ? const LinearProgressIndicator(color: AppColors.primary)
-                : _myTeams.isEmpty 
-                  ? Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: AppColors.error.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: AppColors.error.withOpacity(0.3)),
-                      ),
-                      child: Column(
-                        children: [
-                          const Text(
-                            'No puedes crear un partido si no eres el capitán de al menos un equipo.',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(color: AppColors.error, fontWeight: FontWeight.bold),
-                          ),
-                          const SizedBox(height: 12),
-                          ElevatedButton(
-                            onPressed: () => context.push('/create-team'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.error,
-                              foregroundColor: Colors.white,
-                              elevation: 0,
+                : () {
+                    final selectedSport = _sports.where((s) => s.id == selectedSportId).firstOrNull;
+                    final filteredTeams = _myTeams.where((t) => t.sportName == selectedSport?.name).toList();
+                    
+                    if (filteredTeams.isEmpty) {
+                      return Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: AppColors.error.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
+                        ),
+                        child: Column(
+                          children: [
+                            Text(
+                              selectedSport != null 
+                                ? 'No organizas ningún equipo de ${selectedSport.name} todavía.'
+                                : 'No organizas ningún equipo todavía.',
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(color: AppColors.error, fontWeight: FontWeight.bold),
                             ),
-                            child: const Text('Crear un Equipo ahora'),
-                          ),
-                        ],
-                      ),
-                    )
-                  : _buildDropdown<int>(
-                      value: selectedTeamId,
-                      items: _myTeams.map((t) => DropdownMenuItem(value: t.id, child: Text(t.name))).toList(),
+                            const SizedBox(height: 12),
+                            ElevatedButton(
+                              onPressed: () => context.push('/crear-equipo'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.error,
+                                foregroundColor: Colors.white,
+                                elevation: 0,
+                              ),
+                              child: const Text('Crear un Equipo ahora'),
+                            ),
+                          ],
+                        ),
+                      );
+                    }
+
+                    return _buildDropdown<int>(
+                      value: filteredTeams.any((t) => t.id == selectedTeamId) ? selectedTeamId : (filteredTeams.isNotEmpty ? filteredTeams.first.id : null),
+                      items: filteredTeams.map((t) => DropdownMenuItem(value: t.id, child: Text(t.name))).toList(),
                       onChanged: (val) => setState(() => selectedTeamId = val),
                       isDark: isDark,
-                    ),
+                    );
+                  }(),
 
               const SizedBox(height: 32),
               _buildSectionTitle('Fecha y Hora', isDark),
@@ -375,9 +396,20 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
             foregroundColor: Colors.black,
             padding: const EdgeInsets.symmetric(vertical: 16),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            disabledBackgroundColor: AppColors.primary.withOpacity(0.3),
+            disabledBackgroundColor: AppColors.primary.withValues(alpha: 0.3),
           ),
-          child: const Text('Buscar o Crear Partido', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+          child: BlocBuilder<MatchesBloc, MatchesState>(
+            builder: (context, state) {
+              if (state is MatchesLoading) {
+                return const SizedBox(
+                  height: 20,
+                  width: 20,
+                  child: CircularProgressIndicator(color: Colors.black, strokeWidth: 2),
+                );
+              }
+              return const Text('Buscar o Crear Partido', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16));
+            },
+          ),
         ),
       ),
     );
@@ -563,8 +595,21 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
       endTime.minute,
     );
 
-    final authState = context.read<AuthBloc>().state as AuthAuthenticated;
-    final userId = int.tryParse(authState.user.id) ?? 1;
+    final profileState = context.read<ProfileBloc>().state;
+    final authState = context.read<AuthBloc>().state;
+    
+    int? userId;
+    if (profileState is ProfileLoaded) {
+      userId = profileState.profile.id;
+    } else if (authState is AuthAuthenticated) {
+      userId = int.tryParse(authState.user.id);
+    }
+    
+    // Fallback or error if no user ID
+    if (userId == null) {
+      _showError('No se pudo determinar el usuario. Por favor intenta de nuevo.');
+      return;
+    }
     
     final match = MatchEntity(
       id: 0,

@@ -29,8 +29,8 @@ class CatalogsRemoteDataSourceImpl implements CatalogsRemoteDataSource {
   @override
   Future<List<CanchaModel>> getCanchas({int? regionId}) async {
     final response = await network.get('/catalogs/canchas', queryParameters: {
-      if (regionId != null) 'region_id': regionId,
-    });
+      'region_id': regionId,
+    }..removeWhere((_, v) => v == null));
     return (response.data as List).map((e) => CanchaModel.fromJson(e)).toList();
   }
 }
