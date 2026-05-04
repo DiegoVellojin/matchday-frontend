@@ -10,7 +10,7 @@ import java.util.Properties
 import java.io.FileInputStream
 
 val localProperties = Properties()
-val localPropertiesFile = rootProject.file("local.properties")
+val localPropertiesFile = rootProject.file("secrets.properties")
 if (localPropertiesFile.exists()) {
     localPropertiesFile.inputStream().use { localProperties.load(it) }
 }

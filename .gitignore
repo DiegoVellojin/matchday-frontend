@@ -54,3 +54,4 @@ firebase_options.dart
 
 # Archivos de entorno y claves
 lib/core/config/env.dart
+android/secrets.properties
