@@ -6,6 +6,7 @@ import '../../../../core/di/injection_container.dart';
 import '../bloc/matches_bloc.dart';
 import '../../domain/entities/match_entity.dart';
 import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class MatchDetailsPage extends StatefulWidget {
   final int matchId;
@@ -54,7 +55,7 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            _buildMapPreview(isDark),
+            _buildMapPreview(match, isDark),
             const SizedBox(height: 20),
             _buildStatusBadge(match.estatus),
             const SizedBox(height: 20),
@@ -69,22 +70,37 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> {
     );
   }
 
-  Widget _buildMapPreview(bool isDark) {
-    return Container(
-      height: 180,
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF2A2A2A) : Colors.grey[200],
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: isDark ? const Color(0xFF3A3A3A) : Colors.grey[300]!),
-      ),
-      child: const Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.location_on, color: AppColors.primary, size: 48),
-          SizedBox(height: 8),
-          Text('Abrir en Google Maps', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold)),
-        ],
+  Widget _buildMapPreview(MatchEntity match, bool isDark) {
+    return GestureDetector(
+      onTap: () async {
+        final query = match.nombreCancha ?? 'Cancha #${match.idCancha}';
+        final url = Uri.parse('https://www.google.com/maps/search/?api=1&query=${Uri.encodeComponent(query)}');
+        if (await canLaunchUrl(url)) {
+          await launchUrl(url, mode: LaunchMode.externalApplication);
+        } else {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('No se pudo abrir Google Maps')),
+            );
+          }
+        }
+      },
+      child: Container(
+        height: 180,
+        width: double.infinity,
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF2A2A2A) : Colors.grey[200],
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: isDark ? const Color(0xFF3A3A3A) : Colors.grey[300]!),
+        ),
+        child: const Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.location_on, color: AppColors.primary, size: 48),
+            SizedBox(height: 8),
+            Text('Abrir en Google Maps', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold)),
+          ],
+        ),
       ),
     );
   }
