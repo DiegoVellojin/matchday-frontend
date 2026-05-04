@@ -7,6 +7,7 @@ abstract class CatalogsRemoteDataSource {
   Future<List<SportModel>> getSports();
   Future<List<RegionModel>> getRegions();
   Future<List<CanchaModel>> getCanchas({int? regionId});
+  Future<CanchaModel> createCancha(CanchaModel cancha);
 }
 
 class CatalogsRemoteDataSourceImpl implements CatalogsRemoteDataSource {
@@ -32,5 +33,11 @@ class CatalogsRemoteDataSourceImpl implements CatalogsRemoteDataSource {
       'region_id': regionId,
     }..removeWhere((_, v) => v == null));
     return (response.data as List).map((e) => CanchaModel.fromJson(e)).toList();
+  }
+
+  @override
+  Future<CanchaModel> createCancha(CanchaModel cancha) async {
+    final response = await network.post('/catalogs/canchas', data: cancha.toJson());
+    return CanchaModel.fromJson(response.data);
   }
 }

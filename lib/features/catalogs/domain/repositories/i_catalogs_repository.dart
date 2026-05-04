@@ -8,4 +8,5 @@ abstract class ICatalogsRepository {
   Future<Either<Failure, List<SportEntity>>> getSports();
   Future<Either<Failure, List<RegionEntity>>> getRegions();
   Future<Either<Failure, List<CanchaEntity>>> getCanchas({int? regionId});
+  Future<Either<Failure, CanchaEntity>> createCancha(CanchaEntity cancha);
 }

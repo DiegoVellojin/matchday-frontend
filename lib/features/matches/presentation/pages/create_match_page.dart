@@ -18,7 +18,8 @@ import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/presentation/bloc/auth_state.dart';
 import '../../../profile/presentation/bloc/profile_bloc.dart';
 import '../../../profile/presentation/bloc/profile_state.dart';
-
+import '../../../catalogs/presentation/bloc/add_court/add_court_bloc.dart' as import_add_court_bloc;
+import '../../../catalogs/presentation/pages/add_court_page.dart' as import_add_court_page;
 class CreateMatchPage extends StatefulWidget {
   const CreateMatchPage({super.key});
 
@@ -366,9 +367,26 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
               
               const SizedBox(height: 12),
               TextButton.icon(
-                onPressed: () {
-                  // TODO: Implementar flujo de añadir nueva cancha con Google Maps
-                  _showError('Próximamente: Integración con Google Maps para añadir canchas');
+                onPressed: () async {
+                  if (selectedRegionId == null) {
+                    _showError('Por favor selecciona una ciudad primero.');
+                    return;
+                  }
+                  final newCancha = await Navigator.push<CanchaEntity>(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => BlocProvider(
+                        create: (_) => sl<import_add_court_bloc.AddCourtBloc>(),
+                        child: import_add_court_page.AddCourtPage(regionId: selectedRegionId!),
+                      ),
+                    ),
+                  );
+                  if (newCancha != null) {
+                    await _loadCanchas(selectedRegionId!);
+                    setState(() {
+                      selectedCanchaId = newCancha.id;
+                    });
+                  }
                 },
                 icon: const Icon(Icons.add_location_alt, color: AppColors.primary, size: 18),
                 label: const Text('¿No encuentras la cancha? Añádela aquí', style: TextStyle(color: AppColors.primary, fontSize: 13)),

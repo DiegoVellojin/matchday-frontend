@@ -75,59 +75,69 @@ final _router = GoRouter(
         return ResetPasswordPage(token: token);
       },
     ),
-    GoRoute(
-      path: '/hub',
-      builder: (context, state) => MultiBlocProvider(
-        providers: [
-          BlocProvider(create: (_) => di.sl<MatchesBloc>()..add(LoadMatchesEvent())),
-          BlocProvider(create: (_) => di.sl<TeamsBloc>()..add(LoadTeamsEvent())),
-          BlocProvider(create: (_) => di.sl<MyTeamsBloc>()..add(LoadMyTeamsEvent())),
-          BlocProvider(create: (_) => di.sl<PaymentsBloc>()..add(LoadMyPaymentsEvent())),
-          BlocProvider(create: (_) => di.sl<LeaderboardBloc>()..add(LoadLeaderboardEvent())),
-        ],
-        child: const MainHubPage(),
-      ),
-    ),
-    GoRoute(
-      path: '/crear-equipo',
-      builder: (context, state) => const CreateTeamPage(),
-    ),
-    GoRoute(
-      path: '/notificaciones',
-      builder: (context, state) => const NotificationsPage(),
-    ),
-    GoRoute(path: '/perfil', builder: (context, state) => const ProfilePage()),
-    GoRoute(
-      path: '/editar-perfil',
-      builder: (context, state) {
-        final extra = state.extra as Map<String, dynamic>;
-        final profile = extra['profile'] as UserProfileEntity;
-        return EditProfilePage(profile: profile);
+    
+    // RUTAS AUTENTICADAS (Comparten los BLoCs de feature sin ensuciar la raíz)
+    ShellRoute(
+      builder: (context, state, child) {
+        return MultiBlocProvider(
+          providers: [
+            BlocProvider(create: (_) => di.sl<MatchesBloc>()..add(LoadMatchesEvent())),
+            BlocProvider(create: (_) => di.sl<TeamsBloc>()..add(LoadTeamsEvent())),
+            BlocProvider(create: (_) => di.sl<MyTeamsBloc>()..add(LoadMyTeamsEvent())),
+            BlocProvider(create: (_) => di.sl<PaymentsBloc>()..add(LoadMyPaymentsEvent())),
+            BlocProvider(create: (_) => di.sl<LeaderboardBloc>()..add(LoadLeaderboardEvent())),
+          ],
+          child: child,
+        );
       },
-
-    ),
-
-    GoRoute(
-      path: '/team-dashboard/:id',
-      builder: (context, state) {
-        final id = int.tryParse(state.pathParameters['id'] ?? '') ?? 0;
-        return TeamDashboardPage(teamId: id);
-      },
-    ),
-    GoRoute(
-      path: '/pagos',
-      builder: (context, state) => const PaymentManagementPage(),
-    ),
-    GoRoute(
-      path: '/crear-partido',
-      builder: (context, state) => const CreateMatchPage(),
-    ),
-    GoRoute(
-      path: '/match-details/:id',
-      builder: (context, state) {
-        final id = int.parse(state.pathParameters['id']!);
-        return MatchDetailsPage(matchId: id);
-      },
+      routes: [
+        GoRoute(
+          path: '/hub',
+          builder: (context, state) => const MainHubPage(),
+        ),
+        GoRoute(
+          path: '/crear-equipo',
+          builder: (context, state) => const CreateTeamPage(),
+        ),
+        GoRoute(
+          path: '/notificaciones',
+          builder: (context, state) => const NotificationsPage(),
+        ),
+        GoRoute(
+          path: '/perfil',
+          builder: (context, state) => const ProfilePage(),
+        ),
+        GoRoute(
+          path: '/editar-perfil',
+          builder: (context, state) {
+            final extra = state.extra as Map<String, dynamic>?;
+            final profile = extra?['profile'] as UserProfileEntity?;
+            return EditProfilePage(profile: profile!);
+          },
+        ),
+        GoRoute(
+          path: '/team-dashboard/:id',
+          builder: (context, state) {
+            final id = int.tryParse(state.pathParameters['id'] ?? '') ?? 0;
+            return TeamDashboardPage(teamId: id);
+          },
+        ),
+        GoRoute(
+          path: '/pagos',
+          builder: (context, state) => const PaymentManagementPage(),
+        ),
+        GoRoute(
+          path: '/crear-partido',
+          builder: (context, state) => const CreateMatchPage(),
+        ),
+        GoRoute(
+          path: '/match-details/:id',
+          builder: (context, state) {
+            final id = int.parse(state.pathParameters['id']!);
+            return MatchDetailsPage(matchId: id);
+          },
+        ),
+      ],
     ),
   ],
 );

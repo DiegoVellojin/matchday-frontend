@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -127,7 +128,91 @@ class _MatchesPageState extends State<MatchesPage> {
                     }
                   },
                   builder: (context, state) {
-                    return _buildBody(state, isDark);
+                    final matchesToShow = state is MatchesLoaded ? state.matches : _cachedMatches;
+                    
+                    if (state is MatchesLoading && matchesToShow.isEmpty) {
+                      return const Center(child: CircularProgressIndicator(color: AppColors.primary));
+                    }
+                    
+                    if (state is MatchesError) {
+                      return Center(child: Text(state.message, style: const TextStyle(color: Colors.red)));
+                    }
+
+                    final profileState = context.read<ProfileBloc>().state;
+                    int? currentUserId;
+                    if (profileState is ProfileLoaded) {
+                      currentUserId = profileState.profile.id;
+                    }
+
+                    final filteredMatches = matchesToShow.where((m) {
+                      if (_isMyMatchesView) {
+                        if (m.idUsuarioOrg != currentUserId) return false;
+                      } else {
+                        if (m.idUsuarioOrg == currentUserId) return false;
+                      }
+
+                      return _searchQuery.isEmpty ||
+                          m.id.toString().contains(_searchQuery) ||
+                          (m.sportName ?? 'Deporte').toLowerCase().contains(_searchQuery);
+                    }).toList();
+
+                    if (filteredMatches.isEmpty && state is! MatchesLoading) {
+                      return RefreshIndicator(
+                        onRefresh: () async {
+                          context.read<MatchesBloc>().add(LoadMatchesEvent(
+                            sportId: selectedSportId,
+                            regionId: selectedRegionId,
+                            canchaId: selectedCanchaId,
+                            date: selectedDate,
+                          ));
+                        },
+                        child: ListView(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          children: [
+                            SizedBox(height: MediaQuery.of(context).size.height * 0.2),
+                            Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    _isMyMatchesView ? Icons.sports_soccer : Icons.search_off,
+                                    size: 64,
+                                    color: Colors.grey[600],
+                                  ),
+                                  const SizedBox(height: 16),
+                                  Text(
+                                    _isMyMatchesView 
+                                      ? 'Aún no has organizado ningún partido.' 
+                                      : 'No hay ofertas disponibles.',
+                                    style: const TextStyle(color: Color(0xFF9CA3AF), fontSize: 16),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }
+
+                    return RefreshIndicator(
+                      onRefresh: () async {
+                        context.read<MatchesBloc>().add(LoadMatchesEvent(
+                          sportId: selectedSportId,
+                          regionId: selectedRegionId,
+                          canchaId: selectedCanchaId,
+                          date: selectedDate,
+                        ));
+                      },
+                      child: ListView.separated(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        itemCount: filteredMatches.length,
+                        separatorBuilder: (context, index) => const SizedBox(height: 16),
+                        itemBuilder: (context, index) {
+                          final match = filteredMatches[index];
+                          return _buildMatchCard(match, isDark, currentUserId);
+                        },
+                      ),
+                    );
                   },
                 ),
               ),
@@ -143,79 +228,6 @@ class _MatchesPageState extends State<MatchesPage> {
       );
   }
 
-  Widget _buildBody(MatchesState state, bool isDark) {
-    if (state is MatchesLoading && _cachedMatches.isEmpty) {
-      return const Center(child: CircularProgressIndicator(color: AppColors.primary));
-    } else if (state is MatchesError) {
-      return Center(child: Text(state.message, style: const TextStyle(color: Colors.red)));
-    } else if (state is MatchesLoaded || state is MatchesLoading) {
-      final profileState = context.read<ProfileBloc>().state;
-      int? currentUserId;
-      if (profileState is ProfileLoaded) {
-        currentUserId = profileState.profile.id;
-      }
-
-      final matchesToShow = state is MatchesLoaded ? state.matches : _cachedMatches;
-
-      final filteredMatches = matchesToShow.where((m) {
-        // Filtro por tipo de vista (Mis Partidos vs Ofertas)
-        if (_isMyMatchesView) {
-          if (m.idUsuarioOrg != currentUserId) return false;
-        } else {
-          // En ofertas, tal vez no quiero ver los míos?
-          // El usuario dijo "separar", así que en ofertas mostraré los de otros.
-          if (m.idUsuarioOrg == currentUserId) return false;
-        }
-
-        final matchesSearch = _searchQuery.isEmpty ||
-            m.id.toString().contains(_searchQuery) ||
-            (m.sportName ?? 'Deporte').toLowerCase().contains(_searchQuery);
-        return matchesSearch;
-      }).toList();
-
-      if (filteredMatches.isEmpty) {
-        return Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                _isMyMatchesView ? Icons.sports_soccer : Icons.search_off,
-                size: 64,
-                color: Colors.grey[600],
-              ),
-              const SizedBox(height: 16),
-              Text(
-                _isMyMatchesView 
-                  ? 'Aún no has organizado ningún partido.' 
-                  : 'No hay ofertas disponibles.',
-                style: const TextStyle(color: Color(0xFF9CA3AF), fontSize: 16),
-              ),
-            ],
-          ),
-        );
-      }
-      return RefreshIndicator(
-        onRefresh: () async {
-          context.read<MatchesBloc>().add(LoadMatchesEvent(
-            sportId: selectedSportId,
-            regionId: selectedRegionId,
-            canchaId: selectedCanchaId,
-            date: selectedDate,
-          ));
-        },
-        child: ListView.separated(
-          physics: const AlwaysScrollableScrollPhysics(),
-          itemCount: filteredMatches.length,
-          separatorBuilder: (context, index) => const SizedBox(height: 16),
-          itemBuilder: (context, index) {
-            final match = filteredMatches[index];
-            return _buildMatchCard(match, isDark, currentUserId);
-          },
-        ),
-      );
-    }
-    return const SizedBox();
-  }
 
   Widget _buildViewSelector(bool isDark) {
     return Padding(

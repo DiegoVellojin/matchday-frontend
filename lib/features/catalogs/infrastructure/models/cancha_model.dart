@@ -20,4 +20,15 @@ class CanchaModel extends CanchaEntity {
       longitude: json['longitud_cancha'] != null ? double.parse(json['longitud_cancha'].toString()) : null,
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      if (id > 0) 'id_cancha': id,
+      'nombre_cancha': name,
+      'direccion_cancha': address,
+      'fk_id_region': regionId,
+      'latitud_cancha': latitude,
+      'longitud_cancha': longitude,
+    };
+  }
 }

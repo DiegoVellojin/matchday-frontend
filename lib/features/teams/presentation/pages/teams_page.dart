@@ -311,59 +311,57 @@ class _TeamsViewState extends State<_TeamsView> {
             ),
             const SizedBox(height: 16),
             
-            // FILTERS & LOADING BAR
-            BlocConsumer<TeamsBloc, TeamsState>(
-              listener: (context, state) {
-                if (state is TeamsError) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(state.message), backgroundColor: AppColors.error),
-                  );
-                } else if (state is TeamJoinRequestSuccess) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(state.message), backgroundColor: AppColors.primary),
-                  );
-                }
-                if (state is TeamsLoaded) {
-                  setState(() {
-                    _cachedTeams = state.teams;
-                    _cachedSports = state.sports;
-                  });
-                }
-              },
+            // FILTERS
+            BlocBuilder<TeamsBloc, TeamsState>(
               builder: (context, state) {
                 final List<String> dynamicFilters = _getDynamicFilters(_cachedSports);
-                
-                return Column(
-                  children: [
-                    MatchDayFilterChips<String>(
-                      options: dynamicFilters.map((f) => FilterOption(label: f, value: f)).toList(),
-                      selectedValue: _selectedFilter,
-                      onSelected: (val) {
-                        if (val == null) return;
-                        setState(() {
-                          _selectedFilter = val;
-                          if (val != 'Todos') {
-                            _recentSports.remove(val);
-                            _recentSports.insert(0, val);
-                          }
-                        });
-                      },
-                      onAdvancedFiltersPressed: () => _openFiltersBottomSheet(context, _cachedSports),
-                    ),
-                    MatchDayLoadingBar(
-                      isLoading: state is TeamsLoading,
-                      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0),
-                    ),
-                  ],
+                return MatchDayFilterChips<String>(
+                  options: dynamicFilters.map((f) => FilterOption(label: f, value: f)).toList(),
+                  selectedValue: _selectedFilter,
+                  onSelected: (val) {
+                    if (val == null) return;
+                    setState(() {
+                      _selectedFilter = val;
+                      if (val != 'Todos') {
+                        _recentSports.remove(val);
+                        _recentSports.insert(0, val);
+                      }
+                    });
+                  },
+                  onAdvancedFiltersPressed: () => _openFiltersBottomSheet(context, _cachedSports),
+                );
+              },
+            ),
+            // LOADING BAR
+            BlocBuilder<TeamsBloc, TeamsState>(
+              builder: (context, state) {
+                return MatchDayLoadingBar(
+                  isLoading: state is TeamsLoading,
+                  padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0),
                 );
               },
             ),
 
             Expanded(
-              child: Builder(
-                builder: (context) {
-                  final state = context.watch<TeamsBloc>().state;
-                  
+              child: BlocConsumer<TeamsBloc, TeamsState>(
+                listener: (context, state) {
+                  if (state is TeamsError) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(state.message), backgroundColor: AppColors.error),
+                    );
+                  } else if (state is TeamJoinRequestSuccess) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(state.message), backgroundColor: AppColors.primary),
+                    );
+                  }
+                  if (state is TeamsLoaded) {
+                    setState(() {
+                      _cachedTeams = state.teams;
+                      _cachedSports = state.sports;
+                    });
+                  }
+                },
+                builder: (context, state) {
                   final teamsToShow = state is TeamsLoaded ? state.teams : _cachedTeams;
 
                   if (state is TeamsLoading && teamsToShow.isEmpty) {

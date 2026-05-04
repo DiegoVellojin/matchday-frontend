@@ -51,3 +51,6 @@ firebase_options.dart
 
 # Reglas de Agente
 .antigravityrules
+
+# Archivos de entorno y claves
+lib/core/config/env.dart
