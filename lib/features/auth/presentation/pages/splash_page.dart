@@ -71,7 +71,7 @@ class _SplashPageState extends State<SplashPage> {
     final massiveSquareSize = size.height * 1.5;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Stack(
         children: [
           AnimatedAlign(
