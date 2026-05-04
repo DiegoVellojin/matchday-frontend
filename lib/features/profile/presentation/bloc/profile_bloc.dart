@@ -6,6 +6,10 @@ import '../../application/usecases/update_user_profile_usecase.dart';
 import 'profile_event.dart';
 import 'profile_state.dart';
 
+/// BLoC responsable de gestionar la información y acciones del perfil del usuario.
+/// 
+/// Interviene en la visualización, actualización de datos y el cierre de sesión,
+/// delegando la persistencia y la lógica a los Casos de Uso.
 class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
   final GetUserProfileUseCase getUserProfileUseCase;
   final UpdateUserProfileUseCase updateUserProfileUseCase;

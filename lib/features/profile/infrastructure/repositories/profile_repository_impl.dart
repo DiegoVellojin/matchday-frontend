@@ -1,6 +1,6 @@
 import 'package:fpdart/fpdart.dart';
 import '../../../../core/error/failures.dart';
-import '../../../teams_discovery/domain/entities/team_entity.dart';
+import '../../../teams/domain/entities/team_entity.dart';
 import '../../domain/entities/profile_entity.dart';
 import '../../domain/repositories/i_profile_repository.dart';
 import '../datasources/profile_remote_data_source.dart';

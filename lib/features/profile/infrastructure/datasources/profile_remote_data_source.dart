@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
 import '../../../../core/network/network_robot.dart';
-import '../../../teams_discovery/infrastructure/models/team_model.dart';
+import '../../../teams/infrastructure/models/team_model.dart';
 import '../models/profile_model.dart';
 
 class ProfileRemoteDataSource {

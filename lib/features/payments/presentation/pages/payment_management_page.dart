@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/di/injection_container.dart';
+import '../../../../core/widgets/matchday_loading_bar.dart';
 import '../../domain/entities/payment_entity.dart';
 import '../bloc/payments_bloc.dart';
 import '../bloc/payments_event.dart';
@@ -19,17 +19,26 @@ class PaymentManagementPage extends StatefulWidget {
 
 class _PaymentManagementPageState extends State<PaymentManagementPage> {
   PaymentFilter _activeFilter = PaymentFilter.all;
+  List<PaymentEntity> _cachedPayments = [];
+
+  @override
+  void initState() {
+    super.initState();
+    // Inicializar caché desde el estado actual del BLoC si ya existe
+    final currentState = context.read<PaymentsBloc>().state;
+    if (currentState is PaymentsLoaded) {
+      _cachedPayments = currentState.payments;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return BlocProvider<PaymentsBloc>(
-      create: (context) => sl<PaymentsBloc>()..add(LoadMyPaymentsEvent()),
-      child: Scaffold(
-        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        appBar: AppBar(
+    return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      appBar: AppBar(
           backgroundColor: colorScheme.surface,
           title: Text(
             'Gestión de Pagos',
@@ -41,66 +50,76 @@ class _PaymentManagementPageState extends State<PaymentManagementPage> {
           iconTheme: IconThemeData(color: colorScheme.onSurface),
           elevation: 0,
         ),
-        body: BlocConsumer<PaymentsBloc, PaymentsState>(
-          listener: (context, state) {
-            if (state is PaymentsError) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(state.message),
-                  backgroundColor: Colors.redAccent,
-                ),
-              );
-            }
-          },
-          builder: (context, state) {
-            if (state is PaymentsLoading) {
-              return const Center(
-                child: CircularProgressIndicator(color: AppColors.primary),
-              );
-            }
+        body: Column(
+          children: [
+            // BARRA DE CARGA "FULL PERSISTENCIA"
+            BlocBuilder<PaymentsBloc, PaymentsState>(
+              builder: (context, state) {
+                return MatchDayLoadingBar(isLoading: state is PaymentsLoading);
+              },
+            ),
 
-            if (state is PaymentsLoaded) {
-              final payments = _getFilteredPayments(state.payments);
-              final totalDebt = _calculateTotalDebt(state.payments);
+            Expanded(
+              child: BlocConsumer<PaymentsBloc, PaymentsState>(
+                listener: (context, state) {
+                  if (state is PaymentsError) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(state.message), backgroundColor: Colors.redAccent),
+                    );
+                  }
+                  if (state is PaymentsLoaded) {
+                    setState(() => _cachedPayments = state.payments);
+                  }
+                },
+                builder: (context, state) {
+                  final paymentsToShow = state is PaymentsLoaded ? state.payments : _cachedPayments;
 
-              return Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16.0,
-                  vertical: 12.0,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildSummaryCard(totalDebt),
-                    const SizedBox(height: 20),
-                    _buildMicroFilters(colorScheme),
-                    const SizedBox(height: 16),
-                    Expanded(
-                      child: payments.isEmpty
-                          ? _buildEmptyState()
-                          : ListView.separated(
-                              itemCount: payments.length,
-                              separatorBuilder: (_, _) =>
-                                  const SizedBox(height: 12),
-                              itemBuilder: (context, index) {
-                                return _buildPaymentCard(
-                                  context,
-                                  payments[index],
-                                  colorScheme,
-                                  isDark,
-                                );
-                              },
-                            ),
+                  if (state is PaymentsLoading && paymentsToShow.isEmpty) {
+                    return const Center(child: CircularProgressIndicator(color: AppColors.primary));
+                  }
+
+                  final payments = _getFilteredPayments(paymentsToShow);
+                  final totalDebt = _calculateTotalDebt(paymentsToShow);
+
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildSummaryCard(totalDebt),
+                        const SizedBox(height: 20),
+                        _buildMicroFilters(colorScheme),
+                        const SizedBox(height: 16),
+                        Expanded(
+                          child: payments.isEmpty && state is! PaymentsLoading
+                              ? _buildEmptyState()
+                              : RefreshIndicator(
+                                  onRefresh: () async {
+                                    context.read<PaymentsBloc>().add(LoadMyPaymentsEvent());
+                                  },
+                                  child: ListView.separated(
+                                    physics: const AlwaysScrollableScrollPhysics(),
+                                    itemCount: payments.length,
+                                    separatorBuilder: (_, _) => const SizedBox(height: 12),
+                                    itemBuilder: (context, index) {
+                                      return _buildPaymentCard(
+                                        context,
+                                        payments[index],
+                                        colorScheme,
+                                        isDark,
+                                      );
+                                    },
+                                  ),
+                                ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-              );
-            }
-
-            return const SizedBox.shrink();
-          },
+                  );
+                },
+              ),
+            ),
+          ],
         ),
-      ),
     );
   }
 

@@ -1,6 +1,6 @@
 import 'package:fpdart/fpdart.dart';
 import '../../../../core/error/failures.dart';
-import '../../../teams_discovery/domain/entities/sport_entity.dart';
+import '../../../teams/domain/entities/sport_entity.dart';
 import '../../domain/repositories/i_catalogs_repository.dart';
 
 class GetSportsUseCase {

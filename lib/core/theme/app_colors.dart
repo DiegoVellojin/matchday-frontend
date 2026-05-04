@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+/// Paleta de colores centralizada de la marca MatchDay.
+/// Define todos los tokens de color requeridos por [AppTheme].
 class AppColors {
   // Colores principales de la marca MatchDay
   static const Color primary = Color(0xFF39CEA5); // Tu verde neón

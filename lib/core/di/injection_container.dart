@@ -23,28 +23,30 @@ import '../../features/auth/infrastructure/repositories/auth_repository_impl.dar
 import '../../features/auth/presentation/bloc/auth_bloc.dart';
 
 // Importaciones de Teams Discovery (NUEVO)
-import '../../features/teams_discovery/application/usecases/get_discoverable_teams_usecase.dart';
-import '../../features/teams_discovery/application/usecases/request_join_team_usecase.dart';
-import '../../features/teams_discovery/application/usecases/create_team_usecase.dart';
-import '../../features/teams_discovery/application/usecases/get_team_by_id_usecase.dart';
-import '../../features/teams_discovery/application/usecases/get_team_members_usecase.dart';
-import '../../features/teams_discovery/application/usecases/get_pending_requests_usecase.dart';
-import '../../features/teams_discovery/application/usecases/respond_to_join_request_usecase.dart';
-import '../../features/teams_discovery/application/usecases/get_sports_usecase.dart';
-import '../../features/teams_discovery/application/usecases/update_team_usecase.dart';
-import '../../features/teams_discovery/application/usecases/delete_team_usecase.dart';
-import '../../features/teams_discovery/application/usecases/transfer_captain_usecase.dart';
-import '../../features/teams_discovery/application/usecases/leave_team_usecase.dart';
-import '../../features/teams_discovery/application/usecases/kick_member_usecase.dart' as discovery_kick;
+import '../../features/teams/application/usecases/get_discoverable_teams_usecase.dart';
+import '../../features/teams/application/usecases/request_join_team_usecase.dart';
+import '../../features/teams/application/usecases/create_team_usecase.dart';
+import '../../features/teams/application/usecases/get_team_by_id_usecase.dart';
+import '../../features/teams/application/usecases/get_team_members_usecase.dart';
+import '../../features/teams/application/usecases/get_pending_requests_usecase.dart';
+import '../../features/teams/application/usecases/respond_to_join_request_usecase.dart';
+import '../../features/teams/application/usecases/get_sports_usecase.dart';
+import '../../features/teams/application/usecases/update_team_usecase.dart';
+import '../../features/teams/application/usecases/delete_team_usecase.dart';
+import '../../features/teams/application/usecases/transfer_captain_usecase.dart';
+import '../../features/teams/application/usecases/leave_team_usecase.dart';
+import '../../features/teams/application/usecases/kick_member_usecase.dart';
+import '../../features/teams/application/usecases/get_my_teams_usecase.dart';
 
 
 
 
 
-import '../../features/teams_discovery/domain/repositories/i_teams_discovery_repository.dart';
-import '../../features/teams_discovery/infrastructure/datasources/teams_discovery_remote_data_source.dart';
-import '../../features/teams_discovery/infrastructure/repositories/teams_discovery_repository_impl.dart';
-import '../../features/teams_discovery/presentation/bloc/teams_discovery_bloc.dart';
+import '../../features/teams/domain/repositories/i_teams_repository.dart';
+import '../../features/teams/infrastructure/datasources/teams_remote_data_source.dart';
+import '../../features/teams/infrastructure/repositories/teams_repository_impl.dart';
+import '../../features/teams/presentation/bloc/teams_bloc.dart';
+import '../../features/teams/presentation/bloc/my_teams_bloc.dart';
 
 // Importaciones de Notificaciones (NUEVO)
 import '../../features/notifications/application/usecases/get_notifications_usecase.dart';
@@ -65,14 +67,6 @@ import '../../features/profile/domain/repositories/i_profile_repository.dart';
 import '../../features/profile/infrastructure/datasources/profile_remote_data_source.dart';
 import '../../features/profile/infrastructure/repositories/profile_repository_impl.dart';
 import '../../features/profile/presentation/bloc/profile_bloc.dart';
-// Importaciones de Mis Equipos (NUEVO)
-import '../../features/my_teams/application/usecases/get_my_teams_usecase.dart' as mt_usecase;
-
-import '../../features/my_teams/application/usecases/kick_member_usecase.dart';
-import '../../features/my_teams/domain/repositories/i_my_teams_repository.dart';
-import '../../features/my_teams/infrastructure/datasources/my_teams_remote_datasource.dart';
-import '../../features/my_teams/infrastructure/repositories/my_teams_repository_impl.dart';
-import '../../features/my_teams/presentation/bloc/my_teams_bloc.dart';
 
 // Importaciones de Pagos (NUEVO)
 import '../../features/payments/application/usecases/get_my_payments_usecase.dart';
@@ -96,6 +90,14 @@ import '../../features/catalogs/application/usecases/get_sports_usecase.dart' as
 import '../../features/catalogs/application/usecases/get_regions_usecase.dart';
 import '../../features/catalogs/application/usecases/get_canchas_usecase.dart';
 
+
+
+// Importaciones de Rankings (NUEVO)
+import '../../features/rankings/domain/repositories/i_rankings_repository.dart';
+import '../../features/rankings/infrastructure/datasources/rankings_remote_datasource.dart';
+import '../../features/rankings/infrastructure/repositories/rankings_repository_impl.dart';
+import '../../features/rankings/application/usecases/get_team_leaderboard_usecase.dart';
+import '../../features/rankings/presentation/bloc/leaderboard_bloc.dart';
 
 // sl = Service Locator
 final sl = GetIt.instance;
@@ -121,12 +123,15 @@ Future<void> init() async {
   // ===========================================================================
   // 4. DATA SOURCES
   // ===========================================================================
+
+  // Rankings (NUEVO)
+  sl.registerLazySingleton(() => RankingsRemoteDataSource(sl()));
   // Auth
   sl.registerLazySingleton(() => AuthRemoteDataSource(dio: sl()));
 
   // Teams Discovery (NUEVO)
   sl.registerLazySingleton(
-    () => TeamsDiscoveryRemoteDataSource(networkRobot: sl()),
+    () => TeamsRemoteDataSource(networkRobot: sl()),
   );
 
   // Notificaciones
@@ -139,8 +144,6 @@ Future<void> init() async {
     () => ProfileRemoteDataSource(networkRobot: sl()),
   );
 
-  // Mis Equipos (NUEVO)
-  sl.registerLazySingleton(() => MyTeamsRemoteDataSource(sl()));
 
   // Pagos (NUEVO)
   sl.registerLazySingleton(() => PaymentsRemoteDataSource(sl()));
@@ -152,9 +155,16 @@ Future<void> init() async {
 
 
 
+  
+  // Rankings (NUEVO)
+  sl.registerLazySingleton(() => RankingsRemoteDataSource(sl()));
+
   // ===========================================================================
   // 3. REPOSITORIOS
   // ===========================================================================
+
+  // Rankings (NUEVO)
+  sl.registerLazySingleton<IRankingsRepository>(() => RankingsRepositoryImpl(sl()));
   // Auth
   sl.registerLazySingleton<IAuthRepository>(
     () =>
@@ -162,8 +172,8 @@ Future<void> init() async {
   );
 
   // Teams Discovery (NUEVO)
-  sl.registerLazySingleton<ITeamsDiscoveryRepository>(
-    () => TeamsDiscoveryRepositoryImpl(remoteDataSource: sl()),
+  sl.registerLazySingleton<ITeamsRepository>(
+    () => TeamsRepositoryImpl(remoteDataSource: sl()),
   );
 
   // Notificaciones
@@ -176,8 +186,6 @@ Future<void> init() async {
     () => ProfileRepositoryImpl(remoteDataSource: sl()),
   );
 
-  // Mis Equipos (NUEVO)
-  sl.registerLazySingleton<IMyTeamsRepository>(() => MyTeamsRepositoryImpl(sl()));
 
   // Pagos (NUEVO)
   sl.registerLazySingleton<IPaymentsRepository>(() => PaymentsRepositoryImpl(sl()));
@@ -190,9 +198,16 @@ Future<void> init() async {
 
 
 
+  
+  // Rankings (NUEVO)
+  sl.registerLazySingleton<IRankingsRepository>(() => RankingsRepositoryImpl(sl()));
+
   // ===========================================================================
   // 2. CASOS DE USO
   // ===========================================================================
+
+  // Rankings (NUEVO)
+  sl.registerLazySingleton(() => GetTeamLeaderboardUseCase(sl()));
   // Auth
   sl.registerLazySingleton(() => SignInWithGoogleUseCase(sl()));
   sl.registerLazySingleton(() => SignInWithEmailUseCase(sl()));
@@ -202,6 +217,7 @@ Future<void> init() async {
 
   // Teams Discovery (NUEVO)
   sl.registerLazySingleton(() => GetDiscoverableTeamsUseCase(sl()));
+  sl.registerLazySingleton(() => GetMyTeamsUseCase(sl()));
   sl.registerLazySingleton(() => RequestJoinTeamUseCase(sl()));
   sl.registerLazySingleton(() => CreateTeamUseCase(sl()));
   sl.registerLazySingleton(() => GetTeamByIdUseCase(sl()));
@@ -213,7 +229,7 @@ Future<void> init() async {
   sl.registerLazySingleton(() => DeleteTeamUseCase(sl()));
   sl.registerLazySingleton(() => TransferCaptainUseCase(sl()));
   sl.registerLazySingleton(() => LeaveTeamUseCase(sl()));
-  sl.registerLazySingleton(() => discovery_kick.KickMemberUseCase(sl()));
+  sl.registerLazySingleton(() => KickMemberUseCase(sl()));
 
 
 
@@ -229,9 +245,6 @@ Future<void> init() async {
   sl.registerLazySingleton(() => UpdateUserProfileUseCase(sl()));
 
 
-  // Mis Equipos (NUEVO)
-  sl.registerLazySingleton(() => mt_usecase.GetMyTeamsUseCase(sl()));
-  sl.registerLazySingleton(() => KickMemberUseCase(sl()));
 
   // Pagos (NUEVO)
   sl.registerLazySingleton(() => GetMyPaymentsUseCase(sl()));
@@ -256,6 +269,11 @@ Future<void> init() async {
   // ===========================================================================
   // 1. BLOCs
   // ===========================================================================
+
+  // Rankings (NUEVO)
+  sl.registerFactory(
+    () => LeaderboardBloc(getTeamLeaderboardUseCase: sl()),
+  );
   // Cargar el modo de tema guardado
   final secureStorage = SecureStorageService(const FlutterSecureStorage());
   final isDark = await secureStorage.isDarkMode();
@@ -300,7 +318,7 @@ Future<void> init() async {
 
   // Teams Discovery (NUEVO)
   sl.registerFactory(
-    () => TeamsDiscoveryBloc(
+    () => TeamsBloc(
       getTeamsUseCase: sl(),
       requestJoinUseCase: sl(),
       getSportsUseCase: sl(),

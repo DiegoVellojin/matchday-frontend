@@ -1,58 +1,24 @@
 # ==============================================================================
 # MATCHDAY APP - ARQUITECTURA CLEAN & MODULAR (FLUTTER)
 # ==============================================================================
-# Esta aplicación sigue los principios de Clean Architecture para garantizar un
-# código desacoplado, mantenible y escalable. Cada funcionalidad (Feature) es 
-# un módulo independiente con sus propias capas de responsabilidad.
-# ==============================================================================
 
 lib/
 ├── core/                       # COMPONENTES TRANSVERSALES (Shared Kernel)
-│   ├── constants/              # Constantes globales: API Endpoints, Assets y Keys.
-│   ├── di/                     # Service Locator: Configuración de GetIt (Inyección de dependencias).
-│   ├── error/                  # Gestión de Fallos: Definición de Failures y Excepciones.
-│   ├── network/                # Networking: NetworkRobot (Dio wrapper) con interceptores maestros.
-│   ├── storage/                # Persistencia & Media: SecureStorage y FirebaseStorageService.
-│   ├── theme/                  # UI System: Definición de colores, tipografías y BLoC de tema.
-│   ├── utils/                  # Helpers: Formateadores, validadores y utilidades de imagen.
-│   └── widgets/                # Widgets Globales: MatchDayImagePicker, AppBar, Dialogs.
-├── features/                   # MÓDULOS DE NEGOCIO (Domain-Driven Features)
-│   ├── auth/                   # 🔐 Seguridad: Login, Registro y Google Authentication.
-│   ├── main_hub/               # 🧭 Core UX: Estructura de navegación principal y BottomNav.
-│   ├── matches/                # ⚽ Partidos: Creación de retos y gestión de convocatorias.
-│   ├── teams_discovery/        # 🔍 Exploración: Feed para descubrir y filtrar equipos.
-│   ├── my_teams/               # 📋 Administración: Mis equipos como jugador u organizador.
-│   ├── notifications/          # 🔔 Notificaciones: Centro de alertas y solicitudes push.
-│   ├── payments/               # 💸 Finanzas: Pagos de partidos y deudas de equipo.
-│   ├── rankings/               # 🏆 Competición: Tablas de clasificación y estadísticas.
-│   └── profile/                # 👤 Usuario: Perfil, configuración e historial.
-└── main.dart                   # Bootstrap: Punto de arranque y configuración de GoRouter.
+│   ├── constants/              
+│   ├── di/                     # Service Locator Modular (GetIt).
+│   ├── network/                # Interceptores Dio.
+│   ├── theme/                  # UI System (AppTheme, AppColors, BLoC).
+│   ├── widgets/                # Componentes Reutilizables.
+│   └── domain/                 # Entidades globales (TeamEntity base, UserEntity).
+├── features/                   # MÓDULOS DE NEGOCIO (Domain-Driven)
+│   ├── auth/                   
+│   ├── main_hub/               
+│   ├── matches/                
+│   ├── teams/                  # (Unificado) Centraliza discovery y my_teams.
+│   ├── notifications/          
+│   ├── payments/               
+│   ├── rankings/               
+│   └── profile/                
+└── main.dart                   # Bootstrap limpio.
 
-# ------------------------------------------------------------------------------
-# ANATOMÍA DE UNA FEATURE (Ejemplo: teams_discovery/)
-# ------------------------------------------------------------------------------
-# Implementamos 4 capas estrictas para separar la lógica de la UI:
-# ------------------------------------------------------------------------------
-
-lib/features/teams_discovery/
-├── domain/                     # CAPA 1: DOMINIO (El "Qué")
-│   ├── entities/               # Objetos de negocio puros (TeamEntity).
-│   └── repositories/           # Interfaces (Contratos): Definen qué datos necesita la feature.
-├── application/                # CAPA 2: APLICACIÓN (El "Cómo")
-│   └── usecases/               # Lógica orquestada: Un archivo por acción (RequestJoinTeamUseCase).
-├── infrastructure/             # CAPA 3: INFRAESTRUCTURA (Los Datos)
-│   ├── models/                 # DTOs: Extensiones de entidades con FromJson/ToJson.
-│   ├── datasources/            # Clientes API: Llamadas directas a través de NetworkRobot.
-│   └── repositories/           # Implementación real de los contratos del dominio.
-└── presentation/               # CAPA 4: PRESENTACIÓN (La UI)
-    ├── bloc/                   # State Management: Lógica de eventos y estados de Flutter BLoC.
-    ├── pages/                  # Pantallas: Widgets que ocupan toda la pantalla (TeamDashboardPage).
-    └── widgets/                # Componentes Reutilizables: TeamDiscoveryCard, Filters.
-
-# ==============================================================================
-# PRINCIPIOS APLICADOS:
-# 1. Independencia de Framework: El dominio no sabe que existe Flutter.
-# 2. Testeabilidad: Cada capa se puede probar de forma aislada.
-# 3. SOLID & DRY: Inyección de dependencias y reutilización de componentes core.
-# 4. State Isolation: Los BLoCs gestionan el estado de forma predecible y unidireccional.
-# ==============================================================================
+# Cada feature respeta: domain/, application/, infrastructure/, presentation/

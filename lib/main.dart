@@ -3,7 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:firebase_core/firebase_core.dart';
 
-// NUESTRA CAJA DE HERRAMIENTAS Y TEMAS
 import 'core/di/injection_container.dart' as di;
 import 'core/theme/app_theme.dart';
 import 'core/theme/bloc/theme_bloc.dart';
@@ -15,25 +14,29 @@ import 'features/auth/presentation/pages/register_page.dart';
 import 'features/auth/presentation/pages/forgot_password_page.dart';
 import 'features/auth/presentation/pages/reset_password_page.dart';
 import 'features/main_hub/presentation/pages/main_hub_page.dart';
-import 'features/teams_discovery/presentation/pages/create_team_page.dart';
+import 'features/teams/presentation/pages/create_team_page.dart';
 import 'features/notifications/presentation/pages/notifications_page.dart';
-import 'features/teams_discovery/presentation/pages/team_dashboard_page.dart';
+import 'features/teams/presentation/pages/team_dashboard_page.dart';
 import 'features/profile/presentation/pages/profile_page.dart';
 import 'features/profile/presentation/pages/edit_profile_page.dart';
-import 'features/profile/domain/entities/profile_entity.dart';
-import 'features/profile/presentation/bloc/profile_bloc.dart';
-import 'features/profile/presentation/bloc/profile_event.dart';
-
-import 'features/notifications/presentation/bloc/notifications_bloc.dart';
-import 'features/notifications/presentation/bloc/notifications_event.dart';
+import 'features/auth/presentation/bloc/auth_bloc.dart';
+import 'features/matches/presentation/bloc/matches_bloc.dart';
+import 'features/teams/presentation/bloc/teams_bloc.dart';
+import 'features/teams/presentation/bloc/teams_event.dart';
+import 'features/teams/presentation/bloc/my_teams_bloc.dart';
+import 'features/teams/presentation/bloc/my_teams_event.dart';
+import 'features/payments/presentation/bloc/payments_bloc.dart';
+import 'features/payments/presentation/bloc/payments_event.dart';
+import 'features/rankings/presentation/bloc/leaderboard_bloc.dart';
+import 'features/rankings/presentation/bloc/leaderboard_event.dart';
 import 'features/payments/presentation/pages/payment_management_page.dart';
 import 'features/matches/presentation/pages/create_match_page.dart';
 import 'features/matches/presentation/pages/match_details_page.dart';
-import 'features/auth/presentation/bloc/auth_bloc.dart';
-import 'features/matches/presentation/bloc/matches_bloc.dart';
-
-
-
+import 'features/profile/presentation/bloc/profile_bloc.dart';
+import 'features/profile/presentation/bloc/profile_event.dart';
+import 'features/notifications/presentation/bloc/notifications_bloc.dart';
+import 'features/notifications/presentation/bloc/notifications_event.dart';
+import 'features/profile/domain/entities/profile_entity.dart';
 
 void main() async {
   // 1. Aseguramos que Flutter esté listo
@@ -72,7 +75,19 @@ final _router = GoRouter(
         return ResetPasswordPage(token: token);
       },
     ),
-    GoRoute(path: '/hub', builder: (context, state) => const MainHubPage()),
+    GoRoute(
+      path: '/hub',
+      builder: (context, state) => MultiBlocProvider(
+        providers: [
+          BlocProvider(create: (_) => di.sl<MatchesBloc>()..add(LoadMatchesEvent())),
+          BlocProvider(create: (_) => di.sl<TeamsBloc>()..add(LoadTeamsEvent())),
+          BlocProvider(create: (_) => di.sl<MyTeamsBloc>()..add(LoadMyTeamsEvent())),
+          BlocProvider(create: (_) => di.sl<PaymentsBloc>()..add(LoadMyPaymentsEvent())),
+          BlocProvider(create: (_) => di.sl<LeaderboardBloc>()..add(LoadLeaderboardEvent())),
+        ],
+        child: const MainHubPage(),
+      ),
+    ),
     GoRoute(
       path: '/crear-equipo',
       builder: (context, state) => const CreateTeamPage(),
@@ -129,7 +144,6 @@ class MatchDayApp extends StatelessWidget {
         BlocProvider(create: (_) => di.sl<ProfileBloc>()..add(LoadProfileEvent())),
         BlocProvider(create: (_) => di.sl<NotificationsBloc>()..add(LoadNotificationsEvent())),
         BlocProvider(create: (_) => di.sl<AuthBloc>()),
-        BlocProvider(create: (_) => di.sl<MatchesBloc>()..add(LoadMatchesEvent())),
       ],
       child: BlocBuilder<ThemeBloc, ThemeMode>(
         builder: (context, currentThemeMode) {

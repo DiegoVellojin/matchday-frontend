@@ -2,8 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'app_colors.dart';
 
+/// Clase que define y centraliza la configuración de temas (Claro y Oscuro) 
+/// de Material Design para toda la aplicación MatchDay.
 class AppTheme {
-  // --- MODO OSCURO (El que ya teníamos) ---
+  /// Retorna el tema oscuro predeterminado de la aplicación.
+  /// 
+  /// Configura el [scaffoldBackgroundColor], el [colorScheme] y el tema 
+  /// de botones utilizando la paleta de colores oficial.
   static ThemeData get darkTheme {
     return ThemeData(
       brightness: Brightness.dark,
@@ -25,7 +30,10 @@ class AppTheme {
     );
   }
 
-  // --- MODO CLARO (¡NUEVO!) ---
+  /// Retorna el tema claro de la aplicación.
+  /// 
+  /// Ideal para entornos con alta iluminación. Mantiene el verde principal 
+  /// pero ajusta los fondos y contrastes de superficie.
   static ThemeData get lightTheme {
     return ThemeData(
       brightness: Brightness.light,

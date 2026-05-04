@@ -6,14 +6,14 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/di/injection_container.dart';
 import '../bloc/matches_bloc.dart';
 import '../../domain/entities/match_entity.dart';
-import '../../../teams_discovery/domain/entities/sport_entity.dart';
-import '../../../my_teams/domain/entities/my_team_entity.dart';
+import '../../../teams/domain/entities/sport_entity.dart';
+import '../../../teams/domain/entities/team_entity.dart';
 import '../../../catalogs/domain/entities/region_entity.dart';
 import '../../../catalogs/domain/entities/cancha_entity.dart';
 import '../../../catalogs/application/usecases/get_sports_usecase.dart' as cat_sports;
 import '../../../catalogs/application/usecases/get_regions_usecase.dart';
 import '../../../catalogs/application/usecases/get_canchas_usecase.dart';
-import '../../../my_teams/application/usecases/get_my_teams_usecase.dart' as mt_usecase;
+import '../../../teams/application/usecases/get_my_teams_usecase.dart' as mt_usecase;
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/presentation/bloc/auth_state.dart';
 import '../../../profile/presentation/bloc/profile_bloc.dart';
@@ -49,7 +49,7 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
   bool _isLoadingCanchas = false;
 
   List<SportEntity> _sports = [];
-  List<MyTeamEntity> _myTeams = [];
+  List<TeamEntity> _myTeams = [];
   List<RegionEntity> _regions = [];
   List<CanchaEntity> _canchas = [];
 

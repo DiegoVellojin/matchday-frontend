@@ -1,6 +1,6 @@
 import 'package:fpdart/fpdart.dart';
 import '../../../../core/error/failures.dart';
-import '../../../teams_discovery/domain/entities/sport_entity.dart';
+import '../../../teams/domain/entities/sport_entity.dart';
 import '../../domain/entities/region_entity.dart';
 import '../../domain/entities/cancha_entity.dart';
 

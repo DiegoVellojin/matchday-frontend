@@ -7,6 +7,10 @@ import '../../application/usecases/reset_password_usecase.dart';
 import 'auth_event.dart';
 import 'auth_state.dart';
 
+/// BLoC principal para la gestión de estado de la autenticación.
+/// 
+/// Escucha eventos de la UI (Login, Registro, Google) y emite estados
+/// transaccionales (Loading, Error, Authenticated) comunicándose con los UseCases.
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final SignInWithGoogleUseCase signInWithGoogleUseCase;
   final SignInWithEmailUseCase signInWithEmailUseCase;

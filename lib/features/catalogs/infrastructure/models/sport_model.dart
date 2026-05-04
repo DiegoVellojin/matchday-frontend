@@ -1,4 +1,4 @@
-import '../../../teams_discovery/domain/entities/sport_entity.dart';
+import '../../../teams/domain/entities/sport_entity.dart';
 
 class SportModel extends SportEntity {
   const SportModel({

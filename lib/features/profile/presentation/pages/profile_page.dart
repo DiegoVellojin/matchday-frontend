@@ -3,15 +3,16 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/di/injection_container.dart';
-import '../../../my_teams/presentation/bloc/my_teams_bloc.dart';
-import '../../../my_teams/presentation/bloc/my_teams_event.dart';
-import '../../../my_teams/presentation/bloc/my_teams_state.dart';
-import '../../../my_teams/domain/entities/my_team_entity.dart';
-import '../../../my_teams/presentation/pages/my_teams_page.dart';
+import '../../../teams/presentation/bloc/my_teams_bloc.dart';
+import '../../../teams/presentation/bloc/my_teams_event.dart';
+import '../../../teams/presentation/bloc/my_teams_state.dart';
+import '../../../teams/domain/entities/team_entity.dart';
+import '../../../teams/presentation/pages/my_teams_page.dart';
 
 import '../bloc/profile_bloc.dart';
 import '../bloc/profile_event.dart';
 import '../bloc/profile_state.dart';
+import '../../../../core/widgets/matchday_loading_bar.dart';
 
 import '../../domain/entities/profile_entity.dart';
 
@@ -23,6 +24,8 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
+  UserProfileEntity? _cachedProfile;
+
   @override
   void initState() {
     super.initState();
@@ -43,50 +46,71 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
           );
         }
+        if (state is ProfileLoaded) {
+          setState(() => _cachedProfile = state.profile);
+        }
       },
       child: Scaffold(
         appBar: _buildAppBar(context),
-        body: BlocBuilder<ProfileBloc, ProfileState>(
+        body: Column(
+          children: [
+            BlocBuilder<ProfileBloc, ProfileState>(
+              builder: (context, state) {
+                return MatchDayLoadingBar(isLoading: state is ProfileLoading);
+              },
+            ),
+            Expanded(
+              child: BlocBuilder<ProfileBloc, ProfileState>(
+                builder: (context, state) {
+                  if (state is ProfileLoading && _cachedProfile == null) {
+                    return const Center(child: CircularProgressIndicator(color: AppColors.primary));
+                  }
 
-          builder: (context, state) {
-            if (state is ProfileLoading) {
-              return const Center(
-                child: CircularProgressIndicator(color: AppColors.primary),
-              );
-            } else if (state is ProfileLoaded) {
-              return SingleChildScrollView(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  children: [
-                    _buildProfileHeader(state.profile),
-                    const SizedBox(height: 24),
-                    _buildStatistics(state.profile.rating),
-                    const SizedBox(height: 24),
-                    BlocProvider<MyTeamsBloc>(
-                      create: (_) => sl<MyTeamsBloc>()..add(LoadMyTeamsEvent()),
-                      child: BlocBuilder<MyTeamsBloc, MyTeamsState>(
-                        builder: (context, myTeamsState) {
-                          if (myTeamsState is MyTeamsLoaded) {
-                            return _buildMyTeamsSection(myTeamsState.teams);
-                          }
-                          return const SizedBox.shrink();
-                        },
+                  if (_cachedProfile != null) {
+                    final profile = _cachedProfile!;
+                    return RefreshIndicator(
+                      color: AppColors.primary,
+                      onRefresh: () async {
+                        context.read<ProfileBloc>().add(LoadProfileEvent());
+                      },
+                      child: SingleChildScrollView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          children: [
+                            _buildProfileHeader(profile),
+                            const SizedBox(height: 24),
+                            _buildStatistics(profile.rating),
+                            const SizedBox(height: 24),
+                            BlocProvider<MyTeamsBloc>(
+                              create: (_) => sl<MyTeamsBloc>()..add(LoadMyTeamsEvent()),
+                              child: BlocBuilder<MyTeamsBloc, MyTeamsState>(
+                                builder: (context, myTeamsState) {
+                                  if (myTeamsState is MyTeamsLoaded) {
+                                    return _buildMyTeamsSection(myTeamsState.teams);
+                                  }
+                                  return const SizedBox.shrink();
+                                },
+                              ),
+                            ),
+                            const SizedBox(height: 24),
+                            _buildActionButtons(context, profile),
+                          ],
+                        ),
                       ),
-                    ),
+                    );
+                  }
 
-                    const SizedBox(height: 24),
-                    _buildActionButtons(context, state.profile),
-                  ],
-                ),
-              );
-            }
-            return const Center(
-              child: Text(
-                'No se pudo cargar el perfil.',
-                style: TextStyle(color: Colors.white),
+                  return const Center(
+                    child: Text(
+                      'No se pudo cargar el perfil.',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  );
+                },
               ),
-            );
-          },
+            ),
+          ],
         ),
       ),
     );
@@ -230,7 +254,7 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget _buildMyTeamsSection(List<MyTeamEntity> teams) {
+  Widget _buildMyTeamsSection(List<TeamEntity> teams) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -291,7 +315,7 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget _buildTeamCard(MyTeamEntity team) {
+  Widget _buildTeamCard(TeamEntity team) {
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(

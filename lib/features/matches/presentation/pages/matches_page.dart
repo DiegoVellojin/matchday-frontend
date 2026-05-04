@@ -6,10 +6,11 @@ import 'package:intl/date_symbol_data_local.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../bloc/matches_bloc.dart';
 import '../../domain/entities/match_entity.dart';
-import '../../../../core/widgets/matchday_search_bar.dart';
 import '../../../../core/widgets/matchday_filter_chips.dart';
+import '../../../../core/widgets/matchday_loading_bar.dart';
+import '../../../../core/widgets/matchday_search_bar.dart';
 import '../../../../core/di/injection_container.dart';
-import '../../../teams_discovery/domain/entities/sport_entity.dart';
+import '../../../teams/domain/entities/sport_entity.dart';
 import '../../../catalogs/application/usecases/get_sports_usecase.dart' as cat_usecase;
 import '../../../catalogs/domain/entities/region_entity.dart';
 import '../../../catalogs/domain/entities/cancha_entity.dart';
@@ -36,6 +37,7 @@ class _MatchesPageState extends State<MatchesPage> {
   List<SportEntity> _sports = [];
   List<RegionEntity> _regions = [];
   List<CanchaEntity> _canchas = [];
+  List<MatchEntity> _cachedMatches = [];
   
   bool _isMyMatchesView = false;
   bool _isLoadingCatalogs = true;
@@ -79,45 +81,58 @@ class _MatchesPageState extends State<MatchesPage> {
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        body: BlocBuilder<MatchesBloc, MatchesState>(
-          builder: (context, state) {
-            return Column(
-              children: [
-                const SizedBox(height: 16),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: MatchDaySearchBar(
-                    controller: _searchController,
-                    hintText: 'Buscar partidos...',
-                  ),
+        body: Column(
+          children: [
+            const SizedBox(height: 16),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: MatchDaySearchBar(
+                controller: _searchController,
+                hintText: 'Buscar partidos...',
+              ),
+            ),
+            const SizedBox(height: 16),
+            _buildViewSelector(isDark),
+            const SizedBox(height: 16),
+            MatchDayLoadingBar(isLoading: _isLoadingCatalogs),
+            if (!_isLoadingCatalogs)
+              MatchDayFilterChips<int?>(
+                  options: [
+                    const FilterOption(label: 'Todos', value: null),
+                    ..._sports.map((s) => FilterOption(label: s.name, value: s.id)),
+                  ],
+                  selectedValue: selectedSportId,
+                  onSelected: (val) {
+                    setState(() => selectedSportId = val);
+                    _applyFilters();
+                  },
+                  onAdvancedFiltersPressed: () => _openFiltersBottomSheet(context),
                 ),
-                const SizedBox(height: 16),
-                _buildViewSelector(isDark),
-                const SizedBox(height: 16),
-                _isLoadingCatalogs 
-                  ? const LinearProgressIndicator(color: AppColors.primary)
-                  : MatchDayFilterChips<int?>(
-                      options: [
-                        const FilterOption(label: 'Todos', value: null),
-                        ..._sports.map((s) => FilterOption(label: s.name, value: s.id)),
-                      ],
-                      selectedValue: selectedSportId,
-                      onSelected: (val) {
-                        setState(() => selectedSportId = val);
-                        _applyFilters();
-                      },
-                      onAdvancedFiltersPressed: () => _openFiltersBottomSheet(context),
-                    ),
-                const SizedBox(height: 16),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                    child: _buildBody(state, isDark),
-                  ),
+            const SizedBox(height: 8),
+
+            // BARRA DE CARGA "FULL PERSISTENCIA" PARA PARTIDOS
+            BlocBuilder<MatchesBloc, MatchesState>(
+              builder: (context, state) {
+                return MatchDayLoadingBar(isLoading: state is MatchesLoading);
+              },
+            ),
+
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: BlocConsumer<MatchesBloc, MatchesState>(
+                  listener: (context, state) {
+                    if (state is MatchesLoaded) {
+                      setState(() => _cachedMatches = state.matches);
+                    }
+                  },
+                  builder: (context, state) {
+                    return _buildBody(state, isDark);
+                  },
                 ),
-              ],
-            );
-          },
+              ),
+            ),
+          ],
         ),
         floatingActionButton: FloatingActionButton(
           onPressed: () => context.push('/crear-partido'),
@@ -129,18 +144,20 @@ class _MatchesPageState extends State<MatchesPage> {
   }
 
   Widget _buildBody(MatchesState state, bool isDark) {
-    if (state is MatchesLoading) {
+    if (state is MatchesLoading && _cachedMatches.isEmpty) {
       return const Center(child: CircularProgressIndicator(color: AppColors.primary));
     } else if (state is MatchesError) {
       return Center(child: Text(state.message, style: const TextStyle(color: Colors.red)));
-    } else if (state is MatchesLoaded) {
+    } else if (state is MatchesLoaded || state is MatchesLoading) {
       final profileState = context.read<ProfileBloc>().state;
       int? currentUserId;
       if (profileState is ProfileLoaded) {
         currentUserId = profileState.profile.id;
       }
 
-      final filteredMatches = state.matches.where((m) {
+      final matchesToShow = state is MatchesLoaded ? state.matches : _cachedMatches;
+
+      final filteredMatches = matchesToShow.where((m) {
         // Filtro por tipo de vista (Mis Partidos vs Ofertas)
         if (_isMyMatchesView) {
           if (m.idUsuarioOrg != currentUserId) return false;
@@ -177,13 +194,24 @@ class _MatchesPageState extends State<MatchesPage> {
           ),
         );
       }
-      return ListView.separated(
-        itemCount: filteredMatches.length,
-        separatorBuilder: (context, index) => const SizedBox(height: 16),
-        itemBuilder: (context, index) {
-          final match = filteredMatches[index];
-          return _buildMatchCard(match, isDark, currentUserId);
+      return RefreshIndicator(
+        onRefresh: () async {
+          context.read<MatchesBloc>().add(LoadMatchesEvent(
+            sportId: selectedSportId,
+            regionId: selectedRegionId,
+            canchaId: selectedCanchaId,
+            date: selectedDate,
+          ));
         },
+        child: ListView.separated(
+          physics: const AlwaysScrollableScrollPhysics(),
+          itemCount: filteredMatches.length,
+          separatorBuilder: (context, index) => const SizedBox(height: 16),
+          itemBuilder: (context, index) {
+            final match = filteredMatches[index];
+            return _buildMatchCard(match, isDark, currentUserId);
+          },
+        ),
       );
     }
     return const SizedBox();
