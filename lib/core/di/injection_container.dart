@@ -123,9 +123,6 @@ Future<void> init() async {
   // ===========================================================================
   // 4. DATA SOURCES
   // ===========================================================================
-
-  // Rankings (NUEVO)
-  sl.registerLazySingleton(() => RankingsRemoteDataSource(sl()));
   // Auth
   sl.registerLazySingleton(() => AuthRemoteDataSource(dio: sl()));
 
@@ -162,9 +159,6 @@ Future<void> init() async {
   // ===========================================================================
   // 3. REPOSITORIOS
   // ===========================================================================
-
-  // Rankings (NUEVO)
-  sl.registerLazySingleton<IRankingsRepository>(() => RankingsRepositoryImpl(sl()));
   // Auth
   sl.registerLazySingleton<IAuthRepository>(
     () =>

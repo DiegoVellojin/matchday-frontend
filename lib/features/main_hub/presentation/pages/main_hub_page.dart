@@ -65,8 +65,6 @@ class _MainHubPageState extends State<MainHubPage> {
     const TeamsPage(), 
     const MatchesPage(),
     const MyTeamsPage(),
-
-    const MyTeamsPage(),
     const LeaderboardPage(),
   ];
 
