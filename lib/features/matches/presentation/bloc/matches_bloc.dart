@@ -15,6 +15,7 @@ class LoadMatchesEvent extends MatchesEvent {
   final int? regionId;
   final int? canchaId;
   final DateTime? date;
+  final bool? mine;
 
   LoadMatchesEvent({
     this.sportId, 
@@ -22,10 +23,11 @@ class LoadMatchesEvent extends MatchesEvent {
     this.regionId,
     this.canchaId,
     this.date,
+    this.mine,
   });
 
   @override
-  List<Object?> get props => [sportId, status, regionId, canchaId, date];
+  List<Object?> get props => [sportId, status, regionId, canchaId, date, mine];
 }
 
 class LoadMatchDetailsEvent extends MatchesEvent {
@@ -39,6 +41,14 @@ class SearchSimilarMatchesEvent extends MatchesEvent {
   SearchSimilarMatchesEvent({required this.sportId, required this.date});
 }
 
+class AcceptEncounterEvent extends MatchesEvent {
+  final int matchId;
+  final int teamId;
+  AcceptEncounterEvent({required this.matchId, required this.teamId});
+  @override
+  List<Object?> get props => [matchId, teamId];
+}
+
 class CreateMatchEvent extends MatchesEvent {
   final MatchEntity match;
   CreateMatchEvent(this.match);
@@ -49,6 +59,36 @@ class ProposeTermsEvent extends MatchesEvent {
   final DateTime fecha;
   final double costo;
   ProposeTermsEvent({required this.matchId, required this.fecha, required this.costo});
+}
+
+class ConfigureMatchEvent extends MatchesEvent {
+  final int matchId;
+  final DateTime fecha;
+  final double costo;
+  final String banco;
+  final String cedula;
+  final String telefono;
+  
+  ConfigureMatchEvent({
+    required this.matchId,
+    required this.fecha,
+    required this.costo,
+    required this.banco,
+    required this.cedula,
+    required this.telefono,
+  });
+}
+
+class MarkTeamReadyEvent extends MatchesEvent {
+  final int matchId;
+  MarkTeamReadyEvent(this.matchId);
+}
+
+class RegisterResultEvent extends MatchesEvent {
+  final int matchId;
+  final int golesA;
+  final int golesB;
+  RegisterResultEvent({required this.matchId, required this.golesA, required this.golesB});
 }
 
 // STATES
@@ -84,6 +124,25 @@ class MatchesError extends MatchesState {
   @override
   List<Object?> get props => [message];
 }
+class MatchConfigured extends MatchesState {
+  final MatchEntity match;
+  MatchConfigured(this.match);
+  @override
+  List<Object?> get props => [match];
+}
+class TeamMarkedReady extends MatchesState {
+  final MatchEntity match;
+  TeamMarkedReady(this.match);
+  @override
+  List<Object?> get props => [match];
+}
+class MatchResultRegistered extends MatchesState {}
+class MatchEncounterAccepted extends MatchesState {
+  final MatchEntity match;
+  MatchEncounterAccepted(this.match);
+  @override
+  List<Object?> get props => [match];
+}
 
 // BLOC
 class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
@@ -91,18 +150,39 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
   final GetMatchDetailsUseCase getMatchDetailsUseCase;
   final CreateMatchUseCase createMatchUseCase;
   final ProposeTermsUseCase proposeTermsUseCase;
+  final ConfigureMatchUseCase configureMatchUseCase;
+  final MarkTeamReadyUseCase markTeamReadyUseCase;
+  final RegisterMatchResultUseCase registerMatchResultUseCase;
+  final AcceptEncounterUseCase acceptEncounterUseCase;
 
   MatchesBloc({
     required this.getMatchesUseCase,
     required this.getMatchDetailsUseCase,
     required this.createMatchUseCase,
     required this.proposeTermsUseCase,
+    required this.configureMatchUseCase,
+    required this.markTeamReadyUseCase,
+    required this.registerMatchResultUseCase,
+    required this.acceptEncounterUseCase,
   }) : super(MatchesInitial()) {
     on<LoadMatchesEvent>(_onLoadMatches);
     on<LoadMatchDetailsEvent>(_onLoadMatchDetails);
     on<SearchSimilarMatchesEvent>(_onSearchSimilar);
+    on<AcceptEncounterEvent>(_onAcceptEncounter);
     on<CreateMatchEvent>(_onCreateMatch);
     on<ProposeTermsEvent>(_onProposeTerms);
+    on<ConfigureMatchEvent>(_onConfigureMatch);
+    on<MarkTeamReadyEvent>(_onMarkTeamReady);
+    on<RegisterResultEvent>(_onRegisterResult);
+  }
+
+  Future<void> _onAcceptEncounter(AcceptEncounterEvent event, Emitter<MatchesState> emit) async {
+    emit(MatchesLoading());
+    final result = await acceptEncounterUseCase.execute(event.matchId, event.teamId);
+    result.fold(
+      (failure) => emit(MatchesError(failure.message)),
+      (match) => emit(MatchEncounterAccepted(match)),
+    );
   }
 
   Future<void> _onLoadMatches(LoadMatchesEvent event, Emitter<MatchesState> emit) async {
@@ -113,6 +193,7 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
       regionId: event.regionId,
       canchaId: event.canchaId,
       date: event.date,
+      mine: event.mine,
     );
     result.fold(
       (failure) => emit(MatchesError(failure.message)),
@@ -163,6 +244,35 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
     result.fold(
       (failure) => emit(MatchesError(failure.message)),
       (match) => emit(MatchDetailsLoaded(match)),
+    );
+  }
+
+  Future<void> _onConfigureMatch(ConfigureMatchEvent event, Emitter<MatchesState> emit) async {
+    emit(MatchesLoading());
+    final result = await configureMatchUseCase.execute(
+      event.matchId, event.fecha, event.costo, event.banco, event.cedula, event.telefono
+    );
+    result.fold(
+      (failure) => emit(MatchesError(failure.message)),
+      (match) => emit(MatchConfigured(match)),
+    );
+  }
+
+  Future<void> _onMarkTeamReady(MarkTeamReadyEvent event, Emitter<MatchesState> emit) async {
+    emit(MatchesLoading());
+    final result = await markTeamReadyUseCase.execute(event.matchId);
+    result.fold(
+      (failure) => emit(MatchesError(failure.message)),
+      (match) => emit(TeamMarkedReady(match)),
+    );
+  }
+
+  Future<void> _onRegisterResult(RegisterResultEvent event, Emitter<MatchesState> emit) async {
+    emit(MatchesLoading());
+    final result = await registerMatchResultUseCase.execute(event.matchId, event.golesA, event.golesB);
+    result.fold(
+      (failure) => emit(MatchesError(failure.message)),
+      (_) => emit(MatchResultRegistered()),
     );
   }
 }

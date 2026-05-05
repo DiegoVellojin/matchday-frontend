@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/matchday_loading_bar.dart';
 import '../../domain/entities/payment_entity.dart';
@@ -322,7 +323,7 @@ class _PaymentManagementPageState extends State<PaymentManagementPage> {
     }
 
     return ElevatedButton(
-      onPressed: () => _showUploadDialog(context, payment.idPartida),
+      onPressed: () => _showUploadDialog(context, payment.idPartida, payment),
       style: ElevatedButton.styleFrom(
         backgroundColor: Colors.redAccent,
         foregroundColor: Colors.white,
@@ -336,60 +337,9 @@ class _PaymentManagementPageState extends State<PaymentManagementPage> {
     );
   }
 
-  void _showUploadDialog(BuildContext context, int idPartida) {
-    final controller = TextEditingController();
-    showDialog(
-      context: context,
-      builder: (ctx) {
-        return AlertDialog(
-          backgroundColor: AppColors.surface,
-          title: const Text(
-            'Subir Comprobante',
-            style: TextStyle(color: Colors.white),
-          ),
-          content: TextField(
-            controller: controller,
-            style: const TextStyle(color: Colors.white),
-            decoration: const InputDecoration(
-              labelText: 'URL de la imagen del comprobante',
-              labelStyle: TextStyle(color: AppColors.textMuted),
-              enabledBorder: UnderlineInputBorder(
-                borderSide: BorderSide(color: AppColors.border),
-              ),
-              focusedBorder: UnderlineInputBorder(
-                borderSide: BorderSide(color: AppColors.primary),
-              ),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text(
-                'Cancelar',
-                style: TextStyle(color: Colors.redAccent),
-              ),
-            ),
-            TextButton(
-              onPressed: () {
-                if (controller.text.isNotEmpty) {
-                  context.read<PaymentsBloc>().add(
-                    UploadReceiptEvent(
-                      partidaId: idPartida,
-                      urlReciboPago: controller.text,
-                    ),
-                  );
-                  Navigator.pop(ctx);
-                }
-              },
-              child: const Text(
-                'Guardar',
-                style: TextStyle(color: AppColors.primary),
-              ),
-            ),
-          ],
-        );
-      },
-    );
+  void _showUploadDialog(BuildContext context, int idPartida, PaymentEntity payment) {
+    // En lugar del diálogo, usamos la nueva pantalla nativa:
+    context.push('/upload-receipt', extra: {'payment': payment});
   }
 
   Widget _buildEmptyState() {

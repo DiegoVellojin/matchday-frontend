@@ -12,7 +12,6 @@ import 'package:share_plus/share_plus.dart';
 import '../../../profile/presentation/bloc/profile_bloc.dart';
 import '../../../profile/presentation/bloc/profile_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import './team_settings_page.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 
@@ -203,14 +202,12 @@ class _TeamDashboardPageState extends State<TeamDashboardPage> {
                     return IconButton(
                       icon: const Icon(Icons.settings, color: AppColors.textMuted),
                       onPressed: currentUserId == null ? null : () async {
-                        final updated = await Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => TeamSettingsPage(
-                              team: team,
-                              currentUserId: currentUserId,
-                            ),
-                          ),
+                        final updated = await context.push<bool>(
+                          '/team-settings/${team.id}',
+                          extra: {
+                            'team': team,
+                            'currentUserId': currentUserId,
+                          },
                         );
                         if (updated == true) {
                           _loadTeam();

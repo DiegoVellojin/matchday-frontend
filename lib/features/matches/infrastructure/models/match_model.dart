@@ -17,11 +17,16 @@ class MatchModel extends MatchEntity {
     super.propuestaCostoA,
     super.propuestaFechaB,
     super.propuestaCostoB,
+    super.equipoAListo = false,
+    super.equipoBListo = false,
     super.nombreEquipoA,
     super.logoEquipoA,
     super.nombreCapitanA,
     super.nombreCancha,
     super.sportName,
+    super.idCapitanB,
+    super.nombreEquipoB,
+    super.logoEquipoB,
   });
 
   factory MatchModel.fromJson(Map<String, dynamic> json) {
@@ -51,11 +56,16 @@ class MatchModel extends MatchEntity {
       propuestaCostoB: json['propuesta_costo_b'] != null 
           ? (json['propuesta_costo_b'] as num).toDouble() 
           : null,
+      equipoAListo: json['equipo_a_listo'] ?? false,
+      equipoBListo: json['equipo_b_listo'] ?? false,
       nombreEquipoA: json['nombre_equipo_a'],
       logoEquipoA: json['logo_equipo_a'],
       nombreCapitanA: json['nombre_capitan_a'],
       nombreCancha: json['nombre_cancha'],
       sportName: json['nombre_deporte'],
+      idCapitanB: json['id_capitan_b'],
+      nombreEquipoB: json['nombre_equipo_b'],
+      logoEquipoB: json['logo_equipo_b'],
     );
   }
 
@@ -76,11 +86,38 @@ class MatchModel extends MatchEntity {
       'propuesta_costo_a': propuestaCostoA,
       'propuesta_fecha_b': propuestaFechaB?.toIso8601String(),
       'propuesta_costo_b': propuestaCostoB,
+      'equipo_a_listo': equipoAListo,
+      'equipo_b_listo': equipoBListo,
       'nombre_equipo_a': nombreEquipoA,
       'logo_equipo_a': logoEquipoA,
       'nombre_capitan_a': nombreCapitanA,
       'nombre_cancha': nombreCancha,
       'nombre_deporte': sportName,
+      'id_capitan_b': idCapitanB,
+      'nombre_equipo_b': nombreEquipoB,
+      'logo_equipo_b': logoEquipoB,
     };
+  }
+}
+
+class MatchPlayerModel extends MatchPlayer {
+  const MatchPlayerModel({
+    required super.idUsuario,
+    required super.nombreUsuario,
+    super.urlFotoPerfil,
+    required super.estatusPago,
+    super.urlReciboPago,
+    super.idEquipo,
+  });
+
+  factory MatchPlayerModel.fromJson(Map<String, dynamic> json) {
+    return MatchPlayerModel(
+      idUsuario: json['id_usuario'],
+      nombreUsuario: json['nombre_usuario'],
+      urlFotoPerfil: json['url_foto_perfil'],
+      estatusPago: json['estatus_pago'],
+      urlReciboPago: json['url_recibo_pago'],
+      idEquipo: json['id_equipo'],
+    );
   }
 }

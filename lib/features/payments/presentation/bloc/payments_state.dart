@@ -19,3 +19,5 @@ class PaymentsError extends PaymentsState {
 }
 
 class ReceiptUploadedSuccess extends PaymentsState {}
+
+class PaymentVerifiedSuccess extends PaymentsState {}

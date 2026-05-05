@@ -8,12 +8,17 @@ abstract class MatchesRemoteDataSource {
     int? regionId,
     int? canchaId,
     DateTime? date,
+    bool? mine,
   });
   Future<MatchModel> createMatch(MatchModel match);
   Future<MatchModel> getMatchDetails(int id);
   Future<MatchModel> acceptEncounter(int matchId, int teamId);
   Future<MatchModel> proposeTerms(int matchId, DateTime fecha, double costo);
+  Future<MatchModel> configureMatch(int matchId, DateTime fecha, double costo, String banco, String cedula, String telefono);
+  Future<MatchModel> markTeamReady(int matchId);
+  Future<void> registerResult(int matchId, int golesA, int golesB);
   Future<void> joinMatch(int matchId, {int? teamId});
+  Future<List<MatchPlayerModel>> getMatchPlayers(int matchId);
 }
 
 class MatchesRemoteDataSourceImpl implements MatchesRemoteDataSource {
@@ -28,6 +33,7 @@ class MatchesRemoteDataSourceImpl implements MatchesRemoteDataSource {
     int? regionId,
     int? canchaId,
     DateTime? date,
+    bool? mine,
   }) async {
     final response = await network.get('/matches/', queryParameters: {
       'sport_id': sportId,
@@ -35,6 +41,7 @@ class MatchesRemoteDataSourceImpl implements MatchesRemoteDataSource {
       'region_id': regionId,
       'cancha_id': canchaId,
       'fecha': date?.toIso8601String(),
+      'mine': mine,
     }..removeWhere((_, v) => v == null));
     return (response.data as List).map((e) => MatchModel.fromJson(e)).toList();
   }
@@ -67,9 +74,41 @@ class MatchesRemoteDataSourceImpl implements MatchesRemoteDataSource {
   }
 
   @override
+  Future<MatchModel> configureMatch(int matchId, DateTime fecha, double costo, String banco, String cedula, String telefono) async {
+    final response = await network.put('/matches/$matchId/configure', data: {
+      'fecha_acordada': fecha.toIso8601String(),
+      'costo_total_partida': costo,
+      'banco_receptor': banco,
+      'cedula_receptor': cedula,
+      'telefono_receptor': telefono,
+    });
+    return MatchModel.fromJson(response.data);
+  }
+
+  @override
+  Future<MatchModel> markTeamReady(int matchId) async {
+    final response = await network.post('/matches/$matchId/ready');
+    return MatchModel.fromJson(response.data);
+  }
+
+  @override
+  Future<void> registerResult(int matchId, int golesA, int golesB) async {
+    await network.post('/matches/$matchId/results', data: {
+      'goles_a': golesA,
+      'goles_b': golesB,
+    });
+  }
+
+  @override
   Future<void> joinMatch(int matchId, {int? teamId}) async {
     await network.post('/matches/$matchId/join', queryParameters: {
       'team_id': teamId,
     }..removeWhere((_, v) => v == null));
+  }
+
+  @override
+  Future<List<MatchPlayerModel>> getMatchPlayers(int matchId) async {
+    final response = await network.get('/matches/$matchId/players');
+    return (response.data as List).map((e) => MatchPlayerModel.fromJson(e)).toList();
   }
 }

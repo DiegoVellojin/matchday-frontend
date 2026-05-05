@@ -9,10 +9,15 @@ abstract class IMatchesRepository {
     int? regionId,
     int? canchaId,
     DateTime? date,
+    bool? mine,
   });
   Future<Either<Failure, MatchEntity>> createMatch(MatchEntity match);
   Future<Either<Failure, MatchEntity>> getMatchDetails(int id);
   Future<Either<Failure, MatchEntity>> acceptEncounter(int matchId, int teamId);
   Future<Either<Failure, MatchEntity>> proposeTerms(int matchId, DateTime fecha, double costo);
+  Future<Either<Failure, MatchEntity>> configureMatch(int matchId, DateTime fecha, double costo, String banco, String cedula, String telefono);
+  Future<Either<Failure, MatchEntity>> markTeamReady(int matchId);
+  Future<Either<Failure, void>> registerResult(int matchId, int golesA, int golesB);
   Future<Either<Failure, void>> joinMatch(int matchId, {int? teamId});
+  Future<Either<Failure, List<MatchPlayer>>> getMatchPlayers(int matchId);
 }

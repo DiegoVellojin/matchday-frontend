@@ -19,12 +19,18 @@ class MatchEntity extends Equatable {
   final DateTime? propuestaFechaB;
   final double? propuestaCostoB;
 
+  final bool equipoAListo;
+  final bool equipoBListo;
+
   // Campos enriquecidos para visualización
   final String? nombreEquipoA;
   final String? logoEquipoA;
   final String? nombreCapitanA;
   final String? nombreCancha;
   final String? sportName;
+  final int? idCapitanB;
+  final String? nombreEquipoB;
+  final String? logoEquipoB;
 
   const MatchEntity({
     required this.id,
@@ -42,11 +48,16 @@ class MatchEntity extends Equatable {
     this.propuestaCostoA,
     this.propuestaFechaB,
     this.propuestaCostoB,
+    this.equipoAListo = false,
+    this.equipoBListo = false,
     this.nombreEquipoA,
     this.logoEquipoA,
     this.nombreCapitanA,
     this.nombreCancha,
     this.sportName,
+    this.idCapitanB,
+    this.nombreEquipoB,
+    this.logoEquipoB,
   });
 
   @override
@@ -66,10 +77,43 @@ class MatchEntity extends Equatable {
         propuestaCostoA,
         propuestaFechaB,
         propuestaCostoB,
+        equipoAListo,
+        equipoBListo,
         nombreEquipoA,
         logoEquipoA,
         nombreCapitanA,
         nombreCancha,
         sportName,
+        idCapitanB,
+        nombreEquipoB,
+        logoEquipoB,
+      ];
+}
+
+class MatchPlayer extends Equatable {
+  final int idUsuario;
+  final String nombreUsuario;
+  final String? urlFotoPerfil;
+  final String estatusPago;
+  final String? urlReciboPago;
+  final int? idEquipo;
+
+  const MatchPlayer({
+    required this.idUsuario,
+    required this.nombreUsuario,
+    this.urlFotoPerfil,
+    required this.estatusPago,
+    this.urlReciboPago,
+    this.idEquipo,
+  });
+
+  @override
+  List<Object?> get props => [
+        idUsuario,
+        nombreUsuario,
+        urlFotoPerfil,
+        estatusPago,
+        urlReciboPago,
+        idEquipo,
       ];
 }

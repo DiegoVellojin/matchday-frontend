@@ -71,6 +71,7 @@ import '../../features/profile/presentation/bloc/profile_bloc.dart';
 // Importaciones de Pagos (NUEVO)
 import '../../features/payments/application/usecases/get_my_payments_usecase.dart';
 import '../../features/payments/application/usecases/upload_receipt_usecase.dart';
+import '../../features/payments/application/usecases/verify_user_payment_usecase.dart';
 import '../../features/payments/domain/repositories/i_payments_repository.dart';
 import '../../features/payments/infrastructure/datasources/payments_remote_data_source.dart';
 import '../../features/payments/infrastructure/repositories/payments_repository_impl.dart';
@@ -246,6 +247,7 @@ Future<void> init() async {
   // Pagos (NUEVO)
   sl.registerLazySingleton(() => GetMyPaymentsUseCase(sl()));
   sl.registerLazySingleton(() => UploadReceiptUseCase(sl()));
+  sl.registerLazySingleton(() => VerifyUserPaymentUseCase(sl()));
   // Partidos (NUEVO)
   sl.registerLazySingleton(() => GetMatchesUseCase(sl()));
   sl.registerLazySingleton(() => GetMatchDetailsUseCase(sl()));
@@ -253,6 +255,9 @@ Future<void> init() async {
   sl.registerLazySingleton(() => AcceptEncounterUseCase(sl()));
   sl.registerLazySingleton(() => ProposeTermsUseCase(sl()));
   sl.registerLazySingleton(() => JoinMatchUseCase(sl()));
+  sl.registerLazySingleton(() => ConfigureMatchUseCase(sl()));
+  sl.registerLazySingleton(() => MarkTeamReadyUseCase(sl()));
+  sl.registerLazySingleton(() => RegisterMatchResultUseCase(sl()));
 
   // Catalogs (NUEVO)
   sl.registerLazySingleton(() => LocationService(dio: sl()));
@@ -337,6 +342,7 @@ Future<void> init() async {
     () => PaymentsBloc(
       getMyPaymentsUseCase: sl(),
       uploadReceiptUseCase: sl(),
+      verifyUserPaymentUseCase: sl(),
     ),
   );
   // Partidos (NUEVO)
@@ -346,6 +352,10 @@ Future<void> init() async {
       getMatchDetailsUseCase: sl(),
       createMatchUseCase: sl(),
       proposeTermsUseCase: sl(),
+      configureMatchUseCase: sl(),
+      markTeamReadyUseCase: sl(),
+      registerMatchResultUseCase: sl(),
+      acceptEncounterUseCase: sl(),
     ),
   );
 

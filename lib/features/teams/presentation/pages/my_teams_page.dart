@@ -5,7 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../profile/presentation/bloc/profile_bloc.dart';
 import '../../../profile/presentation/bloc/profile_state.dart';
-import '../../../teams/presentation/pages/team_dashboard_page.dart';
+import 'package:go_router/go_router.dart';
 import '../../domain/entities/team_entity.dart';
 import '../bloc/my_teams_bloc.dart';
 import '../bloc/my_teams_event.dart';
@@ -393,18 +393,7 @@ class _MyTeamsPageState extends State<MyTeamsPage> {
               const SizedBox(width: 12),
               Expanded(
                 child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => TeamDashboardPage(teamId: team.id),
-                      ),
-                    ).then((_) {
-                      if (context.mounted) {
-                        context.read<MyTeamsBloc>().add(LoadMyTeamsEvent());
-                      }
-                    });
-                  },
+                  onPressed: () => context.push('/team-dashboard/${team.id}'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
                     foregroundColor: Colors.black,

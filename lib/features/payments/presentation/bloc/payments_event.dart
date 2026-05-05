@@ -5,6 +5,14 @@ class LoadMyPaymentsEvent extends PaymentsEvent {}
 class UploadReceiptEvent extends PaymentsEvent {
   final int partidaId;
   final String urlReciboPago;
+  final String referenciaPago;
 
-  UploadReceiptEvent({required this.partidaId, required this.urlReciboPago});
+  UploadReceiptEvent({required this.partidaId, required this.urlReciboPago, required this.referenciaPago});
+}
+
+class VerifyPaymentEvent extends PaymentsEvent {
+  final int partidaId;
+  final int userId;
+
+  VerifyPaymentEvent({required this.partidaId, required this.userId});
 }

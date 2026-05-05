@@ -15,8 +15,9 @@ import 'features/auth/presentation/pages/forgot_password_page.dart';
 import 'features/auth/presentation/pages/reset_password_page.dart';
 import 'features/main_hub/presentation/pages/main_hub_page.dart';
 import 'features/teams/presentation/pages/create_team_page.dart';
-import 'features/notifications/presentation/pages/notifications_page.dart';
 import 'features/teams/presentation/pages/team_dashboard_page.dart';
+import 'features/teams/presentation/pages/team_settings_page.dart';
+import 'features/notifications/presentation/pages/notifications_page.dart';
 import 'features/profile/presentation/pages/profile_page.dart';
 import 'features/profile/presentation/pages/edit_profile_page.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
@@ -32,11 +33,21 @@ import 'features/rankings/presentation/bloc/leaderboard_event.dart';
 import 'features/payments/presentation/pages/payment_management_page.dart';
 import 'features/matches/presentation/pages/create_match_page.dart';
 import 'features/matches/presentation/pages/match_details_page.dart';
+import 'features/matches/presentation/pages/captain_match_dashboard_page.dart';
+import 'features/matches/presentation/pages/configure_match_page.dart';
+import 'features/matches/presentation/pages/player_match_dashboard_page.dart';
+import 'features/matches/presentation/pages/register_match_result_page.dart';
+import 'features/matches/presentation/pages/accept_encounter_page.dart';
+import 'features/payments/presentation/pages/upload_receipt_page.dart';
 import 'features/profile/presentation/bloc/profile_bloc.dart';
+import 'features/payments/domain/entities/payment_entity.dart';
 import 'features/profile/presentation/bloc/profile_event.dart';
 import 'features/notifications/presentation/bloc/notifications_bloc.dart';
 import 'features/notifications/presentation/bloc/notifications_event.dart';
 import 'features/profile/domain/entities/profile_entity.dart';
+import 'features/teams/domain/entities/team_entity.dart';
+import 'features/matches/domain/repositories/matches_repository.dart';
+import 'features/matches/domain/entities/match_entity.dart';
 
 void main() async {
   // 1. Aseguramos que Flutter esté listo
@@ -76,18 +87,33 @@ final _router = GoRouter(
       },
     ),
     
+    GoRoute(
+      path: '/perfil',
+      builder: (context, state) => const ProfilePage(),
+    ),
+    GoRoute(
+      path: '/editar-perfil',
+      builder: (context, state) {
+        final extra = state.extra as Map<String, dynamic>?;
+        final profile = extra?['profile'] as UserProfileEntity?;
+        return EditProfilePage(profile: profile!);
+      },
+    ),
     // RUTAS AUTENTICADAS (Comparten los BLoCs de feature sin ensuciar la raíz)
     ShellRoute(
       builder: (context, state, child) {
-        return MultiBlocProvider(
-          providers: [
-            BlocProvider(create: (_) => di.sl<MatchesBloc>()..add(LoadMatchesEvent())),
-            BlocProvider(create: (_) => di.sl<TeamsBloc>()..add(LoadTeamsEvent())),
-            BlocProvider(create: (_) => di.sl<MyTeamsBloc>()..add(LoadMyTeamsEvent())),
-            BlocProvider(create: (_) => di.sl<PaymentsBloc>()..add(LoadMyPaymentsEvent())),
-            BlocProvider(create: (_) => di.sl<LeaderboardBloc>()..add(LoadLeaderboardEvent())),
-          ],
-          child: child,
+        return RepositoryProvider<IMatchesRepository>(
+          create: (_) => di.sl<IMatchesRepository>(),
+          child: MultiBlocProvider(
+            providers: [
+              BlocProvider(create: (_) => di.sl<MatchesBloc>()..add(LoadMatchesEvent())),
+              BlocProvider(create: (_) => di.sl<TeamsBloc>()..add(LoadTeamsEvent())),
+              BlocProvider(create: (_) => di.sl<MyTeamsBloc>()..add(LoadMyTeamsEvent())),
+              BlocProvider(create: (_) => di.sl<PaymentsBloc>()..add(LoadMyPaymentsEvent())),
+              BlocProvider(create: (_) => di.sl<LeaderboardBloc>()..add(LoadLeaderboardEvent())),
+            ],
+            child: child,
+          ),
         );
       },
       routes: [
@@ -98,6 +124,22 @@ final _router = GoRouter(
         GoRoute(
           path: '/crear-equipo',
           builder: (context, state) => const CreateTeamPage(),
+        ),
+        GoRoute(
+          path: '/team-dashboard/:id',
+          builder: (context, state) {
+            final id = int.tryParse(state.pathParameters['id'] ?? '') ?? 0;
+            return TeamDashboardPage(teamId: id);
+          },
+        ),
+        GoRoute(
+          path: '/team-settings/:id',
+          builder: (context, state) {
+            final extra = state.extra as Map<String, dynamic>?;
+            final team = extra?['team'] as TeamEntity;
+            final currentUserId = extra?['currentUserId'] as int;
+            return TeamSettingsPage(team: team, currentUserId: currentUserId);
+          },
         ),
         GoRoute(
           path: '/notificaciones',
@@ -116,10 +158,19 @@ final _router = GoRouter(
           },
         ),
         GoRoute(
-          path: '/team-dashboard/:id',
+          path: '/match-dashboard',
           builder: (context, state) {
-            final id = int.tryParse(state.pathParameters['id'] ?? '') ?? 0;
-            return TeamDashboardPage(teamId: id);
+            final extra = state.extra as Map<String, dynamic>?;
+            final matchEntity = extra?['matchEntity'];
+            return CaptainMatchDashboardPage(matchEntity: matchEntity);
+          },
+        ),
+        GoRoute(
+          path: '/accept-encounter',
+          builder: (context, state) {
+            final extra = state.extra as Map<String, dynamic>?;
+            final match = extra?['match'];
+            return AcceptEncounterPage(match: match);
           },
         ),
         GoRoute(
@@ -127,14 +178,46 @@ final _router = GoRouter(
           builder: (context, state) => const PaymentManagementPage(),
         ),
         GoRoute(
+          path: '/upload-receipt',
+          builder: (context, state) {
+            final extra = state.extra as Map<String, dynamic>?;
+            final payment = extra?['payment'] as PaymentEntity;
+            return UploadReceiptPage(pago: payment);
+          },
+        ),
+        GoRoute(
           path: '/crear-partido',
           builder: (context, state) => const CreateMatchPage(),
+        ),
+        GoRoute(
+          path: '/configure-match',
+          builder: (context, state) {
+            final extra = state.extra as Map<String, dynamic>?;
+            final matchEntity = extra?['matchEntity'];
+            return ConfigureMatchPage(partido: matchEntity);
+          },
+        ),
+        GoRoute(
+          path: '/register-result',
+          builder: (context, state) {
+            final extra = state.extra as Map<String, dynamic>?;
+            final matchEntity = extra?['matchEntity'];
+            return RegisterMatchResultPage(partido: matchEntity);
+          },
         ),
         GoRoute(
           path: '/match-details/:id',
           builder: (context, state) {
             final id = int.parse(state.pathParameters['id']!);
             return MatchDetailsPage(matchId: id);
+          },
+        ),
+        GoRoute(
+          path: '/player-match-dashboard',
+          builder: (context, state) {
+            final extra = state.extra as Map<String, dynamic>?;
+            final match = extra?['match'] as MatchEntity;
+            return PlayerMatchDashboardPage(match: match);
           },
         ),
       ],

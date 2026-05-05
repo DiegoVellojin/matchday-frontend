@@ -145,10 +145,13 @@ class _MatchesPageState extends State<MatchesPage> {
                     }
 
                     final filteredMatches = matchesToShow.where((m) {
+
                       if (_isMyMatchesView) {
-                        if (m.idUsuarioOrg != currentUserId) return false;
+                        return true; 
                       } else {
+                        // En "Ofertas", no queremos ver los nuestros
                         if (m.idUsuarioOrg == currentUserId) return false;
+                        if (m.idEquipoB != null) return false; // Ya no es oferta si hay equipo B
                       }
 
                       return _searchQuery.isEmpty ||
@@ -201,6 +204,7 @@ class _MatchesPageState extends State<MatchesPage> {
                           regionId: selectedRegionId,
                           canchaId: selectedCanchaId,
                           date: selectedDate,
+                          mine: _isMyMatchesView,
                         ));
                       },
                       child: ListView.separated(
@@ -240,8 +244,26 @@ class _MatchesPageState extends State<MatchesPage> {
         ),
         child: Row(
           children: [
-            Expanded(child: _buildViewTab('Ofertas', !_isMyMatchesView, isDark, () => setState(() => _isMyMatchesView = false))),
-            Expanded(child: _buildViewTab('Mis Partidos', _isMyMatchesView, isDark, () => setState(() => _isMyMatchesView = true))),
+            Expanded(child: _buildViewTab('Ofertas', !_isMyMatchesView, isDark, () {
+              setState(() => _isMyMatchesView = false);
+              context.read<MatchesBloc>().add(LoadMatchesEvent(
+                sportId: selectedSportId,
+                regionId: selectedRegionId,
+                canchaId: selectedCanchaId,
+                date: selectedDate,
+                mine: false,
+              ));
+            })),
+            Expanded(child: _buildViewTab('Mis Partidos', _isMyMatchesView, isDark, () {
+              setState(() => _isMyMatchesView = true);
+              context.read<MatchesBloc>().add(LoadMatchesEvent(
+                sportId: selectedSportId,
+                regionId: selectedRegionId,
+                canchaId: selectedCanchaId,
+                date: selectedDate,
+                mine: true,
+              ));
+            })),
           ],
         ),
       ),
@@ -620,7 +642,32 @@ class _MatchesPageState extends State<MatchesPage> {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: () => context.push('/match-details/${match.id}'),
+                    onPressed: () {
+                      final isCaptainB = currentUserId != null && match.idCapitanB == currentUserId;
+                      final isAnyCaptain = isOrganizer || isCaptainB;
+
+                      if (match.estatus == 'publicada') {
+                        if (isOrganizer) {
+                          context.push('/match-details/${match.id}');
+                        } else {
+                          context.push('/accept-encounter', extra: {'match': match});
+                        }
+                      } else if (match.estatus == 'negociando') {
+                        if (isAnyCaptain) {
+                          context.push('/configure-match', extra: {'matchEntity': match});
+                        } else {
+                          context.push('/player-match-dashboard', extra: {'match': match});
+                        }
+                      } else if (match.estatus == 'pendiente_pago' || match.estatus == 'confirmada') {
+                        if (isAnyCaptain) {
+                          context.push('/match-dashboard', extra: {'matchEntity': match});
+                        } else {
+                          context.push('/player-match-dashboard', extra: {'match': match});
+                        }
+                      } else {
+                        context.push('/match-details/${match.id}');
+                      }
+                    },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primary,
                       foregroundColor: Colors.black,
@@ -629,9 +676,25 @@ class _MatchesPageState extends State<MatchesPage> {
                       ),
                       padding: const EdgeInsets.symmetric(vertical: 12),
                     ),
-                    child: Text(
-                      isOrganizer ? 'Administrar Partido' : 'Aceptar Encuentro',
-                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    child: Builder(
+                      builder: (context) {
+                        final isCaptainB = currentUserId != null && match.idCapitanB == currentUserId;
+                        final isAnyCaptain = isOrganizer || isCaptainB;
+
+                        String label = 'Ver Detalles';
+                        if (match.estatus == 'publicada') {
+                          label = isOrganizer ? 'Administrar Partido' : 'Aceptar Encuentro';
+                        } else if (match.estatus == 'negociando') {
+                          label = isAnyCaptain ? 'Configurar Encuentro' : 'Ver Encuentro';
+                        } else if (match.estatus == 'pendiente_pago' || match.estatus == 'confirmada') {
+                          label = isAnyCaptain ? 'Administrar Partido' : 'Ver Encuentro';
+                        }
+                        
+                        return Text(
+                          label,
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        );
+                      }
                     ),
                   ),
                 ),

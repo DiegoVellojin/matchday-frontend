@@ -19,14 +19,32 @@ class PaymentsRemoteDataSource {
   }
 
   /// Envía el comprobante de pago.
-  Future<void> uploadReceipt({required int partidaId, required String urlReciboPago}) async {
+  Future<void> uploadReceipt({required int partidaId, required String urlReciboPago, required String referenciaPago}) async {
     try {
-      await networkRobot.put(
-        '/payments/$partidaId/upload-receipt',
-        data: {'url_recibo_pago': urlReciboPago},
+      await networkRobot.post(
+        '/payments/$partidaId/upload',
+        data: {
+          'url_recibo_pago': urlReciboPago,
+          'referencia_pago': referenciaPago,
+        },
       );
     } catch (e) {
       throw Exception('Error al reportar el comprobante de pago.');
+    }
+  }
+
+  /// Verifica el pago de un jugador (Capitán).
+  Future<void> verifyUserPayment({required int partidaId, required int userId}) async {
+    try {
+      await networkRobot.put(
+        '/payments/verify',
+        data: {
+          'id_partida': partidaId,
+          'id_usuario': userId,
+        },
+      );
+    } catch (e) {
+      throw Exception('Error al verificar el pago del jugador.');
     }
   }
 }

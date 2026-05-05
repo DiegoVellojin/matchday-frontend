@@ -8,7 +8,7 @@ class UploadReceiptUseCase {
 
   const UploadReceiptUseCase(this.repository);
 
-  Future<Either<Failure, Unit>> call({required int partidaId, required String urlReciboPago}) async {
-    return await repository.uploadReceipt(partidaId: partidaId, urlReciboPago: urlReciboPago);
+  Future<Either<Failure, Unit>> call({required int partidaId, required String urlReciboPago, required String referenciaPago}) async {
+    return await repository.uploadReceipt(partidaId: partidaId, urlReciboPago: urlReciboPago, referenciaPago: referenciaPago);
   }
 }

@@ -17,6 +17,7 @@ class MatchesRepositoryImpl implements IMatchesRepository {
     int? regionId,
     int? canchaId,
     DateTime? date,
+    bool? mine,
   }) async {
     try {
       final results = await remoteDataSource.getMatches(
@@ -25,6 +26,7 @@ class MatchesRepositoryImpl implements IMatchesRepository {
         regionId: regionId,
         canchaId: canchaId,
         date: date,
+        mine: mine,
       );
       return Right(results);
     } catch (e) {
@@ -86,10 +88,50 @@ class MatchesRepositoryImpl implements IMatchesRepository {
   }
 
   @override
+  Future<Either<Failure, MatchEntity>> configureMatch(int matchId, DateTime fecha, double costo, String banco, String cedula, String telefono) async {
+    try {
+      final result = await remoteDataSource.configureMatch(matchId, fecha, costo, banco, cedula, telefono);
+      return Right(result);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, MatchEntity>> markTeamReady(int matchId) async {
+    try {
+      final result = await remoteDataSource.markTeamReady(matchId);
+      return Right(result);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> registerResult(int matchId, int golesA, int golesB) async {
+    try {
+      await remoteDataSource.registerResult(matchId, golesA, golesB);
+      return const Right(null);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
   Future<Either<Failure, void>> joinMatch(int matchId, {int? teamId}) async {
     try {
       await remoteDataSource.joinMatch(matchId, teamId: teamId);
       return const Right(null);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<MatchPlayer>>> getMatchPlayers(int matchId) async {
+    try {
+      final result = await remoteDataSource.getMatchPlayers(matchId);
+      return Right(result);
     } catch (e) {
       return Left(ServerFailure(e.toString()));
     }

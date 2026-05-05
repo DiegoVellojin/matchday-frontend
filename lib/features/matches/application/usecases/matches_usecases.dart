@@ -13,6 +13,7 @@ class GetMatchesUseCase {
     int? regionId,
     int? canchaId,
     DateTime? date,
+    bool? mine,
   }) {
     return repository.getMatches(
       sportId: sportId, 
@@ -20,6 +21,7 @@ class GetMatchesUseCase {
       regionId: regionId,
       canchaId: canchaId,
       date: date,
+      mine: mine,
     );
   }
 }
@@ -66,5 +68,32 @@ class JoinMatchUseCase {
 
   Future<Either<Failure, void>> execute(int matchId, {int? teamId}) {
     return repository.joinMatch(matchId, teamId: teamId);
+  }
+}
+
+class ConfigureMatchUseCase {
+  final IMatchesRepository repository;
+  ConfigureMatchUseCase(this.repository);
+
+  Future<Either<Failure, MatchEntity>> execute(int matchId, DateTime fecha, double costo, String banco, String cedula, String telefono) {
+    return repository.configureMatch(matchId, fecha, costo, banco, cedula, telefono);
+  }
+}
+
+class MarkTeamReadyUseCase {
+  final IMatchesRepository repository;
+  MarkTeamReadyUseCase(this.repository);
+
+  Future<Either<Failure, MatchEntity>> execute(int matchId) {
+    return repository.markTeamReady(matchId);
+  }
+}
+
+class RegisterMatchResultUseCase {
+  final IMatchesRepository repository;
+  RegisterMatchResultUseCase(this.repository);
+
+  Future<Either<Failure, void>> execute(int matchId, int golesA, int golesB) {
+    return repository.registerResult(matchId, golesA, golesB);
   }
 }
