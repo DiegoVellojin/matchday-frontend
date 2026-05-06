@@ -21,20 +21,21 @@ class PlayerMatchDashboardPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF151515) : Colors.grey[50],
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+        backgroundColor: colorScheme.surface,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: isDark ? Colors.white : Colors.black),
+          icon: Icon(Icons.arrow_back, color: colorScheme.onSurface),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
+        title: Text(
           'Detalles del Encuentro',
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: colorScheme.onSurface),
         ),
       ),
       body: SingleChildScrollView(
@@ -43,15 +44,15 @@ class PlayerMatchDashboardPage extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Card de Equipos
-            _buildTeamsCard(isDark),
+            _buildTeamsCard(context, isDark),
             const SizedBox(height: 20),
 
             // Info del Partido (Fecha, Cancha, Mapa)
-            _buildMatchInfoCard(isDark),
+            _buildMatchInfoCard(context, isDark),
             const SizedBox(height: 20),
 
             // Estado de Pagos (Vista Jugador)
-            _buildPaymentsStatusCard(isDark),
+            _buildPaymentsStatusCard(context, isDark),
             const SizedBox(height: 100),
           ],
         ),
@@ -60,23 +61,24 @@ class PlayerMatchDashboardPage extends StatelessWidget {
     );
   }
 
-  Widget _buildTeamsCard(bool isDark) {
+  Widget _buildTeamsCard(BuildContext context, bool isDark) {
+    final theme = Theme.of(context);
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+        color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: isDark ? const Color(0xFF2A2A2A) : Colors.grey[200]!),
+        border: Border.all(color: theme.dividerColor),
       ),
       child: Column(
         children: [
           Row(
             children: [
-              _teamAvatar(match.logoEquipoA, 'A'),
+              _teamAvatar(context, match.logoEquipoA, 'A'),
               const Spacer(),
               const Text('VS', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 20)),
               const Spacer(),
-              _teamAvatar(match.logoEquipoB, 'B'),
+              _teamAvatar(context, match.logoEquipoB, 'B'),
             ],
           ),
           const SizedBox(height: 12),
@@ -86,7 +88,7 @@ class PlayerMatchDashboardPage extends StatelessWidget {
                 child: Text(
                   match.nombreEquipoA ?? 'Equipo A',
                   textAlign: TextAlign.center,
-                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                  style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontWeight: FontWeight.bold),
                 ),
               ),
               const SizedBox(width: 40),
@@ -94,7 +96,7 @@ class PlayerMatchDashboardPage extends StatelessWidget {
                 child: Text(
                   match.nombreEquipoB ?? 'Tu Equipo',
                   textAlign: TextAlign.center,
-                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                  style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontWeight: FontWeight.bold),
                 ),
               ),
             ],
@@ -104,39 +106,43 @@ class PlayerMatchDashboardPage extends StatelessWidget {
     );
   }
 
-  Widget _teamAvatar(String? url, String label) {
+  Widget _teamAvatar(BuildContext context, String? url, String label) {
+    final theme = Theme.of(context);
     return Container(
       width: 70,
       height: 70,
-      decoration: const BoxDecoration(color: Color(0xFF2A2A2A), shape: BoxShape.circle),
+      decoration: BoxDecoration(color: theme.scaffoldBackgroundColor, shape: BoxShape.circle, border: Border.all(color: theme.dividerColor)),
       child: ClipOval(
         child: url != null && url.isNotEmpty
             ? Image.network(
                 url,
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) =>
-                    Center(child: Text(label, style: const TextStyle(fontSize: 24, color: Colors.white))),
+                    Center(child: Text(label, style: TextStyle(fontSize: 24, color: theme.colorScheme.onSurface))),
               )
-            : Center(child: Text(label, style: const TextStyle(fontSize: 24, color: Colors.white))),
+            : Center(child: Text(label, style: TextStyle(fontSize: 24, color: theme.colorScheme.onSurface))),
       ),
     );
   }
 
-  Widget _buildMatchInfoCard(bool isDark) {
+  Widget _buildMatchInfoCard(BuildContext context, bool isDark) {
+    final theme = Theme.of(context);
+    final textMuted = isDark ? const Color(0xFF9CA3AF) : Colors.black54;
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+        color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: isDark ? const Color(0xFF2A2A2A) : Colors.grey[200]!),
+        border: Border.all(color: theme.dividerColor),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _infoRow(Icons.calendar_today, 'Fecha', DateFormat('EEEE d MMMM', 'es_VE').format(match.fechaInicioEstimada)),
-          const Divider(color: Color(0xFF2A2A2A), height: 24),
-          _infoRow(Icons.access_time, 'Hora', '${DateFormat('jm').format(match.fechaInicioEstimada)} - ${DateFormat('jm').format(match.fechaFinEstimada)}'),
-          const Divider(color: Color(0xFF2A2A2A), height: 24),
+          _infoRow(context, Icons.calendar_today, 'Fecha', DateFormat('EEEE d MMMM', 'es_VE').format(match.fechaInicioEstimada), isDark),
+          Divider(color: theme.dividerColor, height: 24),
+          _infoRow(context, Icons.access_time, 'Hora', '${DateFormat('jm').format(match.fechaInicioEstimada)} - ${DateFormat('jm').format(match.fechaFinEstimada)}', isDark),
+          Divider(color: theme.dividerColor, height: 24),
           Row(
             children: [
               const Icon(Icons.location_on_outlined, color: AppColors.primary, size: 20),
@@ -145,8 +151,8 @@ class PlayerMatchDashboardPage extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(match.nombreCancha ?? 'Cancha por definir', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                    const Text('Ver ubicación en el mapa', style: TextStyle(color: Color(0xFF9CA3AF), fontSize: 12)),
+                    Text(match.nombreCancha ?? 'Cancha por definir', style: TextStyle(color: theme.colorScheme.onSurface, fontWeight: FontWeight.bold)),
+                    Text('Ver ubicación en el mapa', style: TextStyle(color: textMuted, fontSize: 12)),
                   ],
                 ),
               ),
@@ -162,7 +168,8 @@ class PlayerMatchDashboardPage extends StatelessWidget {
     );
   }
 
-  Widget _infoRow(IconData icon, String label, String value) {
+  Widget _infoRow(BuildContext context, IconData icon, String label, String value, bool isDark) {
+    final textMuted = isDark ? const Color(0xFF9CA3AF) : Colors.black54;
     return Row(
       children: [
         Icon(icon, color: AppColors.primary, size: 20),
@@ -170,68 +177,54 @@ class PlayerMatchDashboardPage extends StatelessWidget {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(label, style: const TextStyle(color: Color(0xFF9CA3AF), fontSize: 12)),
-            Text(value, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            Text(label, style: TextStyle(color: textMuted, fontSize: 12)),
+            Text(value, style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontWeight: FontWeight.bold)),
           ],
         ),
       ],
     );
   }
 
-  Widget _buildPaymentsStatusCard(bool isDark) {
+  Widget _buildPaymentsStatusCard(BuildContext context, bool isDark) {
+    final theme = Theme.of(context);
+    final textMuted = isDark ? const Color(0xFF9CA3AF) : Colors.black54;
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+        color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: isDark ? const Color(0xFF2A2A2A) : Colors.grey[200]!),
+        border: Border.all(color: theme.dividerColor),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Estado del Equipo', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+          Text('Estado del Equipo', style: TextStyle(color: theme.colorScheme.onSurface, fontWeight: FontWeight.bold, fontSize: 16)),
           const SizedBox(height: 16),
-          _paymentProgressRow('Tus compañeros', 0.6), // Simulado
+          Text(
+            'El seguimiento detallado de pagos de tus compañeros estará disponible una vez que todos confirmen.',
+            style: TextStyle(color: textMuted, fontSize: 13),
+          ),
           const SizedBox(height: 12),
-          const Text(
+          Text(
             'El partido se confirmará cuando todos los jugadores realicen su pago.',
-            style: TextStyle(color: Color(0xFF9CA3AF), fontSize: 12),
+            style: TextStyle(color: textMuted, fontSize: 12),
           ),
         ],
       ),
     );
   }
 
-  Widget _paymentProgressRow(String label, double progress) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(label, style: const TextStyle(color: Colors.white, fontSize: 14)),
-            Text('${(progress * 100).toInt()}%', style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold)),
-          ],
-        ),
-        const SizedBox(height: 8),
-        LinearProgressIndicator(
-          value: progress,
-          backgroundColor: const Color(0xFF2A2A2A),
-          color: AppColors.primary,
-          minHeight: 6,
-          borderRadius: BorderRadius.circular(3),
-        ),
-      ],
-    );
-  }
+
 
   Widget _buildBottomBar(BuildContext context, bool isDark) {
+    final theme = Theme.of(context);
     return SafeArea(
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-          border: Border(top: BorderSide(color: isDark ? const Color(0xFF2A2A2A) : Colors.grey[200]!)),
+          color: theme.colorScheme.surface,
+          border: Border(top: BorderSide(color: theme.dividerColor)),
         ),
         child: SizedBox(
           width: double.infinity,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -38,6 +39,8 @@ import 'features/matches/presentation/pages/configure_match_page.dart';
 import 'features/matches/presentation/pages/player_match_dashboard_page.dart';
 import 'features/matches/presentation/pages/register_match_result_page.dart';
 import 'features/matches/presentation/pages/accept_encounter_page.dart';
+import 'features/matches/presentation/pages/match_history_page.dart';
+import 'features/matches/presentation/pages/match_history_detail_page.dart';
 import 'features/payments/presentation/pages/upload_receipt_page.dart';
 import 'features/profile/presentation/bloc/profile_bloc.dart';
 import 'features/payments/domain/entities/payment_entity.dart';
@@ -87,18 +90,7 @@ final _router = GoRouter(
       },
     ),
     
-    GoRoute(
-      path: '/perfil',
-      builder: (context, state) => const ProfilePage(),
-    ),
-    GoRoute(
-      path: '/editar-perfil',
-      builder: (context, state) {
-        final extra = state.extra as Map<String, dynamic>?;
-        final profile = extra?['profile'] as UserProfileEntity?;
-        return EditProfilePage(profile: profile!);
-      },
-    ),
+    
     // RUTAS AUTENTICADAS (Comparten los BLoCs de feature sin ensuciar la raíz)
     ShellRoute(
       builder: (context, state, child) {
@@ -220,6 +212,17 @@ final _router = GoRouter(
             return PlayerMatchDashboardPage(match: match);
           },
         ),
+        GoRoute(
+          path: '/match-history',
+          builder: (context, state) => const MatchHistoryPage(),
+        ),
+        GoRoute(
+          path: '/match-history-detail/:id',
+          builder: (context, state) {
+            final id = int.parse(state.pathParameters['id']!);
+            return MatchHistoryDetailPage(matchId: id);
+          },
+        ),
       ],
     ),
   ],
@@ -247,6 +250,16 @@ class MatchDayApp extends StatelessWidget {
             theme: AppTheme.lightTheme,
             darkTheme: AppTheme.darkTheme,
             routerConfig: _router,
+            localizationsDelegates: const [
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: const [
+              Locale('es', 'ES'),
+              Locale('en', 'US'),
+            ],
+            locale: const Locale('es', 'ES'),
           );
         },
       ),

@@ -106,7 +106,15 @@ class _RegisterMatchResultPageState extends State<RegisterMatchResultPage> {
                                 height: 48,
                                 decoration: BoxDecoration(color: theme.dividerColor, shape: BoxShape.circle),
                                 alignment: Alignment.center,
-                                child: Text(widget.partido.logoEquipoA ?? '⚽', style: const TextStyle(fontSize: 24)),
+                                child: ClipOval(
+                                  child: (widget.partido.logoEquipoA != null && widget.partido.logoEquipoA!.startsWith('http'))
+                                      ? Image.network(
+                                          widget.partido.logoEquipoA!,
+                                          fit: BoxFit.cover,
+                                          errorBuilder: (ctx, err, st) => const Text('⚽', style: TextStyle(fontSize: 24)),
+                                        )
+                                      : const Text('⚽', style: TextStyle(fontSize: 24)),
+                                ),
                               ),
                               const SizedBox(width: 12),
                               Column(
@@ -134,7 +142,15 @@ class _RegisterMatchResultPageState extends State<RegisterMatchResultPage> {
                                 height: 48,
                                 decoration: BoxDecoration(color: theme.dividerColor, shape: BoxShape.circle),
                                 alignment: Alignment.center,
-                                child: const Text('⚽', style: TextStyle(fontSize: 24)),
+                                child: ClipOval(
+                                  child: (widget.partido.logoEquipoB != null && widget.partido.logoEquipoB!.startsWith('http'))
+                                      ? Image.network(
+                                          widget.partido.logoEquipoB!,
+                                          fit: BoxFit.cover,
+                                          errorBuilder: (ctx, err, st) => const Text('⚽', style: TextStyle(fontSize: 24)),
+                                        )
+                                      : const Text('⚽', style: TextStyle(fontSize: 24)),
+                                ),
                               ),
                             ],
                           ),

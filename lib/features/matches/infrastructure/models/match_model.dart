@@ -27,6 +27,12 @@ class MatchModel extends MatchEntity {
     super.idCapitanB,
     super.nombreEquipoB,
     super.logoEquipoB,
+    super.telefonoCapitanA,
+    super.telefonoCapitanB,
+    super.resultadoGolesACapA,
+    super.resultadoGolesBCapA,
+    super.resultadoGolesACapB,
+    super.resultadoGolesBCapB,
   });
 
   factory MatchModel.fromJson(Map<String, dynamic> json) {
@@ -66,6 +72,12 @@ class MatchModel extends MatchEntity {
       idCapitanB: json['id_capitan_b'],
       nombreEquipoB: json['nombre_equipo_b'],
       logoEquipoB: json['logo_equipo_b'],
+      telefonoCapitanA: json['telefono_capitan_a'],
+      telefonoCapitanB: json['telefono_capitan_b'],
+      resultadoGolesACapA: json['resultado_goles_a_cap_a'],
+      resultadoGolesBCapA: json['resultado_goles_b_cap_a'],
+      resultadoGolesACapB: json['resultado_goles_a_cap_b'],
+      resultadoGolesBCapB: json['resultado_goles_b_cap_b'],
     );
   }
 
@@ -96,6 +108,12 @@ class MatchModel extends MatchEntity {
       'id_capitan_b': idCapitanB,
       'nombre_equipo_b': nombreEquipoB,
       'logo_equipo_b': logoEquipoB,
+      'telefono_capitan_a': telefonoCapitanA,
+      'telefono_capitan_b': telefonoCapitanB,
+      'resultado_goles_a_cap_a': resultadoGolesACapA,
+      'resultado_goles_b_cap_a': resultadoGolesBCapA,
+      'resultado_goles_a_cap_b': resultadoGolesACapB,
+      'resultado_goles_b_cap_b': resultadoGolesBCapB,
     };
   }
 }

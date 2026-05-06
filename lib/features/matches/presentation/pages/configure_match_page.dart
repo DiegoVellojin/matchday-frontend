@@ -5,6 +5,8 @@ import 'package:intl/intl.dart';
 import '../bloc/matches_bloc.dart';
 import '../../domain/entities/match_entity.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../profile/presentation/bloc/profile_bloc.dart';
+import '../../../profile/presentation/bloc/profile_state.dart';
 
 class ConfigureMatchPage extends StatefulWidget {
   final MatchEntity partido;
@@ -43,12 +45,30 @@ class _ConfigureMatchPageState extends State<ConfigureMatchPage> {
   }
 
   void _handleContactar() async {
-    // WhatsApp del capitán rival si tuviéramos el número, 
-    // por ahora un placeholder o el número de la cancha si existiera.
-    final message = "Hola, soy el capitán rival para el partido del ${widget.partido.fechaInicioEstimada}. ¿Cómo coordinamos?";
-    final url = "https://wa.me/?text=${Uri.encodeComponent(message)}";
+    final profileState = context.read<ProfileBloc>().state;
+    int? currentUserId;
+    if (profileState is ProfileLoaded) {
+      currentUserId = profileState.profile.id;
+    }
+
+    final isCaptainA = currentUserId == widget.partido.idUsuarioOrg;
+    final rivalPhone = isCaptainA ? widget.partido.telefonoCapitanB : widget.partido.telefonoCapitanA;
+
+    if (rivalPhone == null || rivalPhone.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No hay número de teléfono disponible para el capitán rival')),
+      );
+      return;
+    }
+
+    // Limpiar el número (quitar +, espacios, etc. para la URL)
+    final cleanPhone = rivalPhone.replaceAll(RegExp(r'\D'), '');
+
+    final message = "Hola, soy el capitán rival para el partido del ${DateFormat('dd/MM/yyyy').format(widget.partido.fechaInicioEstimada)}. ¿Cómo coordinamos?";
+    final url = "https://wa.me/$cleanPhone?text=${Uri.encodeComponent(message)}";
+    
     if (await canLaunchUrl(Uri.parse(url))) {
-      await launchUrl(Uri.parse(url));
+      await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
     } else {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -84,29 +104,31 @@ class _ConfigureMatchPageState extends State<ConfigureMatchPage> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF151515) : Colors.grey[50],
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+        backgroundColor: colorScheme.surface,
         elevation: 0,
         centerTitle: false,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: isDark ? Colors.white : Colors.black),
+          icon: Icon(Icons.arrow_back, color: colorScheme.onSurface),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
           'Configurar Encuentro',
           style: TextStyle(
-            color: isDark ? Colors.white : Colors.black,
+            color: colorScheme.onSurface,
             fontSize: 20,
             fontWeight: FontWeight.bold,
           ),
         ),
         shape: Border(
           bottom: BorderSide(
-            color: isDark ? const Color(0xFF2A2A2A) : Colors.grey[200]!,
+            color: theme.dividerColor,
             width: 1,
           ),
         ),
@@ -138,19 +160,19 @@ class _ConfigureMatchPageState extends State<ConfigureMatchPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Card de Equipo Rival
-                _buildRivalCard(isDark),
+                _buildRivalCard(context, isDark),
                 const SizedBox(height: 24),
 
                 // Estado de la Negociación
-                _buildProposalStatus(isDark),
+                _buildProposalStatus(context, isDark),
                 const SizedBox(height: 24),
 
                 // Card de Costo
-                _buildCostoCard(isDark),
+                _buildCostoCard(context, isDark),
                 const SizedBox(height: 24),
 
                 // Card de Datos Bancarios
-                _buildBankingCard(isDark),
+                _buildBankingCard(context, isDark),
                 const SizedBox(height: 24),
 
                 // Próximos Pasos
@@ -165,13 +187,17 @@ class _ConfigureMatchPageState extends State<ConfigureMatchPage> {
     );
   }
 
-  Widget _buildRivalCard(bool isDark) {
+  Widget _buildRivalCard(BuildContext context, bool isDark) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final textMuted = isDark ? const Color(0xFF9CA3AF) : Colors.black54;
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+        color: colorScheme.surface,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: isDark ? const Color(0xFF2A2A2A) : Colors.grey[200]!),
+        border: Border.all(color: theme.dividerColor),
       ),
       child: Column(
         children: [
@@ -181,7 +207,7 @@ class _ConfigureMatchPageState extends State<ConfigureMatchPage> {
                 width: 64,
                 height: 64,
                 decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFF2A2A2A) : Colors.grey[100],
+                  color: Theme.of(context).scaffoldBackgroundColor,
                   shape: BoxShape.circle,
                 ),
                 alignment: Alignment.center,
@@ -194,8 +220,8 @@ class _ConfigureMatchPageState extends State<ConfigureMatchPage> {
                   children: [
                     Text(
                       widget.partido.nombreEquipoA ?? 'Rival Desconocido',
-                      style: const TextStyle(
-                        color: Colors.white,
+                      style: TextStyle(
+                        color: colorScheme.onSurface,
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
                       ),
@@ -203,11 +229,11 @@ class _ConfigureMatchPageState extends State<ConfigureMatchPage> {
                     const SizedBox(height: 4),
                     Row(
                       children: [
-                        const Icon(Icons.group, size: 16, color: Color(0xFF9CA3AF)),
+                        Icon(Icons.group, size: 16, color: textMuted),
                         const SizedBox(width: 4),
                         Text(
                           'Capitán: ${widget.partido.nombreCapitanA ?? 'Pendiente'}',
-                          style: const TextStyle(color: Color(0xFF9CA3AF), fontSize: 14),
+                          style: TextStyle(color: textMuted, fontSize: 14),
                         ),
                       ],
                     ),
@@ -241,13 +267,17 @@ class _ConfigureMatchPageState extends State<ConfigureMatchPage> {
     );
   }
 
-  Widget _buildCostoCard(bool isDark) {
+  Widget _buildCostoCard(BuildContext context, bool isDark) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final textMuted = isDark ? const Color(0xFF9CA3AF) : Colors.black54;
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+        color: colorScheme.surface,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: isDark ? const Color(0xFF2A2A2A) : Colors.grey[200]!),
+        border: Border.all(color: theme.dividerColor),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -256,33 +286,33 @@ class _ConfigureMatchPageState extends State<ConfigureMatchPage> {
             children: [
               const Icon(Icons.monetization_on, color: AppColors.primary, size: 24),
               const SizedBox(width: 8),
-              const Text(
+              Text(
                 'Costo de la Cancha',
-                style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                style: TextStyle(color: colorScheme.onSurface, fontSize: 18, fontWeight: FontWeight.bold),
               ),
             ],
           ),
           const SizedBox(height: 12),
-          const Text(
+          Text(
             'Ingresa el costo total de la reserva. El sistema calculará la división equitativa.',
-            style: TextStyle(color: Color(0xFF9CA3AF), fontSize: 14),
+            style: TextStyle(color: textMuted, fontSize: 14),
           ),
           const SizedBox(height: 20),
           TextField(
             controller: _costoController,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             textAlign: TextAlign.center,
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: colorScheme.onSurface,
               fontSize: 36,
               fontWeight: FontWeight.bold,
             ),
             decoration: InputDecoration(
               prefixIcon: const Icon(Icons.attach_money, color: AppColors.primary, size: 32),
               hintText: '0.00',
-              hintStyle: const TextStyle(color: Color(0xFF4A4A4A)),
+              hintStyle: TextStyle(color: isDark ? const Color(0xFF4A4A4A) : Colors.grey[400]),
               filled: true,
-              fillColor: isDark ? const Color(0xFF2A2A2A) : Colors.grey[100],
+              fillColor: theme.scaffoldBackgroundColor,
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(16),
                 borderSide: const BorderSide(color: AppColors.primary, width: 2),
@@ -308,7 +338,7 @@ class _ConfigureMatchPageState extends State<ConfigureMatchPage> {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('Cuota por jugador (est.)', style: TextStyle(color: Color(0xFF9CA3AF), fontSize: 12)),
+                      Text('Cuota por jugador (est.)', style: TextStyle(color: textMuted, fontSize: 12)),
                       Text(
                         '\$${(_costoActual / 22).toStringAsFixed(2)}',
                         style: const TextStyle(color: AppColors.primary, fontSize: 24, fontWeight: FontWeight.bold),
@@ -318,10 +348,10 @@ class _ConfigureMatchPageState extends State<ConfigureMatchPage> {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      const Text('Costo Total', style: TextStyle(color: Color(0xFF9CA3AF), fontSize: 12)),
+                      Text('Costo Total', style: TextStyle(color: textMuted, fontSize: 12)),
                       Text(
                         '\$${_costoActual.toStringAsFixed(2)}',
-                        style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                        style: TextStyle(color: colorScheme.onSurface, fontSize: 18, fontWeight: FontWeight.bold),
                       ),
                     ],
                   ),
@@ -334,13 +364,17 @@ class _ConfigureMatchPageState extends State<ConfigureMatchPage> {
     );
   }
 
-  Widget _buildBankingCard(bool isDark) {
+  Widget _buildBankingCard(BuildContext context, bool isDark) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final textMuted = isDark ? const Color(0xFF9CA3AF) : Colors.black54;
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+        color: colorScheme.surface,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: isDark ? const Color(0xFF2A2A2A) : Colors.grey[200]!),
+        border: Border.all(color: theme.dividerColor),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -349,16 +383,16 @@ class _ConfigureMatchPageState extends State<ConfigureMatchPage> {
             children: [
               const Icon(Icons.account_balance, color: AppColors.primary, size: 24),
               const SizedBox(width: 8),
-              const Text(
+              Text(
                 'Tus Datos Bancarios',
-                style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                style: TextStyle(color: colorScheme.onSurface, fontSize: 18, fontWeight: FontWeight.bold),
               ),
             ],
           ),
           const SizedBox(height: 8),
-          const Text(
+          Text(
             'Provee tus datos para que los jugadores puedan reportarte sus pagos.',
-            style: TextStyle(color: Color(0xFF9CA3AF), fontSize: 14),
+            style: TextStyle(color: textMuted, fontSize: 14),
           ),
           const SizedBox(height: 20),
           _buildTextField('Banco / Método de Pago', _bancoController, isDark),
@@ -372,15 +406,19 @@ class _ConfigureMatchPageState extends State<ConfigureMatchPage> {
   }
 
   Widget _buildTextField(String label, TextEditingController controller, bool isDark, {TextInputType? keyboardType}) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final textMuted = isDark ? const Color(0xFF9CA3AF) : Colors.black54;
+
     return TextField(
       controller: controller,
       keyboardType: keyboardType,
-      style: const TextStyle(color: Colors.white),
+      style: TextStyle(color: colorScheme.onSurface),
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: const TextStyle(color: Color(0xFF9CA3AF)),
+        labelStyle: TextStyle(color: textMuted),
         filled: true,
-        fillColor: isDark ? const Color(0xFF2A2A2A) : Colors.grey[100],
+        fillColor: Theme.of(context).scaffoldBackgroundColor,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide.none,
@@ -394,6 +432,7 @@ class _ConfigureMatchPageState extends State<ConfigureMatchPage> {
   }
 
   Widget _buildNextSteps(bool isDark) {
+    final textMuted = isDark ? const Color(0xFF9CA3AF) : Colors.black54;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -409,32 +448,36 @@ class _ConfigureMatchPageState extends State<ConfigureMatchPage> {
             style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 14),
           ),
           const SizedBox(height: 8),
-          _buildStep('• Coordina fecha y hora con el capitán rival'),
-          _buildStep('• Confirma el costo final de la cancha'),
-          _buildStep('• Los jugadores verán su cuota en la app'),
-          _buildStep('• Gestiona los cobros desde tu dashboard'),
+          _buildStep('• Coordina fecha y hora con el capitán rival', textMuted),
+          _buildStep('• Confirma el costo final de la cancha', textMuted),
+          _buildStep('• Los jugadores verán su cuota en la app', textMuted),
+          _buildStep('• Gestiona los cobros desde tu dashboard', textMuted),
         ],
       ),
     );
   }
 
-  Widget _buildStep(String text) {
+  Widget _buildStep(String text, Color textMuted) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 4),
       child: Text(
         text,
-        style: const TextStyle(color: Color(0xFF9CA3AF), fontSize: 12),
+        style: TextStyle(color: textMuted, fontSize: 12),
       ),
     );
   }
 
   Widget _buildFooter(BuildContext context, bool isDark) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final textMuted = isDark ? const Color(0xFF9CA3AF) : Colors.black54;
+
     return SafeArea(
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-          border: Border(top: BorderSide(color: isDark ? const Color(0xFF2A2A2A) : Colors.grey[200]!)),
+          color: colorScheme.surface,
+          border: Border(top: BorderSide(color: theme.dividerColor)),
         ),
         child: Row(
           children: [
@@ -443,10 +486,10 @@ class _ConfigureMatchPageState extends State<ConfigureMatchPage> {
                 onPressed: () => Navigator.pop(context),
                 style: OutlinedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
-                  side: const BorderSide(color: Color(0xFF2A2A2A), width: 2),
+                  side: BorderSide(color: theme.dividerColor, width: 2),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                 ),
-                child: const Text('Cancelar', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                child: Text('Cancelar', style: TextStyle(color: colorScheme.onSurface, fontWeight: FontWeight.bold)),
               ),
             ),
             const SizedBox(width: 12),
@@ -458,8 +501,8 @@ class _ConfigureMatchPageState extends State<ConfigureMatchPage> {
                   foregroundColor: Colors.black,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                  disabledBackgroundColor: const Color(0xFF2A2A2A),
-                  disabledForegroundColor: const Color(0xFF6B7280),
+                  disabledBackgroundColor: theme.dividerColor,
+                  disabledForegroundColor: textMuted,
                 ),
                 child: const Text('Confirmar y Retar', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
               ),
@@ -470,7 +513,10 @@ class _ConfigureMatchPageState extends State<ConfigureMatchPage> {
     );
   }
 
-  Widget _buildProposalStatus(bool isDark) {
+  Widget _buildProposalStatus(BuildContext context, bool isDark) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     final match = widget.partido;
     final propA = match.propuestaCostoA != null;
     final propB = match.propuestaCostoB != null;
@@ -481,18 +527,18 @@ class _ConfigureMatchPageState extends State<ConfigureMatchPage> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+        color: colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: coincide ? Colors.green.withValues(alpha: 0.5) : const Color(0xFF2A2A2A)),
+        border: Border.all(color: coincide ? Colors.green.withValues(alpha: 0.5) : theme.dividerColor),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Estado de Negociación', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          Text('Estado de Negociación', style: TextStyle(color: colorScheme.onSurface, fontWeight: FontWeight.bold)),
           const SizedBox(height: 12),
-          _proposalRow('Capitán A (Organizador)', match.propuestaCostoA, match.propuestaFechaA),
-          const Divider(color: Color(0xFF2A2A2A), height: 20),
-          _proposalRow('Capitán B (Retador)', match.propuestaCostoB, match.propuestaFechaB),
+          _proposalRow(context, 'Capitán A (Organizador)', match.propuestaCostoA, match.propuestaFechaA, isDark),
+          Divider(color: theme.dividerColor, height: 20),
+          _proposalRow(context, 'Capitán B (Retador)', match.propuestaCostoB, match.propuestaFechaB, isDark),
           if (propA && propB && !coincide) ...[
             const SizedBox(height: 12),
             Container(
@@ -512,16 +558,19 @@ class _ConfigureMatchPageState extends State<ConfigureMatchPage> {
     );
   }
 
-  Widget _proposalRow(String label, double? costo, DateTime? fecha) {
+  Widget _proposalRow(BuildContext context, String label, double? costo, DateTime? fecha, bool isDark) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textMuted = isDark ? const Color(0xFF9CA3AF) : Colors.black54;
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(label, style: const TextStyle(color: Color(0xFF9CA3AF), fontSize: 12)),
+        Text(label, style: TextStyle(color: textMuted, fontSize: 12)),
         Column(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            Text(costo != null ? '\$${costo.toStringAsFixed(2)}' : 'Sin propuesta', style: TextStyle(color: costo != null ? Colors.white : const Color(0xFF4A4A4A), fontWeight: FontWeight.bold, fontSize: 13)),
-            if (fecha != null) Text(DateFormat('jm').format(fecha), style: const TextStyle(color: Color(0xFF9CA3AF), fontSize: 11)),
+            Text(costo != null ? '\$${costo.toStringAsFixed(2)}' : 'Sin propuesta', style: TextStyle(color: costo != null ? colorScheme.onSurface : (isDark ? const Color(0xFF4A4A4A) : Colors.grey[400]), fontWeight: FontWeight.bold, fontSize: 13)),
+            if (fecha != null) Text(DateFormat('jm').format(fecha), style: TextStyle(color: textMuted, fontSize: 11)),
           ],
         ),
       ],

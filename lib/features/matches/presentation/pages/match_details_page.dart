@@ -7,6 +7,8 @@ import '../bloc/matches_bloc.dart';
 import '../../domain/entities/match_entity.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../../profile/presentation/bloc/profile_bloc.dart';
+import '../../../profile/presentation/bloc/profile_state.dart';
 
 class MatchDetailsPage extends StatefulWidget {
   final int matchId;
@@ -21,6 +23,38 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> {
   final TextEditingController _dateController = TextEditingController();
   DateTime selectedDate = DateTime.now();
 
+  void _handleContactar(MatchEntity match) async {
+    final profileState = context.read<ProfileBloc>().state;
+    int? currentUserId;
+    if (profileState is ProfileLoaded) {
+      currentUserId = profileState.profile.id;
+    }
+
+    final isCaptainA = currentUserId == match.idUsuarioOrg;
+    final rivalPhone = isCaptainA ? match.telefonoCapitanB : match.telefonoCapitanA;
+
+    if (rivalPhone == null || rivalPhone.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No hay número de teléfono disponible para el capitán rival')),
+      );
+      return;
+    }
+
+    final cleanPhone = rivalPhone.replaceAll(RegExp(r'\D'), '');
+    final message = "Hola, soy el capitán rival para el partido del ${DateFormat('dd/MM/yyyy').format(match.fechaInicioEstimada)}. ¿Cómo coordinamos?";
+    final url = "https://wa.me/$cleanPhone?text=${Uri.encodeComponent(message)}";
+    
+    if (await canLaunchUrl(Uri.parse(url))) {
+      await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No se pudo abrir WhatsApp')),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -31,25 +65,29 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> {
         builder: (context, state) {
           if (state is MatchesLoading) {
             return const Scaffold(body: Center(child: CircularProgressIndicator(color: AppColors.primary)));
-          } else if (state is MatchesError) {
-            return Scaffold(body: Center(child: Text(state.message)));
           } else if (state is MatchDetailsLoaded) {
             final match = state.match;
             return _buildContent(context, match, isDark);
           }
-          return const Scaffold();
+          return Scaffold(backgroundColor: Theme.of(context).scaffoldBackgroundColor);
         },
       ),
     );
   }
 
   Widget _buildContent(BuildContext context, MatchEntity match, bool isDark) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-        title: Text('Partido #${match.id}', style: const TextStyle(fontWeight: FontWeight.bold)),
-        leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.pop()),
+        backgroundColor: colorScheme.surface,
+        title: Text('Partido #${match.id}', style: TextStyle(fontWeight: FontWeight.bold, color: colorScheme.onSurface)),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: colorScheme.onSurface),
+          onPressed: () => context.pop(),
+        ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
@@ -89,9 +127,9 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> {
         height: 180,
         width: double.infinity,
         decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF2A2A2A) : Colors.grey[200],
+          color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: isDark ? const Color(0xFF3A3A3A) : Colors.grey[300]!),
+          border: Border.all(color: Theme.of(context).dividerColor),
         ),
         child: const Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -126,12 +164,28 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> {
       children: [
         Row(
           children: [
-            const CircleAvatar(child: Text('⚽')),
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: Theme.of(context).scaffoldBackgroundColor,
+                shape: BoxShape.circle,
+              ),
+              child: ClipOval(
+                child: (match.logoEquipoA != null && match.logoEquipoA!.startsWith('http'))
+                    ? Image.network(
+                        match.logoEquipoA!,
+                        fit: BoxFit.cover,
+                        errorBuilder: (ctx, err, st) => const Center(child: Text('⚽', style: TextStyle(fontSize: 24))),
+                      )
+                    : const Center(child: Text('⚽', style: TextStyle(fontSize: 24))),
+              ),
+            ),
             const SizedBox(width: 12),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Organizador: ${match.nombreCapitanA ?? 'Capi'}', style: _titleStyle(isDark)),
+                Text('Organizador: ${match.nombreCapitanA ?? 'Capi'}', style: _titleStyle(isDark, context)),
                 GestureDetector(
                   onTap: () {
                     if (match.idEquipoA != null) {
@@ -148,7 +202,7 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> {
                     ),
                   ),
                 ),
-                Text(match.sportName ?? 'Deporte Match', style: const TextStyle(color: Colors.grey, fontSize: 13)),
+                Text(match.sportName ?? 'Deporte Match', style: TextStyle(color: isDark ? Colors.grey : Colors.black54, fontSize: 13)),
               ],
             ),
           ],
@@ -165,10 +219,10 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> {
     return _buildCard(isDark, child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Términos de Negociación', style: _titleStyle(isDark)),
+        Text('Términos de Negociación', style: _titleStyle(isDark, context)),
         const SizedBox(height: 16),
-        const Text('Propón la fecha y el costo final para llegar a un acuerdo con el otro capitán.',
-            style: TextStyle(color: Colors.grey, fontSize: 13)),
+        Text('Propón la fecha y el costo final para llegar a un acuerdo con el otro capitán.',
+            style: TextStyle(color: isDark ? Colors.grey : Colors.black54, fontSize: 13)),
         const SizedBox(height: 20),
         _buildNegotiationField('Costo Total Producido', _costController, Icons.attach_money, isDark),
         const SizedBox(height: 12),
@@ -201,20 +255,20 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> {
   }
 
   Widget _buildFinancialCard(MatchEntity match, bool isDark) {
-    const totalPlayers = 12; // Mock
+    const totalPlayers = 22; // Asumimos 11 vs 11 por defecto
     final quota = match.costoTotal / totalPlayers;
     return _buildCard(isDark, child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Resumen Financiero', style: _titleStyle(isDark)),
+        Text('Resumen Financiero', style: _titleStyle(isDark, context)),
         const SizedBox(height: 16),
         _buildFinancialRow('Alquiler de Cancha', '\$${match.costoTotal}', isDark),
         _buildFinancialRow('Jugadores Totales', '$totalPlayers', isDark),
-        const Divider(color: Color(0xFF2A2A2A), height: 24),
+        Divider(color: Theme.of(context).dividerColor, height: 24),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text('Tu Cuota', style: _titleStyle(isDark)),
+            Text('Tu Cuota', style: _titleStyle(isDark, context)),
             Text('\$${quota.toStringAsFixed(2)}', style: const TextStyle(color: AppColors.primary, fontSize: 20, fontWeight: FontWeight.bold)),
           ],
         ),
@@ -223,22 +277,24 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> {
   }
 
   Widget _buildBottomBar(BuildContext context, MatchEntity match, bool isDark) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-        border: Border(top: BorderSide(color: isDark ? const Color(0xFF2A2A2A) : Colors.grey[200]!)),
+        color: colorScheme.surface,
+        border: Border(top: BorderSide(color: theme.dividerColor)),
       ),
       child: Row(
         children: [
           Expanded(
             child: OutlinedButton.icon(
-              onPressed: () {}, // WhatsApp integration
+              onPressed: () => _handleContactar(match),
               icon: const Icon(Icons.message_outlined),
               label: const Text('Contactar Rival'),
               style: OutlinedButton.styleFrom(
-                foregroundColor: isDark ? Colors.white : Colors.black,
-                side: BorderSide(color: isDark ? const Color(0xFF2A2A2A) : Colors.grey[300]!),
+                foregroundColor: colorScheme.onSurface,
+                side: BorderSide(color: theme.dividerColor),
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
@@ -261,35 +317,40 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> {
   }
 
   Widget _buildNegotiationField(String label, TextEditingController controller, IconData icon, bool isDark, {VoidCallback? onTap}) {
+    final theme = Theme.of(context);
+    final textMuted = isDark ? const Color(0xFF9CA3AF) : Colors.black54;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(color: Colors.grey, fontSize: 12)),
+        Text(label, style: TextStyle(color: textMuted, fontSize: 12)),
         const SizedBox(height: 4),
         TextField(
           controller: controller,
           readOnly: onTap != null,
           onTap: onTap,
           decoration: InputDecoration(
-            prefixIcon: Icon(icon, color: Colors.grey, size: 20),
+            prefixIcon: Icon(icon, color: textMuted, size: 20),
             filled: true,
-            fillColor: isDark ? const Color(0xFF2A2A2A) : Colors.grey[100],
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+            fillColor: theme.colorScheme.surface,
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: theme.dividerColor)),
+            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: theme.dividerColor)),
           ),
-          style: TextStyle(color: isDark ? Colors.white : Colors.black),
+          style: TextStyle(color: theme.colorScheme.onSurface),
         ),
       ],
     );
   }
 
   Widget _buildCard(bool isDark, {required Widget child}) {
+    final theme = Theme.of(context);
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+        color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: isDark ? const Color(0xFF2A2A2A) : Colors.grey[200]!),
+        border: Border.all(color: theme.dividerColor),
       ),
       child: child,
     );
@@ -298,9 +359,9 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> {
   Widget _buildDetailRow(IconData icon, String text, bool isDark) {
     return Row(
       children: [
-        Icon(icon, size: 20, color: const Color(0xFF9CA3AF)),
+        const Icon(Icons.calendar_today, size: 20, color: Color(0xFF9CA3AF)),
         const SizedBox(width: 12),
-        Text(text, style: TextStyle(color: isDark ? Colors.white : Colors.black)),
+        Text(text, style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
       ],
     );
   }
@@ -318,8 +379,8 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> {
     );
   }
 
-  TextStyle _titleStyle(bool isDark) => TextStyle(
-        color: isDark ? Colors.white : Colors.black,
+  TextStyle _titleStyle(bool isDark, BuildContext context) => TextStyle(
+        color: Theme.of(context).colorScheme.onSurface,
         fontSize: 16,
         fontWeight: FontWeight.bold,
       );

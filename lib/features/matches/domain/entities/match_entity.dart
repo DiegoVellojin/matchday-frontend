@@ -31,6 +31,12 @@ class MatchEntity extends Equatable {
   final int? idCapitanB;
   final String? nombreEquipoB;
   final String? logoEquipoB;
+  final String? telefonoCapitanA;
+  final String? telefonoCapitanB;
+  final int? resultadoGolesACapA;
+  final int? resultadoGolesBCapA;
+  final int? resultadoGolesACapB;
+  final int? resultadoGolesBCapB;
 
   const MatchEntity({
     required this.id,
@@ -58,6 +64,12 @@ class MatchEntity extends Equatable {
     this.idCapitanB,
     this.nombreEquipoB,
     this.logoEquipoB,
+    this.telefonoCapitanA,
+    this.telefonoCapitanB,
+    this.resultadoGolesACapA,
+    this.resultadoGolesBCapA,
+    this.resultadoGolesACapB,
+    this.resultadoGolesBCapB,
   });
 
   @override
@@ -87,6 +99,12 @@ class MatchEntity extends Equatable {
         idCapitanB,
         nombreEquipoB,
         logoEquipoB,
+        telefonoCapitanA,
+        telefonoCapitanB,
+        resultadoGolesACapA,
+        resultadoGolesBCapA,
+        resultadoGolesACapB,
+        resultadoGolesBCapB,
       ];
 }
 

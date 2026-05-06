@@ -209,7 +209,15 @@ class _AcceptEncounterPageState extends State<AcceptEncounterPage> {
             width: double.infinity,
             child: OutlinedButton.icon(
               onPressed: () async {
-                final url = Uri.parse('https://wa.me/?text=Hola, vi tu partido en MatchDay y quiero aceptar el reto!');
+                final phone = match.telefonoCapitanA;
+                if (phone == null || phone.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('No hay número de teléfono disponible para el capitán rival')),
+                  );
+                  return;
+                }
+                final cleanPhone = phone.replaceAll(RegExp(r'\D'), '');
+                final url = Uri.parse('https://wa.me/$cleanPhone?text=${Uri.encodeComponent("Hola, vi tu partido en MatchDay y quiero aceptar el reto!")}');
                 if (await canLaunchUrl(url)) await launchUrl(url, mode: LaunchMode.externalApplication);
               },
               icon: const Icon(Icons.chat, size: 18),

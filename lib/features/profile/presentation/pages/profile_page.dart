@@ -163,7 +163,11 @@ class _ProfilePageState extends State<ProfilePage> {
           child: ClipRRect(
             borderRadius: BorderRadius.circular(48),
             child: photoUrl != null && photoUrl.startsWith('http')
-                ? Image.network(photoUrl, fit: BoxFit.cover)
+                ? Image.network(
+                    photoUrl, 
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => const Center(child: Icon(Icons.person, size: 48, color: Colors.grey)),
+                  )
                 : const Center(
                     child: Text('👤', style: TextStyle(fontSize: 48)),
                   ),
@@ -210,8 +214,8 @@ class _ProfilePageState extends State<ProfilePage> {
       crossAxisSpacing: 12,
       childAspectRatio: 0.85,
       children: [
-        _buildStatCard(Icons.emoji_events, '47', 'Partidos\nJugados'),
-        _buildStatCard(Icons.workspace_premium, '12', 'Organizados'),
+        _buildStatCard(Icons.emoji_events, '0', 'Partidos\nJugados'),
+        _buildStatCard(Icons.workspace_premium, '0', 'Organizados'),
         _buildStatCard(Icons.star, rating.toStringAsFixed(1), 'Calificación'),
       ],
     );
@@ -344,7 +348,11 @@ class _ProfilePageState extends State<ProfilePage> {
             child: ClipRRect(
               borderRadius: BorderRadius.circular(20),
               child: team.logo.startsWith('http')
-                  ? Image.network(team.logo, fit: BoxFit.cover)
+                  ? Image.network(
+                      team.logo, 
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => const Center(child: Text('⚽', style: TextStyle(fontSize: 20))),
+                    )
                   : Center(
                       child: Text(
                         team.logo.isNotEmpty ? team.logo : '⚽',
@@ -383,11 +391,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
         _buildMenuButton(
           label: 'Historial de Partidos',
-          onPressed: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Historial próximamente')),
-            );
-          },
+          onPressed: () => context.push('/match-history'),
         ),
         const SizedBox(height: 12),
         _buildMenuButton(

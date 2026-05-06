@@ -166,15 +166,20 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: isDark ? AppColors.background : Colors.white,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        title: const Text('Crear Partido', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: Text('Crear Partido', style: TextStyle(fontWeight: FontWeight.bold, color: colorScheme.onSurface)),
         backgroundColor: Colors.transparent,
         elevation: 0,
-        foregroundColor: isDark ? Colors.white : Colors.black,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: colorScheme.onSurface),
+          onPressed: () => Navigator.pop(context),
+        ),
       ),
       body: BlocListener<MatchesBloc, MatchesState>(
         listener: (context, state) {
@@ -399,8 +404,8 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
       bottomNavigationBar: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-          border: Border(top: BorderSide(color: isDark ? const Color(0xFF2A2A2A) : Colors.grey[200]!)),
+          color: colorScheme.surface,
+          border: Border(top: BorderSide(color: theme.dividerColor)),
         ),
         child: ElevatedButton(
           onPressed: _canSubmit() ? () {
@@ -454,7 +459,7 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
       padding: const EdgeInsets.only(bottom: 8.0),
       child: Text(
         text,
-        style: const TextStyle(color: Color(0xFF9CA3AF), fontWeight: FontWeight.w500),
+        style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF9CA3AF) : Colors.black54, fontWeight: FontWeight.w500),
       ),
     );
   }
@@ -466,33 +471,35 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
     required bool isDark,
     String? hint,
   }) {
+    final theme = Theme.of(context);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E1E1E) : Colors.grey[100],
+        color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: isDark ? const Color(0xFF2A2A2A) : Colors.grey[300]!),
+        border: Border.all(color: theme.dividerColor),
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<T>(
           value: value,
-          hint: hint != null ? Text(hint, style: const TextStyle(color: Colors.grey)) : null,
+          hint: hint != null ? Text(hint, style: TextStyle(color: isDark ? Colors.grey : Colors.grey[600])) : null,
           items: items,
           onChanged: onChanged,
           isExpanded: true,
-          dropdownColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-          style: TextStyle(color: isDark ? Colors.white : Colors.black),
+          dropdownColor: theme.colorScheme.surface,
+          style: TextStyle(color: theme.colorScheme.onSurface),
         ),
       ),
     );
   }
 
   Widget _buildTextField(IconData icon, String hint, bool isDark, {TextEditingController? controller, VoidCallback? onTap}) {
+    final theme = Theme.of(context);
     return Container(
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E1E1E) : Colors.grey[100],
+        color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: isDark ? const Color(0xFF2A2A2A) : Colors.grey[300]!),
+        border: Border.all(color: theme.dividerColor),
       ),
       child: TextField(
         controller: controller,
@@ -500,12 +507,12 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
         onTap: onTap,
         decoration: InputDecoration(
           hintText: hint,
-          hintStyle: const TextStyle(color: Color(0xFF4A4A4A)),
-          prefixIcon: Icon(icon, color: const Color(0xFF9CA3AF)),
+          hintStyle: TextStyle(color: isDark ? const Color(0xFF4A4A4A) : Colors.grey[400]),
+          prefixIcon: Icon(icon, color: isDark ? const Color(0xFF9CA3AF) : Colors.black54),
           border: InputBorder.none,
           contentPadding: const EdgeInsets.symmetric(vertical: 14),
         ),
-        style: TextStyle(color: isDark ? Colors.white : Colors.black),
+        style: TextStyle(color: theme.colorScheme.onSurface),
       ),
     );
   }
@@ -516,11 +523,11 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) {
-        final isDark = Theme.of(context).brightness == Brightness.dark;
+        final theme = Theme.of(context);
         return Container(
           height: MediaQuery.of(context).size.height * 0.7,
           decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+            color: theme.colorScheme.surface,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
           ),
           padding: const EdgeInsets.all(20),
@@ -528,13 +535,13 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
             children: [
               Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[600], borderRadius: BorderRadius.circular(2))),
               const SizedBox(height: 20),
-              const Text('Partidos Similares Encontrados', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.primary)),
-              const Text('Tal vez quieras unirte a uno de estos en lugar de crear uno nuevo.', textAlign: TextAlign.center, style: TextStyle(color: Colors.grey)),
+              Text('Partidos Similares Encontrados', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: theme.colorScheme.primary)),
+              Text('Tal vez quieras unirte a uno de estos en lugar de crear uno nuevo.', textAlign: TextAlign.center, style: TextStyle(color: theme.brightness == Brightness.dark ? Colors.grey : Colors.black54)),
               const SizedBox(height: 20),
               Expanded(
                 child: ListView.builder(
                   itemCount: similar.length,
-                  itemBuilder: (context, index) => _buildSimilarMatchCard(similar[index], isDark),
+                  itemBuilder: (context, index) => _buildSimilarMatchCard(context, similar[index], theme.brightness == Brightness.dark),
                 ),
               ),
               const SizedBox(height: 20),
@@ -559,14 +566,15 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
     );
   }
 
-  Widget _buildSimilarMatchCard(MatchEntity match, bool isDark) {
+  Widget _buildSimilarMatchCard(BuildContext context, MatchEntity match, bool isDark) {
+    final theme = Theme.of(context);
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF252525) : Colors.grey[100],
+        color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFF2A2A2A)),
+        border: Border.all(color: theme.dividerColor),
       ),
       child: Column(
         children: [
@@ -577,8 +585,8 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Partido #${match.id}', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                  const Text('Fútbol', style: TextStyle(color: AppColors.primary, fontSize: 12)),
+                  Text('Partido #${match.id}', style: TextStyle(color: theme.colorScheme.onSurface, fontWeight: FontWeight.bold)),
+                  Text('Fútbol', style: TextStyle(color: theme.colorScheme.primary, fontSize: 12)),
                 ],
               ),
             ],

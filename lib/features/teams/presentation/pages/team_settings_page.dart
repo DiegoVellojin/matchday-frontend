@@ -268,7 +268,11 @@ class _TeamSettingsPageState extends State<TeamSettingsPage> {
               borderRadius: BorderRadius.circular(30),
               child:
                   _currentLogoUrl != null && _currentLogoUrl!.startsWith('http')
-                  ? Image.network(_currentLogoUrl!, fit: BoxFit.cover)
+                  ? Image.network(
+                      _currentLogoUrl!, 
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => const Center(child: Icon(Icons.sports_soccer, size: 30, color: Colors.grey)),
+                    )
                   : Center(
                       child: Text(
                         widget.team.logo,
@@ -433,7 +437,7 @@ class _TeamSettingsPageState extends State<TeamSettingsPage> {
                       member['url_foto_perfil'].toString().startsWith('http')
                   ? NetworkImage(member['url_foto_perfil'])
                   : null,
-              child: member['url_foto_perfil'] == null
+              child: (member['url_foto_perfil'] == null || !member['url_foto_perfil'].toString().startsWith('http'))
                   ? const Icon(Icons.person, color: AppColors.textMuted)
                   : null,
             ),

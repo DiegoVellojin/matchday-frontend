@@ -61,11 +61,10 @@ class VerifyPaymentModal extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     
-    // Mock data for receipt
     final comprobante = {
-      'concepto': 'Reserva Cancha - Sábado 26 Abril',
-      'referencia': 'TRX-20260425-8392',
-      'fecha': '25 de Abril, 2026 - 3:45 PM',
+      'concepto': jugador['concepto'] ?? 'Pago de Partido',
+      'referencia': jugador['referencia'] ?? 'REF-${jugador['id'] ?? '000'}',
+      'fecha': jugador['fecha'] ?? 'Recién enviado',
     };
 
     return Container(

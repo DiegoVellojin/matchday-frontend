@@ -187,7 +187,7 @@ class _MatchesPageState extends State<MatchesPage> {
                                     _isMyMatchesView 
                                       ? 'Aún no has organizado ningún partido.' 
                                       : 'No hay ofertas disponibles.',
-                                    style: const TextStyle(color: Color(0xFF9CA3AF), fontSize: 16),
+                                    style: TextStyle(color: isDark ? const Color(0xFF9CA3AF) : Colors.black54, fontSize: 16),
                                   ),
                                 ],
                               ),
@@ -234,13 +234,15 @@ class _MatchesPageState extends State<MatchesPage> {
 
 
   Widget _buildViewSelector(bool isDark) {
+    final theme = Theme.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
       child: Container(
         height: 45,
         decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF2A2A2A) : Colors.grey[200],
+          color: theme.colorScheme.surface,
           borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: theme.dividerColor),
         ),
         child: Row(
           children: [
@@ -320,7 +322,7 @@ class _MatchesPageState extends State<MatchesPage> {
                 bottom: MediaQuery.of(context).viewInsets.bottom + 30,
               ),
               decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                color: Theme.of(context).colorScheme.surface,
                 borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
               ),
               child: SingleChildScrollView(
@@ -402,9 +404,9 @@ class _MatchesPageState extends State<MatchesPage> {
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                         decoration: BoxDecoration(
-                          color: isDark ? const Color(0xFF2A2A2A) : Colors.grey[100],
+                          color: Theme.of(context).scaffoldBackgroundColor,
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.grey.shade700),
+                          border: Border.all(color: Theme.of(context).dividerColor),
                         ),
                         child: Row(
                           children: [
@@ -438,15 +440,16 @@ class _MatchesPageState extends State<MatchesPage> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12),
                       decoration: BoxDecoration(
-                        color: isDark ? const Color(0xFF2A2A2A) : Colors.grey[100],
+                        color: Theme.of(context).scaffoldBackgroundColor,
                         borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Theme.of(context).dividerColor),
                       ),
                       child: DropdownButton<int?>(
                         value: selectedRegionId,
                         isExpanded: true,
                         underline: const SizedBox(),
                         hint: const Text('Todas las regiones'),
-                        dropdownColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+                        dropdownColor: Theme.of(context).colorScheme.surface,
                         items: [
                           const DropdownMenuItem(value: null, child: Text('Todas las regiones')),
                           ..._regions.map((r) => DropdownMenuItem(value: r.id, child: Text(r.name))),
@@ -469,15 +472,16 @@ class _MatchesPageState extends State<MatchesPage> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12),
                       decoration: BoxDecoration(
-                        color: isDark ? const Color(0xFF2A2A2A) : Colors.grey[100],
+                        color: Theme.of(context).scaffoldBackgroundColor,
                         borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Theme.of(context).dividerColor),
                       ),
                       child: DropdownButton<int?>(
                         value: selectedCanchaId,
                         isExpanded: true,
                         underline: const SizedBox(),
                         hint: const Text('Todas las canchas'),
-                        dropdownColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+                        dropdownColor: Theme.of(context).colorScheme.surface,
                         items: [
                           const DropdownMenuItem(value: null, child: Text('Todas las canchas')),
                           ..._canchas
@@ -555,10 +559,10 @@ class _MatchesPageState extends State<MatchesPage> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: isDark ? const Color(0xFF2A2A2A) : Colors.grey[200]!,
+          color: Theme.of(context).dividerColor,
         ),
         boxShadow: [
           BoxShadow(
@@ -581,7 +585,7 @@ class _MatchesPageState extends State<MatchesPage> {
               width: 56,
               height: 56,
               decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF2A2A2A) : Colors.grey[100],
+                color: Theme.of(context).scaffoldBackgroundColor,
                 shape: BoxShape.circle,
               ),
               child: ClipOval(
@@ -614,7 +618,7 @@ class _MatchesPageState extends State<MatchesPage> {
                   child: Text(
                     match.nombreEquipoA ?? 'Partido #${match.id}',
                     style: TextStyle(
-                      color: isDark ? Colors.white : Colors.black,
+                      color: Theme.of(context).colorScheme.onSurface,
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                       decoration: TextDecoration.underline,
@@ -664,6 +668,8 @@ class _MatchesPageState extends State<MatchesPage> {
                         } else {
                           context.push('/player-match-dashboard', extra: {'match': match});
                         }
+                      } else if (match.estatus == 'completada') {
+                        context.push('/match-history-detail/${match.id}');
                       } else {
                         context.push('/match-details/${match.id}');
                       }
@@ -726,8 +732,8 @@ class _MatchesPageState extends State<MatchesPage> {
         Expanded(
           child: Text(
             text,
-            style: const TextStyle(
-              color: Color(0xFF9CA3AF),
+            style: TextStyle(
+              color: isDark ? const Color(0xFF9CA3AF) : Colors.black54,
               fontSize: 14,
             ),
             overflow: TextOverflow.ellipsis,
