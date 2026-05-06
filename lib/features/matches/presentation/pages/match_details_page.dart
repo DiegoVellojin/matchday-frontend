@@ -32,19 +32,27 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> {
     }
 
     final isCaptainA = currentUserId == match.idUsuarioOrg;
-    final rivalPhone = isCaptainA ? match.telefonoCapitanB : match.telefonoCapitanA;
+    final rivalPhone = isCaptainA
+        ? match.telefonoCapitanB
+        : match.telefonoCapitanA;
 
     if (rivalPhone == null || rivalPhone.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No hay número de teléfono disponible para el capitán rival')),
+        const SnackBar(
+          content: Text(
+            'No hay número de teléfono disponible para el capitán rival',
+          ),
+        ),
       );
       return;
     }
 
     final cleanPhone = rivalPhone.replaceAll(RegExp(r'\D'), '');
-    final message = "Hola, soy el capitán rival para el partido del ${DateFormat('dd/MM/yyyy').format(match.fechaInicioEstimada)}. ¿Cómo coordinamos?";
-    final url = "https://wa.me/$cleanPhone?text=${Uri.encodeComponent(message)}";
-    
+    final message =
+        "Hola, soy el capitán rival para el partido del ${DateFormat('dd/MM/yyyy').format(match.fechaInicioEstimada)}. ¿Cómo coordinamos?";
+    final url =
+        "https://wa.me/$cleanPhone?text=${Uri.encodeComponent(message)}";
+
     if (await canLaunchUrl(Uri.parse(url))) {
       await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
     } else {
@@ -61,17 +69,28 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: Theme.of(context).colorScheme.surface,
-        title: const Text('¿Cancelar Partido?', style: TextStyle(fontWeight: FontWeight.bold)),
-        content: const Text('Esta acción eliminará el partido permanentemente y notificará a los interesados.'),
+        title: const Text(
+          '¿Cancelar Partido?',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        content: const Text(
+          'Esta acción eliminará el partido permanentemente y notificará a los interesados.',
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Volver', style: TextStyle(color: Colors.grey))),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Volver', style: TextStyle(color: Colors.grey)),
+          ),
           ElevatedButton(
             onPressed: () {
               Navigator.pop(ctx);
               context.read<MatchesBloc>().add(CancelMatchEvent(matchId));
             },
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
-            child: const Text('Confirmar Cancelación', style: TextStyle(color: Colors.white)),
+            child: const Text(
+              'Confirmar Cancelación',
+              style: TextStyle(color: Colors.white),
+            ),
           ),
         ],
       ),
@@ -83,28 +102,41 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return BlocProvider(
-      create: (context) => sl<MatchesBloc>()..add(LoadMatchDetailsEvent(widget.matchId)),
+      create: (context) =>
+          sl<MatchesBloc>()..add(LoadMatchDetailsEvent(widget.matchId)),
       child: BlocListener<MatchesBloc, MatchesState>(
         listener: (context, state) {
           if (state is MatchCancelled) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Partido cancelado con éxito'), backgroundColor: AppColors.error),
+              const SnackBar(
+                content: Text('Partido cancelado con éxito'),
+                backgroundColor: AppColors.error,
+              ),
             );
             context.pop();
           } else if (state is MatchesError) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.message), backgroundColor: AppColors.error),
+              SnackBar(
+                content: Text(state.message),
+                backgroundColor: AppColors.error,
+              ),
             );
           }
         },
         child: BlocBuilder<MatchesBloc, MatchesState>(
           builder: (context, state) {
             if (state is MatchesLoading) {
-              return const Scaffold(body: Center(child: CircularProgressIndicator(color: AppColors.primary)));
+              return const Scaffold(
+                body: Center(
+                  child: CircularProgressIndicator(color: AppColors.primary),
+                ),
+              );
             } else if (state is MatchDetailsLoaded) {
               return _buildContent(context, state.match, isDark);
             }
-            return Scaffold(backgroundColor: Theme.of(context).scaffoldBackgroundColor);
+            return Scaffold(
+              backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+            );
           },
         ),
       ),
@@ -136,8 +168,10 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> {
                   const SizedBox(height: 16),
                   _buildMatchInfoCard(match, isDark),
                   const SizedBox(height: 16),
-                  if (match.estatus == 'negociando') _buildNegotiationCard(context, match, isDark),
-                  if (match.estatus == 'pendiente_pago') _buildFinancialCard(match, isDark),
+                  if (match.estatus == 'negociando')
+                    _buildNegotiationCard(context, match, isDark),
+                  if (match.estatus == 'pendiente_pago')
+                    _buildFinancialCard(match, isDark),
                   const SizedBox(height: 80), // Espacio para el bottom bar
                 ],
               ),
@@ -156,21 +190,28 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> {
       pinned: true,
       backgroundColor: AppColors.surface,
       flexibleSpace: FlexibleSpaceBar(
-        title: Text('Partido #${match.id}', 
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white, shadows: [Shadow(color: Colors.black, blurRadius: 4)])),
+        title: Text(
+          'Partido #${match.id}',
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 16,
+            color: Colors.white,
+            shadows: [Shadow(color: Colors.black, blurRadius: 4)],
+          ),
+        ),
         background: Stack(
           fit: StackFit.expand,
           children: [
-            Image.network(
-              'https://images.unsplash.com/photo-1574629810360-7efbbe195018?q=80&w=1000',
-              fit: BoxFit.cover,
-            ),
+            Image.network(_getSportImage(match.sportName), fit: BoxFit.cover),
             Container(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: [Colors.transparent, Colors.black.withValues(alpha: 0.8)],
+                  colors: [
+                    Colors.transparent,
+                    Colors.black.withValues(alpha: 0.8),
+                  ],
                 ),
               ),
             ),
@@ -182,7 +223,8 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> {
         onPressed: () => context.pop(),
       ),
       actions: [
-        if (isOrganizer && (match.estatus == 'publicada' || match.estatus == 'negociando'))
+        if (isOrganizer &&
+            (match.estatus == 'publicada' || match.estatus == 'negociando'))
           IconButton(
             icon: const Icon(Icons.delete_outline, color: AppColors.error),
             onPressed: () => _handleCancelMatch(match.id),
@@ -191,7 +233,55 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> {
     );
   }
 
-  Widget _buildMainStatusCard(MatchEntity match, bool isDark, bool isOrganizer) {
+  String _getSportImage(String? sportName) {
+    final name = sportName?.toLowerCase() ?? '';
+
+    // Fútbol (11, 5, etc.)
+    if (name.contains('futbol') || name.contains('fútbol') || name.contains('soccer')) {
+      return 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?q=80&w=1000';
+    }
+    // Basketball
+    if (name.contains('basket') || name.contains('baloncesto')) {
+      return 'https://images.unsplash.com/photo-1546519638-68e109498ffc?q=80&w=1000';
+    }
+    // Volleyball
+    if (name.contains('volley') || name.contains('voleibol')) {
+      return 'https://images.unsplash.com/photo-1666901356149-93f2eb3ba5a2?q=80&w=1000';
+    }
+    // Tennis
+    if (name.contains('tennis') || name.contains('tenis')) {
+      return 'https://images.unsplash.com/flagged/photo-1576972405668-2d020a01cbfa?q=80&w=1000';
+    }
+    // Padel / Pickleball
+    if (name.contains('padel') || name.contains('pádel') || name.contains('pickleball')) {
+      return 'https://images.unsplash.com/photo-1657704358775-ed705c7388d2?q=80&w=1000';
+    }
+    // Béisbol / Softbol
+    if (name.contains('beisbol') || name.contains('béisbol') || name.contains('softbol') || name.contains('baseball')) {
+      return 'https://images.unsplash.com/photo-1578432014316-48b448d79d57?q=80&w=1000';
+    }
+    // Rugby
+    if (name.contains('rugby')) {
+      return 'https://images.unsplash.com/photo-1529663297269-6d349ec39b57?q=80&w=1000';
+    }
+    // Ping Pong
+    if (name.contains('ping') || name.contains('mesa')) {
+      return 'https://images.unsplash.com/photo-1534158914592-062992fbe900?q=80&w=1000';
+    }
+    // Futsal / Fútbol Sala
+    if (name.contains('futsal') || name.contains('sala')) {
+      return 'https://images.unsplash.com/photo-1587384474964-3a06ce1ce699?q=80&w=1000';
+    }
+
+    // Default: Fútbol
+    return 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?q=80&w=1000';
+  }
+
+  Widget _buildMainStatusCard(
+    MatchEntity match,
+    bool isDark,
+    bool isOrganizer,
+  ) {
     String statusTitle = "";
     String statusDesc = "";
     IconData statusIcon = Icons.info;
@@ -200,8 +290,8 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> {
     switch (match.estatus) {
       case 'publicada':
         statusTitle = isOrganizer ? "Esperando Oponente" : "Partido Disponible";
-        statusDesc = isOrganizer 
-            ? "Tu partido ha sido publicado. Pronto un capitán te retará." 
+        statusDesc = isOrganizer
+            ? "Tu partido ha sido publicado. Pronto un capitán te retará."
             : "¡Reta a este equipo y organiza el encuentro!";
         statusIcon = Icons.hourglass_empty;
         statusColor = Colors.blue;
@@ -214,7 +304,8 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> {
         break;
       case 'pendiente_pago':
         statusTitle = "Pendiente de Pago";
-        statusDesc = "Los términos fueron aceptados. Realiza tu pago para confirmar.";
+        statusDesc =
+            "Los términos fueron aceptados. Realiza tu pago para confirmar.";
         statusIcon = Icons.payments_outlined;
         statusColor = Colors.green;
         break;
@@ -228,14 +319,18 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: isDark 
-            ? [AppColors.surface, AppColors.surface.withValues(alpha: 0.8)]
-            : [Colors.white, Colors.white.withValues(alpha: 0.9)],
+          colors: isDark
+              ? [AppColors.surface, AppColors.surface.withValues(alpha: 0.8)]
+              : [Colors.white, Colors.white.withValues(alpha: 0.9)],
         ),
         borderRadius: BorderRadius.circular(24),
         border: Border.all(color: statusColor.withValues(alpha: 0.3)),
         boxShadow: [
-          BoxShadow(color: statusColor.withValues(alpha: 0.1), blurRadius: 20, offset: const Offset(0, 10)),
+          BoxShadow(
+            color: statusColor.withValues(alpha: 0.1),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
         ],
       ),
       child: Row(
@@ -253,9 +348,22 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(statusTitle, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black)),
+                Text(
+                  statusTitle,
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? Colors.white : Colors.black,
+                  ),
+                ),
                 const SizedBox(height: 4),
-                Text(statusDesc, style: TextStyle(fontSize: 13, color: isDark ? Colors.grey : Colors.black54)),
+                Text(
+                  statusDesc,
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: isDark ? Colors.grey : Colors.black54,
+                  ),
+                ),
               ],
             ),
           ),
@@ -279,8 +387,13 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> {
           child: Stack(
             children: [
               GoogleMap(
-                initialCameraPosition: CameraPosition(target: position, zoom: 15),
-                markers: {Marker(markerId: const MarkerId('court'), position: position)},
+                initialCameraPosition: CameraPosition(
+                  target: position,
+                  zoom: 15,
+                ),
+                markers: {
+                  Marker(markerId: const MarkerId('court'), position: position),
+                },
                 liteModeEnabled: true, // Optimizado para previews
                 zoomControlsEnabled: false,
                 mapToolbarEnabled: false,
@@ -321,7 +434,13 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> {
           children: [
             Icon(Icons.location_on, color: AppColors.primary, size: 48),
             SizedBox(height: 8),
-            Text('Abrir en Google Maps', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold)),
+            Text(
+              'Abrir en Google Maps',
+              style: TextStyle(
+                color: AppColors.primary,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ],
         ),
       ),
@@ -330,48 +449,90 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> {
 
   void _openInGoogleMaps(MatchEntity match) async {
     final query = match.nombreCancha ?? 'Cancha #${match.idCancha}';
-    final url = match.latitudCancha != null 
-      ? Uri.parse('https://www.google.com/maps/search/?api=1&query=${match.latitudCancha},${match.longitudCancha}')
-      : Uri.parse('https://www.google.com/maps/search/?api=1&query=${Uri.encodeComponent(query)}');
-    
+    final url = match.latitudCancha != null
+        ? Uri.parse(
+            'https://www.google.com/maps/search/?api=1&query=${match.latitudCancha},${match.longitudCancha}',
+          )
+        : Uri.parse(
+            'https://www.google.com/maps/search/?api=1&query=${Uri.encodeComponent(query)}',
+          );
+
     if (await canLaunchUrl(url)) {
       await launchUrl(url, mode: LaunchMode.externalApplication);
     }
   }
 
   Widget _buildMatchInfoCard(MatchEntity match, bool isDark) {
-    return _buildCard(isDark, child: Column(
-      children: [
-        Row(
-          children: [
-            _buildTeamAvatar(match.logoEquipoA, 56),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(match.nombreEquipoA ?? 'Equipo Organizador', style: _titleStyle(isDark, context)),
-                  Text('Organizado por ${match.nombreCapitanA ?? 'Capi'}', 
-                    style: TextStyle(color: isDark ? Colors.grey : Colors.black54, fontSize: 13)),
-                  const SizedBox(height: 4),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                    decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(6)),
-                    child: Text(match.sportName ?? 'Fútbol', style: const TextStyle(color: AppColors.primary, fontSize: 11, fontWeight: FontWeight.bold)),
-                  ),
-                ],
+    return _buildCard(
+      isDark,
+      child: Column(
+        children: [
+          Row(
+            children: [
+              _buildTeamAvatar(match.logoEquipoA, 56),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      match.nombreEquipoA ?? 'Equipo Organizador',
+                      style: _titleStyle(isDark, context),
+                    ),
+                    Text(
+                      'Organizado por ${match.nombreCapitanA ?? 'Capi'}',
+                      style: TextStyle(
+                        color: isDark ? Colors.grey : Colors.black54,
+                        fontSize: 13,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        match.sportName ?? 'Fútbol',
+                        style: const TextStyle(
+                          color: AppColors.primary,
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
-        ),
-        const Divider(height: 32),
-        _buildDetailRow(Icons.calendar_today_rounded, DateFormat('EEEE, d MMMM • hh:mm a').format(match.fechaInicioEstimada), isDark),
-        const SizedBox(height: 12),
-        _buildDetailRow(Icons.location_on_rounded, match.nombreCancha ?? 'Ubicación pendiente', isDark),
-        const SizedBox(height: 12),
-        _buildDetailRow(Icons.attach_money_rounded, 'Costo estimado: \$${match.costoTotal}', isDark),
-      ],
-    ));
+            ],
+          ),
+          const Divider(height: 32),
+          _buildDetailRow(
+            Icons.calendar_today_rounded,
+            DateFormat(
+              'EEEE, d MMMM • hh:mm a',
+            ).format(match.fechaInicioEstimada),
+            isDark,
+          ),
+          const SizedBox(height: 12),
+          _buildDetailRow(
+            Icons.location_on_rounded,
+            match.nombreCancha ?? 'Ubicación pendiente',
+            isDark,
+          ),
+          const SizedBox(height: 12),
+          _buildDetailRow(
+            Icons.attach_money_rounded,
+            'Costo estimado: \$${match.costoTotal}',
+            isDark,
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildTeamAvatar(String? url, double size) {
@@ -385,90 +546,150 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> {
       ),
       child: ClipOval(
         child: (url != null && url.startsWith('http'))
-            ? Image.network(url, fit: BoxFit.cover, errorBuilder: (ctx, err, st) => const Icon(Icons.sports_soccer, size: 28))
+            ? Image.network(
+                url,
+                fit: BoxFit.cover,
+                errorBuilder: (ctx, err, st) =>
+                    const Icon(Icons.sports_soccer, size: 28),
+              )
             : const Icon(Icons.sports_soccer, size: 28),
       ),
     );
   }
 
-  Widget _buildNegotiationCard(BuildContext context, MatchEntity match, bool isDark) {
-    return _buildCard(isDark, child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            const Icon(Icons.handshake_outlined, color: Colors.orange),
-            const SizedBox(width: 8),
-            Text('Propuesta de Términos', style: _titleStyle(isDark, context)),
-          ],
-        ),
-        const SizedBox(height: 16),
-        _buildNegotiationField('Costo por Jugador / Total', _costController, Icons.attach_money, isDark),
-        const SizedBox(height: 12),
-        _buildNegotiationField('Fecha y Hora Sugerida', _dateController, Icons.calendar_today, isDark, onTap: () async {
-          final date = await showDatePicker(context: context, initialDate: DateTime.now(), firstDate: DateTime.now(), lastDate: DateTime.now().add(const Duration(days: 30)));
-          if (date != null) {
-            setState(() {
-              selectedDate = date;
-              _dateController.text = DateFormat('dd/MM/yyyy').format(date);
-            });
-          }
-        }),
-        const SizedBox(height: 20),
-        SizedBox(
-          width: double.infinity,
-          height: 50,
-          child: ElevatedButton(
-            onPressed: () {
-              context.read<MatchesBloc>().add(ProposeTermsEvent(
-                matchId: match.id,
-                fecha: selectedDate,
-                costo: double.tryParse(_costController.text) ?? 0.0,
-              ));
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary, 
-              foregroundColor: Colors.black,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            ),
-            child: const Text('Enviar Propuesta', style: TextStyle(fontWeight: FontWeight.bold)),
+  Widget _buildNegotiationCard(
+    BuildContext context,
+    MatchEntity match,
+    bool isDark,
+  ) {
+    return _buildCard(
+      isDark,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.handshake_outlined, color: Colors.orange),
+              const SizedBox(width: 8),
+              Text(
+                'Propuesta de Términos',
+                style: _titleStyle(isDark, context),
+              ),
+            ],
           ),
-        ),
-      ],
-    ));
+          const SizedBox(height: 16),
+          _buildNegotiationField(
+            'Costo por Jugador / Total',
+            _costController,
+            Icons.attach_money,
+            isDark,
+          ),
+          const SizedBox(height: 12),
+          _buildNegotiationField(
+            'Fecha y Hora Sugerida',
+            _dateController,
+            Icons.calendar_today,
+            isDark,
+            onTap: () async {
+              final date = await showDatePicker(
+                context: context,
+                initialDate: DateTime.now(),
+                firstDate: DateTime.now(),
+                lastDate: DateTime.now().add(const Duration(days: 30)),
+              );
+              if (date != null) {
+                setState(() {
+                  selectedDate = date;
+                  _dateController.text = DateFormat('dd/MM/yyyy').format(date);
+                });
+              }
+            },
+          ),
+          const SizedBox(height: 20),
+          SizedBox(
+            width: double.infinity,
+            height: 50,
+            child: ElevatedButton(
+              onPressed: () {
+                context.read<MatchesBloc>().add(
+                  ProposeTermsEvent(
+                    matchId: match.id,
+                    fecha: selectedDate,
+                    costo: double.tryParse(_costController.text) ?? 0.0,
+                  ),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.black,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: const Text(
+                'Enviar Propuesta',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildFinancialCard(MatchEntity match, bool isDark) {
     const totalPlayers = 22;
     final quota = match.costoTotal / totalPlayers;
-    return _buildCard(isDark, child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('Resumen Financiero', style: _titleStyle(isDark, context)),
-        const SizedBox(height: 16),
-        _buildFinancialRow('Alquiler de Cancha', '\$${match.costoTotal}', isDark),
-        _buildFinancialRow('Jugadores Totales', '$totalPlayers', isDark),
-        Divider(color: Theme.of(context).dividerColor, height: 24),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text('Tu Cuota', style: _titleStyle(isDark, context)),
-            Text('\$${quota.toStringAsFixed(2)}', style: const TextStyle(color: AppColors.primary, fontSize: 22, fontWeight: FontWeight.bold)),
-          ],
-        ),
-      ],
-    ));
+    return _buildCard(
+      isDark,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Resumen Financiero', style: _titleStyle(isDark, context)),
+          const SizedBox(height: 16),
+          _buildFinancialRow(
+            'Alquiler de Cancha',
+            '\$${match.costoTotal}',
+            isDark,
+          ),
+          _buildFinancialRow('Jugadores Totales', '$totalPlayers', isDark),
+          Divider(color: Theme.of(context).dividerColor, height: 24),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('Tu Cuota', style: _titleStyle(isDark, context)),
+              Text(
+                '\$${quota.toStringAsFixed(2)}',
+                style: const TextStyle(
+                  color: AppColors.primary,
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
   }
 
-  Widget _buildBottomBar(BuildContext context, MatchEntity match, bool isDark, bool isOrganizer) {
+  Widget _buildBottomBar(
+    BuildContext context,
+    MatchEntity match,
+    bool isDark,
+    bool isOrganizer,
+  ) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    
+
     // Si está publicada y es el organizador, mostrar botones de gestión
     if (match.estatus == 'publicada' && isOrganizer) {
       return Container(
         padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(color: colorScheme.surface, border: Border(top: BorderSide(color: theme.dividerColor))),
+        decoration: BoxDecoration(
+          color: colorScheme.surface,
+          border: Border(top: BorderSide(color: theme.dividerColor)),
+        ),
         child: Row(
           children: [
             Expanded(
@@ -481,7 +702,9 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> {
                 style: OutlinedButton.styleFrom(
                   foregroundColor: colorScheme.onSurface,
                   padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
               ),
             ),
@@ -491,7 +714,11 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> {
                 onPressed: () => _handleCancelMatch(match.id),
                 icon: const Icon(Icons.cancel_outlined),
                 label: const Text('Cancelar'),
-                style: ElevatedButton.styleFrom(backgroundColor: AppColors.error, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 14)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.error,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                ),
               ),
             ),
           ],
@@ -501,7 +728,10 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> {
 
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: colorScheme.surface, border: Border(top: BorderSide(color: theme.dividerColor))),
+      decoration: BoxDecoration(
+        color: colorScheme.surface,
+        border: Border(top: BorderSide(color: theme.dividerColor)),
+      ),
       child: Row(
         children: [
           Expanded(
@@ -513,7 +743,9 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> {
                 foregroundColor: colorScheme.onSurface,
                 side: BorderSide(color: theme.dividerColor),
                 padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
             ),
           ),
@@ -524,7 +756,11 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> {
                 onPressed: () => context.push('/pagos'),
                 icon: const Icon(Icons.attach_money),
                 label: const Text('Pagar'),
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.orange, foregroundColor: Colors.black, padding: const EdgeInsets.symmetric(vertical: 14)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.orange,
+                  foregroundColor: Colors.black,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                ),
               ),
             ),
           ],
@@ -533,7 +769,13 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> {
     );
   }
 
-  Widget _buildNegotiationField(String label, TextEditingController controller, IconData icon, bool isDark, {VoidCallback? onTap}) {
+  Widget _buildNegotiationField(
+    String label,
+    TextEditingController controller,
+    IconData icon,
+    bool isDark, {
+    VoidCallback? onTap,
+  }) {
     final theme = Theme.of(context);
     final textMuted = isDark ? const Color(0xFF9CA3AF) : Colors.black54;
 
@@ -550,7 +792,10 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> {
             prefixIcon: Icon(icon, color: textMuted, size: 20),
             filled: true,
             fillColor: isDark ? AppColors.surface : Colors.grey[100],
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide.none,
+            ),
           ),
           style: TextStyle(color: theme.colorScheme.onSurface),
         ),
@@ -568,7 +813,11 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> {
         borderRadius: BorderRadius.circular(24),
         border: Border.all(color: theme.dividerColor),
         boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 4)),
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
         ],
       ),
       child: child,
@@ -580,7 +829,15 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> {
       children: [
         Icon(icon, size: 20, color: const Color(0xFF9CA3AF)),
         const SizedBox(width: 12),
-        Expanded(child: Text(text, style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 14))),
+        Expanded(
+          child: Text(
+            text,
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurface,
+              fontSize: 14,
+            ),
+          ),
+        ),
       ],
     );
   }
@@ -591,18 +848,27 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: const TextStyle(color: Color(0xFF9CA3AF), fontSize: 14)),
-          Text(value, style: TextStyle(color: isDark ? Colors.white : Colors.black, fontWeight: FontWeight.bold)),
+          Text(
+            label,
+            style: const TextStyle(color: Color(0xFF9CA3AF), fontSize: 14),
+          ),
+          Text(
+            value,
+            style: TextStyle(
+              color: isDark ? Colors.white : Colors.black,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
         ],
       ),
     );
   }
 
   TextStyle _titleStyle(bool isDark, BuildContext context) => TextStyle(
-        color: Theme.of(context).colorScheme.onSurface,
-        fontSize: 16,
-        fontWeight: FontWeight.bold,
-      );
+    color: Theme.of(context).colorScheme.onSurface,
+    fontSize: 16,
+    fontWeight: FontWeight.bold,
+  );
 }
 
 class PositionDetector extends StatelessWidget {
