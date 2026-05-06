@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import '../../../../core/widgets/animated_bouncing_button.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../teams/presentation/bloc/my_teams_bloc.dart';
@@ -78,9 +80,15 @@ class _ProfilePageState extends State<ProfilePage> {
                         padding: const EdgeInsets.all(16.0),
                         child: Column(
                           children: [
-                            _buildProfileHeader(profile),
+                            _buildProfileHeader(profile)
+                                .animate()
+                                .fadeIn(duration: 600.ms)
+                                .slideY(begin: -0.2, end: 0, curve: Curves.easeOutBack),
                             const SizedBox(height: 24),
-                            _buildStatistics(profile.rating),
+                            _buildStatistics(profile.rating)
+                                .animate()
+                                .fadeIn(duration: 600.ms, delay: 200.ms)
+                                .slideY(begin: 0.2, end: 0, curve: Curves.easeOutQuad),
                             const SizedBox(height: 24),
                             BlocProvider<MyTeamsBloc>(
                               create: (_) => sl<MyTeamsBloc>()..add(LoadMyTeamsEvent()),
@@ -94,7 +102,10 @@ class _ProfilePageState extends State<ProfilePage> {
                               ),
                             ),
                             const SizedBox(height: 24),
-                            _buildActionButtons(context, profile),
+                            _buildActionButtons(context, profile)
+                                .animate()
+                                .fadeIn(duration: 600.ms, delay: 600.ms)
+                                .slideY(begin: 0.2, end: 0, curve: Curves.easeOutQuad),
                           ],
                         ),
                       ),
@@ -413,26 +424,25 @@ class _ProfilePageState extends State<ProfilePage> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return SizedBox(
       width: double.infinity,
-      child: ElevatedButton(
-        onPressed: onPressed,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Theme.of(context).colorScheme.surface,
-          foregroundColor: Theme.of(context).colorScheme.onSurface,
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-            side: BorderSide(
-              color: isDark ? AppColors.border : Colors.grey.shade300,
+        child: AnimatedBouncingButton(
+          onTap: onPressed,
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surface,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: isDark ? AppColors.border : Colors.grey.shade300,
+              ),
+            ),
+            alignment: Alignment.center,
+            child: Text(
+              label,
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
           ),
-          elevation: 0,
         ),
-
-        child: Text(
-          label,
-          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-        ),
-      ),
     );
   }
 

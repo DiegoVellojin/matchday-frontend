@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/theme/app_colors.dart';
@@ -28,7 +29,9 @@ class MyTeamsPage extends StatefulWidget {
   State<MyTeamsPage> createState() => _MyTeamsPageState();
 }
 
-class _MyTeamsPageState extends State<MyTeamsPage> {
+class _MyTeamsPageState extends State<MyTeamsPage> with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
   TeamFilter _activeFilter = TeamFilter.all;
   List<TeamEntity> _cachedTeams = [];
   List<PaymentEntity> _cachedPayments = [];
@@ -50,6 +53,7 @@ class _MyTeamsPageState extends State<MyTeamsPage> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return BlocBuilder<ProfileBloc, ProfileState>(
       builder: (context, profileState) {
         final int? currentUserId = profileState is ProfileLoaded ? profileState.profile.id : null;
@@ -150,7 +154,9 @@ class _MyTeamsPageState extends State<MyTeamsPage> {
                                     isCaptain,
                                     teamDebt != null,
                                     teamDebt?.monto ?? 0.0,
-                                  );
+                                  ).animate()
+                                   .fadeIn(duration: 400.ms, delay: (index * 50).ms)
+                                   .slideX(begin: 0.1, end: 0, curve: Curves.easeOutQuad);
                                 },
                               ),
                             );
@@ -229,18 +235,20 @@ class _MyTeamsPageState extends State<MyTeamsPage> {
                     width: 2,
                   ),
                 ),
-                child: CircleAvatar(
-                  radius: 26,
-                  backgroundColor: isDark ? AppColors.background : Colors.grey.shade100,
-                  backgroundImage: hasLogo ? NetworkImage(team.logo) : null,
-                  child: !hasLogo
-                      ? Text(
-                          team.logo.isNotEmpty ? team.logo : '⚽',
-                          style: const TextStyle(fontSize: 24),
-                        )
-                      : null,
-
-                ),
+                  child: Hero(
+                    tag: 'team_logo_${team.id}',
+                    child: CircleAvatar(
+                      radius: 26,
+                      backgroundColor: isDark ? AppColors.background : Colors.grey.shade100,
+                      backgroundImage: hasLogo ? NetworkImage(team.logo) : null,
+                      child: !hasLogo
+                          ? Text(
+                              team.logo.isNotEmpty ? team.logo : '⚽',
+                              style: const TextStyle(fontSize: 24),
+                            )
+                          : null,
+                    ),
+                  ),
               ),
               const SizedBox(width: 14),
               Expanded(

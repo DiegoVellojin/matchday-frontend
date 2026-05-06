@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import '../../../../core/widgets/animated_bouncing_button.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/matchday_loading_bar.dart';
 import '../../domain/entities/payment_entity.dart';
@@ -87,9 +89,14 @@ class _PaymentManagementPageState extends State<PaymentManagementPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _buildSummaryCard(totalDebt),
+                        _buildSummaryCard(totalDebt)
+                            .animate()
+                            .fadeIn(duration: 600.ms)
+                            .slideY(begin: -0.2, end: 0, curve: Curves.easeOutQuad),
                         const SizedBox(height: 20),
-                        _buildMicroFilters(colorScheme),
+                        _buildMicroFilters(colorScheme)
+                            .animate()
+                            .fadeIn(duration: 600.ms, delay: 200.ms),
                         const SizedBox(height: 16),
                         Expanded(
                           child: payments.isEmpty && state is! PaymentsLoading
@@ -108,7 +115,9 @@ class _PaymentManagementPageState extends State<PaymentManagementPage> {
                                         payments[index],
                                         colorScheme,
                                         isDark,
-                                      );
+                                      ).animate()
+                                       .fadeIn(duration: 400.ms, delay: (index * 50 + 400).ms)
+                                       .slideX(begin: 0.1, end: 0, curve: Curves.easeOutQuad);
                                     },
                                   ),
                                 ),
@@ -322,17 +331,29 @@ class _PaymentManagementPageState extends State<PaymentManagementPage> {
       );
     }
 
-    return ElevatedButton(
-      onPressed: () => _showUploadDialog(context, payment.idPartida, payment),
-      style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.redAccent,
-        foregroundColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    return AnimatedBouncingButton(
+      onTap: () => _showUploadDialog(context, payment.idPartida, payment),
+      child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      ),
-      child: const Text(
-        'Pagar',
-        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+        decoration: BoxDecoration(
+          color: Colors.redAccent,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.redAccent.withValues(alpha: 0.3),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: const Text(
+          'Pagar',
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 12,
+          ),
+        ),
       ),
     );
   }

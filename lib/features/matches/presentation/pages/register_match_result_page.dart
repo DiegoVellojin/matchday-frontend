@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../bloc/matches_bloc.dart';
 import '../../domain/entities/match_entity.dart';
+import '../../../../core/widgets/animated_bouncing_button.dart';
 
 class RegisterMatchResultPage extends StatefulWidget {
   final MatchEntity partido;
@@ -270,17 +271,24 @@ class _RegisterMatchResultPageState extends State<RegisterMatchResultPage> {
                 ),
                 const SizedBox(height: 24),
                 // Botón Confirmar
-                SizedBox(
-                  width: double.infinity,
-                  height: 56,
-                  child: ElevatedButton(
-                    onPressed: () => _handleSubmit(context),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: theme.colorScheme.primary,
-                      foregroundColor: theme.colorScheme.onPrimary,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                AnimatedBouncingButton(
+                  onTap: () => _handleSubmit(context),
+                  child: Container(
+                    width: double.infinity,
+                    height: 56,
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primary,
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    child: const Text('Confirmar Resultado', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                    alignment: Alignment.center,
+                    child: const Text(
+                      'Confirmar Resultado',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                        color: Colors.black,
+                      ),
+                    ),
                   ),
                 ),
               ],
@@ -318,7 +326,29 @@ class _RegisterMatchResultPageState extends State<RegisterMatchResultPage> {
             borderRadius: BorderRadius.circular(16),
           ),
           alignment: Alignment.center,
-          child: Text('$value', style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold, color: color)),
+          child: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 300),
+            transitionBuilder: (Widget child, Animation<double> animation) {
+              return FadeTransition(
+                opacity: animation,
+                child: SlideTransition(
+                  position: Tween<Offset>(
+                    begin: const Offset(0, 0.5),
+                    end: Offset.zero,
+                  ).animate(animation),
+                  child: child,
+                ),
+              );
+            },
+            child: Text(
+              '$value',
+              key: ValueKey<int>(value),
+              style: theme.textTheme.headlineMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
+            ),
+          ),
         ),
         const SizedBox(height: 12),
         IconButton(

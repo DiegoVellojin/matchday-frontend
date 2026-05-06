@@ -1,373 +1,46 @@
-import 'package:dio/dio.dart';
-import 'package:get_it/get_it.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter/material.dart';
 
-
-// Importaciones Core
-import '../network/network_robot.dart';
-import '../theme/bloc/theme_bloc.dart';
+import 'service_locator.dart';
+export 'service_locator.dart';
 import '../storage/secure_storage_service.dart';
-import '../storage/firebase_storage_service.dart';
+import '../theme/bloc/theme_bloc.dart';
 
-
-// Importaciones de Auth
-import '../../features/auth/application/usecases/sign_in_with_google_usecase.dart';
-import '../../features/auth/application/usecases/sign_in_with_email_usecase.dart';
-import '../../features/auth/application/usecases/register_usecase.dart';
-import '../../features/auth/application/usecases/forgot_password_usecase.dart';
-import '../../features/auth/application/usecases/reset_password_usecase.dart';
-import '../../features/auth/domain/repositories/auth_repository.dart';
-import '../../features/auth/infrastructure/datasources/auth_remote_data_source.dart';
-import '../../features/auth/infrastructure/repositories/auth_repository_impl.dart';
-import '../../features/auth/presentation/bloc/auth_bloc.dart';
-
-// Importaciones de Teams Discovery (NUEVO)
-import '../../features/teams/application/usecases/get_discoverable_teams_usecase.dart';
-import '../../features/teams/application/usecases/request_join_team_usecase.dart';
-import '../../features/teams/application/usecases/create_team_usecase.dart';
-import '../../features/teams/application/usecases/get_team_by_id_usecase.dart';
-import '../../features/teams/application/usecases/get_team_members_usecase.dart';
-import '../../features/teams/application/usecases/get_pending_requests_usecase.dart';
-import '../../features/teams/application/usecases/respond_to_join_request_usecase.dart';
-import '../../features/teams/application/usecases/get_sports_usecase.dart';
-import '../../features/teams/application/usecases/update_team_usecase.dart';
-import '../../features/teams/application/usecases/delete_team_usecase.dart';
-import '../../features/teams/application/usecases/transfer_captain_usecase.dart';
-import '../../features/teams/application/usecases/leave_team_usecase.dart';
-import '../../features/teams/application/usecases/kick_member_usecase.dart';
-import '../../features/teams/application/usecases/get_my_teams_usecase.dart';
-
-
-
-
-
-import '../../features/teams/domain/repositories/i_teams_repository.dart';
-import '../../features/teams/infrastructure/datasources/teams_remote_data_source.dart';
-import '../../features/teams/infrastructure/repositories/teams_repository_impl.dart';
-import '../../features/teams/presentation/bloc/teams_bloc.dart';
-import '../../features/teams/presentation/bloc/my_teams_bloc.dart';
-
-// Importaciones de Notificaciones (NUEVO)
-import '../../features/notifications/application/usecases/get_notifications_usecase.dart';
-import '../../features/notifications/application/usecases/mark_notification_as_read_usecase.dart';
-import '../../features/notifications/application/usecases/mark_all_notifications_as_read_usecase.dart';
-
-import '../../features/notifications/domain/repositories/i_notification_repository.dart';
-import '../../features/notifications/infrastructure/datasources/notification_remote_data_source.dart';
-import '../../features/notifications/infrastructure/repositories/notification_repository_impl.dart';
-import '../../features/notifications/presentation/bloc/notifications_bloc.dart';
-
-// Importaciones de Perfil (NUEVO)
-import '../../features/profile/application/usecases/get_user_profile_usecase.dart';
-import '../../features/profile/application/usecases/update_user_profile_usecase.dart';
-
-import '../../features/profile/domain/repositories/i_profile_repository.dart';
-
-import '../../features/profile/infrastructure/datasources/profile_remote_data_source.dart';
-import '../../features/profile/infrastructure/repositories/profile_repository_impl.dart';
-import '../../features/profile/presentation/bloc/profile_bloc.dart';
-
-// Importaciones de Pagos (NUEVO)
-import '../../features/payments/application/usecases/get_my_payments_usecase.dart';
-import '../../features/payments/application/usecases/upload_receipt_usecase.dart';
-import '../../features/payments/application/usecases/verify_user_payment_usecase.dart';
-import '../../features/payments/domain/repositories/i_payments_repository.dart';
-import '../../features/payments/infrastructure/datasources/payments_remote_data_source.dart';
-import '../../features/payments/infrastructure/repositories/payments_repository_impl.dart';
-import '../../features/payments/presentation/bloc/payments_bloc.dart';
-// Importaciones de Partidos (NUEVO)
-import '../../features/matches/domain/repositories/matches_repository.dart';
-import '../../features/matches/infrastructure/datasources/matches_remote_datasource.dart';
-import '../../features/matches/infrastructure/repositories/matches_repository_impl.dart';
-import '../../features/matches/application/usecases/matches_usecases.dart';
-import '../../features/matches/presentation/bloc/matches_bloc.dart';
-
-// Importaciones de Catalogs (NUEVO)
-import '../../features/catalogs/domain/repositories/i_catalogs_repository.dart';
-import '../../features/catalogs/infrastructure/datasources/catalogs_remote_datasource.dart';
-import '../../features/catalogs/infrastructure/repositories/catalogs_repository_impl.dart';
-import '../../features/catalogs/application/usecases/get_sports_usecase.dart' as cat_sports;
-import '../../features/catalogs/application/usecases/get_regions_usecase.dart';
-import '../../features/catalogs/application/usecases/get_canchas_usecase.dart';
-import '../../features/catalogs/application/usecases/create_cancha_usecase.dart';
-import '../../features/catalogs/infrastructure/services/location_service.dart';
-import '../../features/catalogs/presentation/bloc/add_court/add_court_bloc.dart';
-
-
-
-// Importaciones de Rankings (NUEVO)
-import '../../features/rankings/domain/repositories/i_rankings_repository.dart';
-import '../../features/rankings/infrastructure/datasources/rankings_remote_datasource.dart';
-import '../../features/rankings/infrastructure/repositories/rankings_repository_impl.dart';
-import '../../features/rankings/application/usecases/get_team_leaderboard_usecase.dart';
-import '../../features/rankings/presentation/bloc/leaderboard_bloc.dart';
-
-// sl = Service Locator
-final sl = GetIt.instance;
+// Importaciones de Módulos DI
+import 'modules/core_module.dart';
+import 'modules/auth_module.dart';
+import 'modules/teams_module.dart';
+import 'modules/matches_module.dart';
+import 'modules/payments_module.dart';
+import 'modules/notifications_module.dart';
+import 'modules/profile_module.dart';
+import 'modules/catalogs_module.dart';
+import 'modules/rankings_module.dart';
 
 Future<void> init() async {
-  // ===========================================================================
-  // 5. CORE & PAQUETES EXTERNOS
-  // ===========================================================================
-  sl.registerLazySingleton<FlutterSecureStorage>(
-    () => const FlutterSecureStorage(),
-  );
-  sl.registerLazySingleton<FirebaseStorageService>(
-    () => FirebaseStorageService(),
-  );
-  sl.registerLazySingleton<SecureStorageService>(
-    () => SecureStorageService(sl()),
-  );
-
-
-  sl.registerLazySingleton<Dio>(() => Dio());
-  sl.registerLazySingleton<NetworkRobot>(() => NetworkRobot(sl(), sl()));
-
-  // ===========================================================================
-  // 4. DATA SOURCES
-  // ===========================================================================
-  // Auth
-  sl.registerLazySingleton(() => AuthRemoteDataSource(dio: sl()));
-
-  // Teams Discovery (NUEVO)
-  sl.registerLazySingleton(
-    () => TeamsRemoteDataSource(networkRobot: sl()),
-  );
-
-  // Notificaciones
-  sl.registerLazySingleton(
-    () => NotificationRemoteDataSource(networkRobot: sl()),
-  );
-
-  // Perfil
-  sl.registerLazySingleton(
-    () => ProfileRemoteDataSource(networkRobot: sl()),
-  );
-
-
-  // Pagos (NUEVO)
-  sl.registerLazySingleton(() => PaymentsRemoteDataSource(sl()));
-  // Partidos (NUEVO)
-  sl.registerLazySingleton<MatchesRemoteDataSource>(() => MatchesRemoteDataSourceImpl(sl()));
-
-  // Catalogs (NUEVO)
-  sl.registerLazySingleton<CatalogsRemoteDataSource>(() => CatalogsRemoteDataSourceImpl(sl()));
-
-
-
+  // 1. Inicializar Módulos de cada Feature (Orden de dependencia: Core primero)
+  await initCore();
   
-  // Rankings (NUEVO)
-  sl.registerLazySingleton(() => RankingsRemoteDataSource(sl()));
+  // 2. Especial: Inicialización del Tema (Requiere await para leer de disco)
+  await _initTheme();
 
-  // ===========================================================================
-  // 3. REPOSITORIOS
-  // ===========================================================================
-  // Auth
-  sl.registerLazySingleton<IAuthRepository>(
-    () =>
-        AuthRepositoryImpl(remoteDataSource: sl(), secureStorageService: sl()),
-  );
+  // 3. Inicializar el resto de features en paralelo o secuencia
+  await initAuth();
+  await initTeams();
+  await initMatches();
+  await initPayments();
+  await initNotifications();
+  await initProfile();
+  await initCatalogs();
+  await initRankings();
+}
 
-  // Teams Discovery (NUEVO)
-  sl.registerLazySingleton<ITeamsRepository>(
-    () => TeamsRepositoryImpl(remoteDataSource: sl()),
-  );
-
-  // Notificaciones
-  sl.registerLazySingleton<INotificationRepository>(
-    () => NotificationRepositoryImpl(remoteDataSource: sl()),
-  );
-
-  // Perfil
-  sl.registerLazySingleton<IProfileRepository>(
-    () => ProfileRepositoryImpl(remoteDataSource: sl()),
-  );
-
-
-  // Pagos (NUEVO)
-  sl.registerLazySingleton<IPaymentsRepository>(() => PaymentsRepositoryImpl(sl()));
-  // Partidos (NUEVO)
-  sl.registerLazySingleton<IMatchesRepository>(() => MatchesRepositoryImpl(sl()));
-
-  // Catalogs (NUEVO)
-  sl.registerLazySingleton<ICatalogsRepository>(() => CatalogsRepositoryImpl(sl()));
-
-
-
-
-  
-  // Rankings (NUEVO)
-  sl.registerLazySingleton<IRankingsRepository>(() => RankingsRepositoryImpl(sl()));
-
-  // ===========================================================================
-  // 2. CASOS DE USO
-  // ===========================================================================
-
-  // Rankings (NUEVO)
-  sl.registerLazySingleton(() => GetTeamLeaderboardUseCase(sl()));
-  // Auth
-  sl.registerLazySingleton(() => SignInWithGoogleUseCase(sl()));
-  sl.registerLazySingleton(() => SignInWithEmailUseCase(sl()));
-  sl.registerLazySingleton(() => RegisterUseCase(sl()));
-  sl.registerLazySingleton(() => ForgotPasswordUseCase(sl()));
-  sl.registerLazySingleton(() => ResetPasswordUseCase(sl()));
-
-  // Teams Discovery (NUEVO)
-  sl.registerLazySingleton(() => GetDiscoverableTeamsUseCase(sl()));
-  sl.registerLazySingleton(() => GetMyTeamsUseCase(sl()));
-  sl.registerLazySingleton(() => RequestJoinTeamUseCase(sl()));
-  sl.registerLazySingleton(() => CreateTeamUseCase(sl()));
-  sl.registerLazySingleton(() => GetTeamByIdUseCase(sl()));
-  sl.registerLazySingleton(() => GetTeamMembersUseCase(sl()));
-  sl.registerLazySingleton(() => GetPendingRequestsUseCase(sl()));
-  sl.registerLazySingleton(() => RespondToJoinRequestUseCase(sl()));
-  sl.registerLazySingleton(() => GetSportsUseCase(sl()));
-  sl.registerLazySingleton(() => UpdateTeamUseCase(sl()));
-  sl.registerLazySingleton(() => DeleteTeamUseCase(sl()));
-  sl.registerLazySingleton(() => TransferCaptainUseCase(sl()));
-  sl.registerLazySingleton(() => LeaveTeamUseCase(sl()));
-  sl.registerLazySingleton(() => KickMemberUseCase(sl()));
-
-
-
-
-  // Notificaciones
-  sl.registerLazySingleton(() => GetNotificationsUseCase(sl()));
-  sl.registerLazySingleton(() => MarkNotificationAsReadUseCase(sl()));
-  sl.registerLazySingleton(() => MarkAllNotificationsAsReadUseCase(sl()));
-
-
-  // Perfil
-  sl.registerLazySingleton(() => GetUserProfileUseCase(sl()));
-  sl.registerLazySingleton(() => UpdateUserProfileUseCase(sl()));
-
-
-
-  // Pagos (NUEVO)
-  sl.registerLazySingleton(() => GetMyPaymentsUseCase(sl()));
-  sl.registerLazySingleton(() => UploadReceiptUseCase(sl()));
-  sl.registerLazySingleton(() => VerifyUserPaymentUseCase(sl()));
-  // Partidos (NUEVO)
-  sl.registerLazySingleton(() => GetMatchesUseCase(sl()));
-  sl.registerLazySingleton(() => GetMatchDetailsUseCase(sl()));
-  sl.registerLazySingleton(() => CreateMatchUseCase(sl()));
-  sl.registerLazySingleton(() => AcceptEncounterUseCase(sl()));
-  sl.registerLazySingleton(() => ProposeTermsUseCase(sl()));
-  sl.registerLazySingleton(() => JoinMatchUseCase(sl()));
-  sl.registerLazySingleton(() => ConfigureMatchUseCase(sl()));
-  sl.registerLazySingleton(() => MarkTeamReadyUseCase(sl()));
-  sl.registerLazySingleton(() => RegisterMatchResultUseCase(sl()));
-  sl.registerLazySingleton(() => CancelMatchUseCase(sl()));
-  sl.registerLazySingleton(() => UpdateMatchUseCase(sl()));
-
-  // Catalogs (NUEVO)
-  sl.registerLazySingleton(() => LocationService(dio: sl()));
-  sl.registerLazySingleton(() => cat_sports.GetSportsUseCase(sl()));
-  sl.registerLazySingleton(() => GetRegionsUseCase(sl()));
-  sl.registerLazySingleton(() => GetCanchasUseCase(sl()));
-  sl.registerLazySingleton(() => CreateCanchaUseCase(sl()));
-
-
-
-
-
-  // ===========================================================================
-  // 1. BLOCs
-  // ===========================================================================
-
-  // Rankings (NUEVO)
-  sl.registerFactory(
-    () => LeaderboardBloc(getTeamLeaderboardUseCase: sl()),
-  );
-  // Cargar el modo de tema guardado
+Future<void> _initTheme() async {
+  // Cargamos el modo de tema guardado al arrancar
+  // Usamos una instancia temporal de storage para la lectura inicial
   final secureStorage = SecureStorageService(const FlutterSecureStorage());
   final isDark = await secureStorage.isDarkMode();
   final initialThemeMode = isDark ? ThemeMode.dark : ThemeMode.light;
 
   sl.registerLazySingleton(() => ThemeBloc(initialThemeMode, sl()));
-
-
-  // Notificaciones
-  sl.registerFactory(
-    () => NotificationsBloc(
-      getNotificationsUseCase: sl(),
-      markNotificationAsReadUseCase: sl(),
-      markAllNotificationsAsReadUseCase: sl(),
-
-    ),
-  );
-
-  // Perfil
-  sl.registerFactory(
-    () => ProfileBloc(
-      getUserProfileUseCase: sl(),
-      updateUserProfileUseCase: sl(),
-      secureStorageService: sl(),
-    ),
-
-  );
-
-
-
-  // Auth
-
-  sl.registerFactory(
-    () => AuthBloc(
-      signInWithGoogleUseCase: sl(),
-      signInWithEmailUseCase: sl(),
-      registerUseCase: sl(),
-      forgotPasswordUseCase: sl(),
-      resetPasswordUseCase: sl(),
-    ),
-  );
-
-  // Teams Discovery (NUEVO)
-  sl.registerFactory(
-    () => TeamsBloc(
-      getTeamsUseCase: sl(),
-      requestJoinUseCase: sl(),
-      getSportsUseCase: sl(),
-    ),
-  );
-
-  // Mis Equipos (NUEVO)
-  sl.registerFactory(
-    () => MyTeamsBloc(
-      getMyTeamsUseCase: sl(),
-      kickMemberUseCase: sl(),
-    ),
-  );
-
-  // Pagos (NUEVO)
-  sl.registerFactory(
-    () => PaymentsBloc(
-      getMyPaymentsUseCase: sl(),
-      uploadReceiptUseCase: sl(),
-      verifyUserPaymentUseCase: sl(),
-    ),
-  );
-  // Partidos (NUEVO)
-  sl.registerFactory(
-    () => MatchesBloc(
-      getMatchesUseCase: sl(),
-      getMatchDetailsUseCase: sl(),
-      createMatchUseCase: sl(),
-      proposeTermsUseCase: sl(),
-      configureMatchUseCase: sl(),
-      markTeamReadyUseCase: sl(),
-      registerMatchResultUseCase: sl(),
-      acceptEncounterUseCase: sl(),
-      cancelMatchUseCase: sl(),
-      updateMatchUseCase: sl(),
-    ),
-  );
-
-  // Catalogs (NUEVO)
-  sl.registerFactory(
-    () => AddCourtBloc(
-      locationService: sl(),
-      createCanchaUseCase: sl(),
-    ),
-  );
 }

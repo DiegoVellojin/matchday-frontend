@@ -22,13 +22,21 @@ class MainHubPage extends StatefulWidget {
 
 class _MainHubPageState extends State<MainHubPage> {
   int _currentIndex = 0;
+  late PageController _pageController;
 
   @override
   void initState() {
     super.initState();
+    _pageController = PageController(initialPage: _currentIndex);
     // Aseguramos que el perfil esté cargado para que los roles (Capitán/Jugador) sean correctos
     context.read<ProfileBloc>().add(LoadProfileEvent());
     _setupPushNotifications();
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
   }
 
   Future<void> _setupPushNotifications() async {
@@ -78,7 +86,16 @@ class _MainHubPageState extends State<MainHubPage> {
         child: Column(
           children: [
             const MatchDayAppBar(),
-            Expanded(child: _pages[_currentIndex]),
+            Expanded(
+              child: PageView(
+                controller: _pageController,
+                onPageChanged: (index) {
+                  setState(() => _currentIndex = index);
+                },
+                physics: const BouncingScrollPhysics(),
+                children: _pages,
+              ),
+            ),
           ],
         ),
       ),
@@ -91,7 +108,13 @@ class _MainHubPageState extends State<MainHubPage> {
           ),
           child: BottomNavigationBar(
             currentIndex: _currentIndex,
-            onTap: (index) => setState(() => _currentIndex = index),
+            onTap: (index) {
+              _pageController.animateToPage(
+                index,
+                duration: const Duration(milliseconds: 400),
+                curve: Curves.easeOutQuart,
+              );
+            },
             // Usa el color de fondo configurado en el AppTheme
             backgroundColor: Theme.of(context).scaffoldBackgroundColor,
             type: BottomNavigationBarType.fixed,

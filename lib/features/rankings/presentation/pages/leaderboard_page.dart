@@ -1,16 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../bloc/leaderboard_bloc.dart';
 import '../bloc/leaderboard_event.dart';
 import '../bloc/leaderboard_state.dart';
 import '../../domain/entities/leaderboard_entry_entity.dart';
 
-class LeaderboardPage extends StatelessWidget {
+class LeaderboardPage extends StatefulWidget {
   const LeaderboardPage({super.key});
 
   @override
+  State<LeaderboardPage> createState() => _LeaderboardPageState();
+}
+
+class _LeaderboardPageState extends State<LeaderboardPage> with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
   Widget build(BuildContext context) {
+    super.build(context);
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     
@@ -65,12 +75,18 @@ class LeaderboardPage extends StatelessWidget {
                     
                     // Podio Top 3
                     if (state.leaderboard.isNotEmpty)
-                      _buildPodium(state.leaderboard, isDark, surfaceColor),
+                      _buildPodium(state.leaderboard, isDark, surfaceColor)
+                          .animate()
+                          .fadeIn(duration: 600.ms)
+                          .slideY(begin: 0.1, end: 0),
                     
                     const SizedBox(height: 32),
                     
                     // Lista del resto (Clasificación General)
-                    _buildList(state.leaderboard, isDark, surfaceColor, borderColor, textMainColor, listHeaderColor),
+                    _buildList(state.leaderboard, isDark, surfaceColor, borderColor, textMainColor, listHeaderColor)
+                        .animate()
+                        .fadeIn(duration: 600.ms, delay: 300.ms)
+                        .slideY(begin: 0.1, end: 0),
                     
                     const SizedBox(height: 24), // padding inferior
                   ],

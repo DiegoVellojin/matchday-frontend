@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import 'package:shimmer/shimmer.dart';
+import '../../../../core/widgets/animated_bouncing_button.dart';
 import '../../domain/repositories/matches_repository.dart';
 import '../../../profile/presentation/bloc/profile_bloc.dart';
 import '../../../profile/presentation/bloc/profile_state.dart';
@@ -229,14 +232,17 @@ class _CaptainMatchDashboardPageState extends State<CaptainMatchDashboardPage>
                         color: accent.withValues(alpha: 0.2),
                         shape: BoxShape.circle,
                       ),
-                      child: ClipOval(
-                        child: (match.logoEquipoA != null && match.logoEquipoA!.startsWith('http'))
-                            ? Image.network(
-                                match.logoEquipoA!,
-                                fit: BoxFit.cover,
-                                errorBuilder: (ctx, err, st) => const Center(child: Text('⚽', style: TextStyle(fontSize: 20))),
-                              )
-                            : const Center(child: Text('⚽', style: TextStyle(fontSize: 20))),
+                      child: Hero(
+                        tag: 'team_logo_${match.idEquipoA}',
+                        child: ClipOval(
+                          child: (match.logoEquipoA != null && match.logoEquipoA!.startsWith('http'))
+                              ? Image.network(
+                                  match.logoEquipoA!,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (ctx, err, st) => const Center(child: Text('⚽', style: TextStyle(fontSize: 20))),
+                                )
+                              : const Center(child: Text('⚽', style: TextStyle(fontSize: 20))),
+                        ),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -346,7 +352,41 @@ class _CaptainMatchDashboardPageState extends State<CaptainMatchDashboardPage>
 
   Widget _buildPlayersList(List<MatchPlayer> players, double cuota, bool isMyTeam, Color accent, Color surface, Color textMain, Color textMuted) {
     if (_isLoadingPlayers) {
-      return Center(child: CircularProgressIndicator(color: accent));
+      return ListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: 6,
+        itemBuilder: (context, index) => Shimmer.fromColors(
+          baseColor: surface,
+          highlightColor: Theme.of(context).dividerColor,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8.0),
+            child: Row(
+              children: [
+                const CircleAvatar(radius: 20),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Container(
+                    height: 16,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 40),
+                Container(
+                  width: 60,
+                  height: 24,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
     }
 
     return ListView(
@@ -395,7 +435,14 @@ class _CaptainMatchDashboardPageState extends State<CaptainMatchDashboardPage>
                   child: Center(child: Text('No hay jugadores aún', style: TextStyle(color: textMuted))),
                 )
               else
-                ...players.map((p) => _buildPlayerRow(p, cuota, isMyTeam, accent, textMain, textMuted)),
+                ...players.asMap().entries.map((entry) {
+                  final index = entry.key;
+                  final p = entry.value;
+                  return _buildPlayerRow(p, cuota, isMyTeam, accent, textMain, textMuted)
+                      .animate()
+                      .fadeIn(duration: 400.ms, delay: (index * 50).ms)
+                      .slideY(begin: 0.1, end: 0, curve: Curves.easeOutQuad);
+                }),
             ],
           ),
         ),
@@ -411,14 +458,17 @@ class _CaptainMatchDashboardPageState extends State<CaptainMatchDashboardPage>
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         children: [
-          CircleAvatar(
-            backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-            backgroundImage: (player.urlFotoPerfil?.startsWith('http') ?? false)
-                ? NetworkImage(player.urlFotoPerfil!)
-                : null,
-            child: !(player.urlFotoPerfil?.startsWith('http') ?? false)
-                ? const Text('👤', style: TextStyle(fontSize: 18))
-                : null,
+          Hero(
+            tag: 'player_avatar_${player.idUsuario}',
+            child: CircleAvatar(
+              backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+              backgroundImage: (player.urlFotoPerfil?.startsWith('http') ?? false)
+                  ? NetworkImage(player.urlFotoPerfil!)
+                  : null,
+              child: !(player.urlFotoPerfil?.startsWith('http') ?? false)
+                  ? const Text('👤', style: TextStyle(fontSize: 18))
+                  : null,
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -480,28 +530,35 @@ class _CaptainMatchDashboardPageState extends State<CaptainMatchDashboardPage>
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          SizedBox(
-            width: double.infinity,
-            height: 60,
-            child: ElevatedButton(
-              onPressed: everyonePaid
-                  ? () => context.read<MatchesBloc>().add(MarkTeamReadyEvent(widget.matchEntity.id))
-                  : null,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: everyonePaid ? accent : Theme.of(context).dividerColor,
-                foregroundColor: everyonePaid ? Colors.black : textMuted,
-                disabledBackgroundColor: Theme.of(context).dividerColor,
-                disabledForegroundColor: textMuted,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                elevation: everyonePaid ? 20 : 0,
-                shadowColor: accent.withValues(alpha: 0.5),
+          AnimatedBouncingButton(
+            onTap: everyonePaid
+                ? () => context.read<MatchesBloc>().add(MarkTeamReadyEvent(widget.matchEntity.id))
+                : null,
+            child: Container(
+              width: double.infinity,
+              height: 60,
+              decoration: BoxDecoration(
+                color: everyonePaid ? accent : Theme.of(context).dividerColor,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: everyonePaid ? [
+                  BoxShadow(
+                    color: accent.withValues(alpha: 0.3),
+                    blurRadius: 15,
+                    spreadRadius: 2,
+                  )
+                ] : [],
               ),
+              alignment: Alignment.center,
               child: Text(
                 everyonePaid ? '✓ Confirmar Equipo Ready' : '⏳ Esperando Pagos ($paidCount/$totalCount)',
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                style: TextStyle(
+                  fontWeight: FontWeight.bold, 
+                  fontSize: 16,
+                  color: everyonePaid ? Colors.black : textMuted,
+                ),
               ),
             ),
-          ),
+          ).withPulseGlow(color: accent, enabled: everyonePaid),
           if (everyonePaid)
             Padding(
               padding: const EdgeInsets.only(top: 8),

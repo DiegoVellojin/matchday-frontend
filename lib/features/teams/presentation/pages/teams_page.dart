@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
-import '../../../../core/di/injection_container.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../bloc/teams_bloc.dart';
 import '../bloc/teams_event.dart';
@@ -12,17 +12,23 @@ import '../widgets/team_discovery_card.dart';
 import '../../../../core/widgets/matchday_search_bar.dart';
 import '../../../../core/widgets/matchday_filter_chips.dart';
 import '../../../../core/widgets/matchday_loading_bar.dart';
+import '../../../../core/widgets/animated_bouncing_button.dart';
 
-class TeamsPage extends StatelessWidget {
+class TeamsPage extends StatefulWidget {
   const TeamsPage({super.key});
 
   @override
+  State<TeamsPage> createState() => _TeamsPageState();
+}
+
+class _TeamsPageState extends State<TeamsPage> with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
   Widget build(BuildContext context) {
-    // Inyectamos el BLoC y cargamos los equipos inmediatamente
-    return BlocProvider(
-      create: (_) => sl<TeamsBloc>()..add(LoadTeamsEvent()),
-      child: const _TeamsView(),
-    );
+    super.build(context); // Importante para KeepAlive
+    return const _TeamsView();
   }
 }
 
@@ -419,7 +425,9 @@ class _TeamsViewState extends State<_TeamsView> {
                           onRequestJoin: () {
                             context.read<TeamsBloc>().add(RequestJoinTeamEvent(teamId: team.id));
                           },
-                        );
+                        ).animate()
+                         .fadeIn(duration: 400.ms, delay: (index * 50).ms)
+                         .scale(begin: const Offset(0.9, 0.9), end: const Offset(1, 1), curve: Curves.easeOutBack);
                       },
                     ),
                   );
@@ -430,15 +438,35 @@ class _TeamsViewState extends State<_TeamsView> {
         ),
       ),
 
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => context.push('/crear-equipo'),
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.black,
-        elevation: 4,
-        icon: const Icon(Icons.add),
-        label: const Text(
-          'Crear Equipo',
-          style: TextStyle(fontWeight: FontWeight.bold),
+      floatingActionButton: AnimatedBouncingButton(
+        onTap: () => context.push('/crear-equipo'),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          decoration: BoxDecoration(
+            color: AppColors.primary,
+            borderRadius: BorderRadius.circular(30),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.primary.withValues(alpha: 0.3),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: const Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.add, color: Colors.black),
+              SizedBox(width: 8),
+              Text(
+                'Crear Equipo',
+                style: TextStyle(
+                  color: Colors.black,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../core/widgets/animated_bouncing_button.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -27,7 +29,9 @@ class MatchesPage extends StatefulWidget {
   State<MatchesPage> createState() => _MatchesPageState();
 }
 
-class _MatchesPageState extends State<MatchesPage> {
+class _MatchesPageState extends State<MatchesPage> with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
   int? selectedSportId;
   int? selectedRegionId;
   int? selectedCanchaId;
@@ -78,6 +82,7 @@ class _MatchesPageState extends State<MatchesPage> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
@@ -213,7 +218,10 @@ class _MatchesPageState extends State<MatchesPage> {
                         separatorBuilder: (context, index) => const SizedBox(height: 16),
                         itemBuilder: (context, index) {
                           final match = filteredMatches[index];
-                          return _buildMatchCard(match, isDark, currentUserId);
+                          return _buildMatchCard(match, isDark, currentUserId)
+                              .animate()
+                              .fadeIn(duration: 400.ms, delay: (index * 100).ms)
+                              .slideY(begin: 0.1, end: 0, curve: Curves.easeOutQuad);
                         },
                       ),
                     );
@@ -223,11 +231,17 @@ class _MatchesPageState extends State<MatchesPage> {
             ),
           ],
         ),
-        floatingActionButton: FloatingActionButton(
-          onPressed: () => context.push('/crear-partido'),
-          backgroundColor: AppColors.primary,
-          shape: const CircleBorder(),
-          child: const Icon(Icons.add, color: Colors.black, size: 30),
+        floatingActionButton: AnimatedBouncingButton(
+          onTap: () => context.push('/crear-partido'),
+          child: Container(
+            width: 56,
+            height: 56,
+            decoration: const BoxDecoration(
+              color: AppColors.primary,
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.add, color: Colors.black, size: 30),
+          ),
         ),
       );
   }
@@ -588,19 +602,22 @@ class _MatchesPageState extends State<MatchesPage> {
                 color: Theme.of(context).scaffoldBackgroundColor,
                 shape: BoxShape.circle,
               ),
-              child: ClipOval(
-                child: match.logoEquipoA != null
-                    ? Image.network(
-                        match.logoEquipoA!,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) => const Center(child: Text('⚽', style: TextStyle(fontSize: 24))),
-                      )
-                    : const Center(
-                        child: Text(
-                          '⚽',
-                          style: TextStyle(fontSize: 24),
+              child: Hero(
+                tag: 'team_logo_${match.idEquipoA}',
+                child: ClipOval(
+                  child: match.logoEquipoA != null
+                      ? Image.network(
+                          match.logoEquipoA!,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) => const Center(child: Text('⚽', style: TextStyle(fontSize: 24))),
+                        )
+                      : const Center(
+                          child: Text(
+                            '⚽',
+                            style: TextStyle(fontSize: 24),
+                          ),
                         ),
-                      ),
+                ),
               ),
             ),
           ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -191,7 +192,9 @@ class _NotificationsViewState extends State<_NotificationsView> {
                                 ),
                             ],
                           ),
-                        ),
+                        ).animate()
+                         .fadeIn(duration: 400.ms, delay: (index * 40).ms)
+                         .slideX(begin: 0.1, end: 0),
                       );
                     },
                   ),

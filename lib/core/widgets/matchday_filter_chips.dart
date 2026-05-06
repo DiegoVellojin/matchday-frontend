@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 class MatchDayFilterChips<T> extends StatelessWidget {
   final List<FilterOption<T>> options;
@@ -72,7 +73,8 @@ class MatchDayFilterChips<T> extends StatelessWidget {
               onSelected: (selected) {
                 onSelected(option.value);
               },
-            ),
+            ).animate(target: isSelected ? 1 : 0)
+             .scale(duration: 200.ms, begin: const Offset(1, 1), end: const Offset(1.05, 1.05), curve: Curves.easeOutBack),
           );
         },
       ),
