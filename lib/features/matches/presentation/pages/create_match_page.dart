@@ -580,7 +580,7 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
                 child: OutlinedButton(
                   onPressed: () {
                     Navigator.pop(context);
-                    _submitCreate();
+                    _submit();
                   },
                   style: OutlinedButton.styleFrom(
                     side: const BorderSide(color: AppColors.primary),

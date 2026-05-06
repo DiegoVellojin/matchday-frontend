@@ -113,7 +113,6 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> {
 
   Widget _buildContent(BuildContext context, MatchEntity match, bool isDark) {
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
     final profileState = context.read<ProfileBloc>().state;
     int? currentUserId;
     if (profileState is ProfileLoaded) {
@@ -155,7 +154,7 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> {
       expandedHeight: 200.0,
       floating: false,
       pinned: true,
-      backgroundColor: AppColors.surfaceDark,
+      backgroundColor: AppColors.surface,
       flexibleSpace: FlexibleSpaceBar(
         title: Text('Partido #${match.id}', 
           style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white, shadows: [Shadow(color: Colors.black, blurRadius: 4)])),
@@ -230,7 +229,7 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: isDark 
-            ? [AppColors.surfaceDark, AppColors.surfaceDark.withValues(alpha: 0.8)]
+            ? [AppColors.surface, AppColors.surface.withValues(alpha: 0.8)]
             : [Colors.white, Colors.white.withValues(alpha: 0.9)],
         ),
         borderRadius: BorderRadius.circular(24),
@@ -550,7 +549,7 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> {
           decoration: InputDecoration(
             prefixIcon: Icon(icon, color: textMuted, size: 20),
             filled: true,
-            fillColor: isDark ? AppColors.surfaceDark : Colors.grey[100],
+            fillColor: isDark ? AppColors.surface : Colors.grey[100],
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
           ),
           style: TextStyle(color: theme.colorScheme.onSurface),
