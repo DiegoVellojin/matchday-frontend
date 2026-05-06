@@ -259,11 +259,15 @@ class _MyTeamsPageState extends State<MyTeamsPage> {
                     const SizedBox(height: 4),
                     Row(
                       children: [
-                        Text(
-                          team.sportName,
-                          style: const TextStyle(
-                            color: AppColors.textMuted,
-                            fontSize: 13,
+                        Flexible(
+                          child: Text(
+                            team.sportName,
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
+                            style: const TextStyle(
+                              color: AppColors.textMuted,
+                              fontSize: 13,
+                            ),
                           ),
                         ),
                         const SizedBox(width: 8),

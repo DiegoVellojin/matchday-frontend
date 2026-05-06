@@ -231,7 +231,16 @@ class _TeamDashboardPageState extends State<TeamDashboardPage> {
             child: ClipRRect(
               borderRadius: BorderRadius.circular(40),
               child: team.logo.startsWith('http')
-                  ? Image.network(team.logo, fit: BoxFit.cover)
+                  ? Image.network(
+                      team.logo,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => Center(
+                        child: Text(
+                          team.logo.isNotEmpty && team.logo.length < 4 ? team.logo : '🛡️',
+                          style: const TextStyle(fontSize: 40),
+                        ),
+                      ),
+                    )
                   : Center(
                       child: Text(
                         team.logo.isNotEmpty ? team.logo : '🛡️',
