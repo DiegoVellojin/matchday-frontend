@@ -19,6 +19,8 @@ abstract class MatchesRemoteDataSource {
   Future<void> registerResult(int matchId, int golesA, int golesB);
   Future<void> joinMatch(int matchId, {int? teamId});
   Future<List<MatchPlayerModel>> getMatchPlayers(int matchId);
+  Future<void> cancelMatch(int matchId);
+  Future<MatchModel> updateMatch(MatchModel match);
 }
 
 class MatchesRemoteDataSourceImpl implements MatchesRemoteDataSource {
@@ -110,5 +112,16 @@ class MatchesRemoteDataSourceImpl implements MatchesRemoteDataSource {
   Future<List<MatchPlayerModel>> getMatchPlayers(int matchId) async {
     final response = await network.get('/matches/$matchId/players');
     return (response.data as List).map((e) => MatchPlayerModel.fromJson(e)).toList();
+  }
+
+  @override
+  Future<void> cancelMatch(int matchId) async {
+    await network.delete('/matches/$matchId');
+  }
+
+  @override
+  Future<MatchModel> updateMatch(MatchModel match) async {
+    final response = await network.put('/matches/${match.id}', data: match.toJson());
+    return MatchModel.fromJson(response.data);
   }
 }

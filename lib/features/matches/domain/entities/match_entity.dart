@@ -37,6 +37,8 @@ class MatchEntity extends Equatable {
   final int? resultadoGolesBCapA;
   final int? resultadoGolesACapB;
   final int? resultadoGolesBCapB;
+  final double? latitudCancha;
+  final double? longitudCancha;
 
   const MatchEntity({
     required this.id,
@@ -70,6 +72,8 @@ class MatchEntity extends Equatable {
     this.resultadoGolesBCapA,
     this.resultadoGolesACapB,
     this.resultadoGolesBCapB,
+    this.latitudCancha,
+    this.longitudCancha,
   });
 
   @override
@@ -105,6 +109,8 @@ class MatchEntity extends Equatable {
         resultadoGolesBCapA,
         resultadoGolesACapB,
         resultadoGolesBCapB,
+        latitudCancha,
+        longitudCancha,
       ];
 }
 

@@ -136,4 +136,37 @@ class MatchesRepositoryImpl implements IMatchesRepository {
       return Left(ServerFailure(e.toString()));
     }
   }
+
+  @override
+  Future<Either<Failure, void>> cancelMatch(int matchId) async {
+    try {
+      await remoteDataSource.cancelMatch(matchId);
+      return const Right(null);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, MatchEntity>> updateMatch(MatchEntity match) async {
+    try {
+      final model = MatchModel(
+        id: match.id,
+        fechaInicioEstimada: match.fechaInicioEstimada,
+        fechaFinEstimada: match.fechaFinEstimada,
+        fechaAcordada: match.fechaAcordada,
+        costoTotal: match.costoTotal,
+        estatus: match.estatus,
+        idUsuarioOrg: match.idUsuarioOrg,
+        idDeporte: match.idDeporte,
+        idCancha: match.idCancha,
+        idEquipoA: match.idEquipoA,
+        idEquipoB: match.idEquipoB,
+      );
+      final result = await remoteDataSource.updateMatch(model);
+      return Right(result);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
 }

@@ -91,6 +91,16 @@ class RegisterResultEvent extends MatchesEvent {
   RegisterResultEvent({required this.matchId, required this.golesA, required this.golesB});
 }
 
+class CancelMatchEvent extends MatchesEvent {
+  final int matchId;
+  CancelMatchEvent(this.matchId);
+}
+
+class UpdateMatchEvent extends MatchesEvent {
+  final MatchEntity match;
+  UpdateMatchEvent(this.match);
+}
+
 // STATES
 abstract class MatchesState extends Equatable {
   @override
@@ -143,6 +153,13 @@ class MatchEncounterAccepted extends MatchesState {
   @override
   List<Object?> get props => [match];
 }
+class MatchCancelled extends MatchesState {}
+class MatchUpdated extends MatchesState {
+  final MatchEntity match;
+  MatchUpdated(this.match);
+  @override
+  List<Object?> get props => [match];
+}
 
 // BLOC
 class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
@@ -154,6 +171,8 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
   final MarkTeamReadyUseCase markTeamReadyUseCase;
   final RegisterMatchResultUseCase registerMatchResultUseCase;
   final AcceptEncounterUseCase acceptEncounterUseCase;
+  final CancelMatchUseCase cancelMatchUseCase;
+  final UpdateMatchUseCase updateMatchUseCase;
 
   MatchesBloc({
     required this.getMatchesUseCase,
@@ -164,6 +183,8 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
     required this.markTeamReadyUseCase,
     required this.registerMatchResultUseCase,
     required this.acceptEncounterUseCase,
+    required this.cancelMatchUseCase,
+    required this.updateMatchUseCase,
   }) : super(MatchesInitial()) {
     on<LoadMatchesEvent>(_onLoadMatches);
     on<LoadMatchDetailsEvent>(_onLoadMatchDetails);
@@ -174,6 +195,8 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
     on<ConfigureMatchEvent>(_onConfigureMatch);
     on<MarkTeamReadyEvent>(_onMarkTeamReady);
     on<RegisterResultEvent>(_onRegisterResult);
+    on<CancelMatchEvent>(_onCancelMatch);
+    on<UpdateMatchEvent>(_onUpdateMatch);
   }
 
   Future<void> _onAcceptEncounter(AcceptEncounterEvent event, Emitter<MatchesState> emit) async {
@@ -273,6 +296,24 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
     result.fold(
       (failure) => emit(MatchesError(failure.message)),
       (_) => emit(MatchResultRegistered()),
+    );
+  }
+
+  Future<void> _onCancelMatch(CancelMatchEvent event, Emitter<MatchesState> emit) async {
+    emit(MatchesLoading());
+    final result = await cancelMatchUseCase.execute(event.matchId);
+    result.fold(
+      (failure) => emit(MatchesError(failure.message)),
+      (_) => emit(MatchCancelled()),
+    );
+  }
+
+  Future<void> _onUpdateMatch(UpdateMatchEvent event, Emitter<MatchesState> emit) async {
+    emit(MatchesLoading());
+    final result = await updateMatchUseCase.execute(event.match);
+    result.fold(
+      (failure) => emit(MatchesError(failure.message)),
+      (match) => emit(MatchUpdated(match)),
     );
   }
 }

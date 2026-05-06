@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/di/injection_container.dart';
 import '../bloc/matches_bloc.dart';
@@ -55,22 +56,57 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> {
     }
   }
 
+  void _handleCancelMatch(int matchId) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        title: const Text('¿Cancelar Partido?', style: TextStyle(fontWeight: FontWeight.bold)),
+        content: const Text('Esta acción eliminará el partido permanentemente y notificará a los interesados.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Volver', style: TextStyle(color: Colors.grey))),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              context.read<MatchesBloc>().add(CancelMatchEvent(matchId));
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
+            child: const Text('Confirmar Cancelación', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return BlocProvider(
       create: (context) => sl<MatchesBloc>()..add(LoadMatchDetailsEvent(widget.matchId)),
-      child: BlocBuilder<MatchesBloc, MatchesState>(
-        builder: (context, state) {
-          if (state is MatchesLoading) {
-            return const Scaffold(body: Center(child: CircularProgressIndicator(color: AppColors.primary)));
-          } else if (state is MatchDetailsLoaded) {
-            final match = state.match;
-            return _buildContent(context, match, isDark);
+      child: BlocListener<MatchesBloc, MatchesState>(
+        listener: (context, state) {
+          if (state is MatchCancelled) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Partido cancelado con éxito'), backgroundColor: AppColors.error),
+            );
+            context.pop();
+          } else if (state is MatchesError) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(state.message), backgroundColor: AppColors.error),
+            );
           }
-          return Scaffold(backgroundColor: Theme.of(context).scaffoldBackgroundColor);
         },
+        child: BlocBuilder<MatchesBloc, MatchesState>(
+          builder: (context, state) {
+            if (state is MatchesLoading) {
+              return const Scaffold(body: Center(child: CircularProgressIndicator(color: AppColors.primary)));
+            } else if (state is MatchDetailsLoaded) {
+              return _buildContent(context, state.match, isDark);
+            }
+            return Scaffold(backgroundColor: Theme.of(context).scaffoldBackgroundColor);
+          },
+        ),
       ),
     );
   }
@@ -78,57 +114,207 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> {
   Widget _buildContent(BuildContext context, MatchEntity match, bool isDark) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final profileState = context.read<ProfileBloc>().state;
+    int? currentUserId;
+    if (profileState is ProfileLoaded) {
+      currentUserId = profileState.profile.id;
+    }
+    final isOrganizer = currentUserId == match.idUsuarioOrg;
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
-      appBar: AppBar(
-        backgroundColor: colorScheme.surface,
-        title: Text('Partido #${match.id}', style: TextStyle(fontWeight: FontWeight.bold, color: colorScheme.onSurface)),
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: colorScheme.onSurface),
-          onPressed: () => context.pop(),
-        ),
+      body: CustomScrollView(
+        slivers: [
+          _buildSliverAppBar(match, isDark, isOrganizer),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                children: [
+                  _buildMainStatusCard(match, isDark, isOrganizer),
+                  const SizedBox(height: 16),
+                  _buildMapPreview(match, isDark),
+                  const SizedBox(height: 16),
+                  _buildMatchInfoCard(match, isDark),
+                  const SizedBox(height: 16),
+                  if (match.estatus == 'negociando') _buildNegotiationCard(context, match, isDark),
+                  if (match.estatus == 'pendiente_pago') _buildFinancialCard(match, isDark),
+                  const SizedBox(height: 80), // Espacio para el bottom bar
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
+      bottomNavigationBar: _buildBottomBar(context, match, isDark, isOrganizer),
+    );
+  }
+
+  Widget _buildSliverAppBar(MatchEntity match, bool isDark, bool isOrganizer) {
+    return SliverAppBar(
+      expandedHeight: 200.0,
+      floating: false,
+      pinned: true,
+      backgroundColor: AppColors.surfaceDark,
+      flexibleSpace: FlexibleSpaceBar(
+        title: Text('Partido #${match.id}', 
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white, shadows: [Shadow(color: Colors.black, blurRadius: 4)])),
+        background: Stack(
+          fit: StackFit.expand,
           children: [
-            _buildMapPreview(match, isDark),
-            const SizedBox(height: 20),
-            _buildStatusBadge(match.estatus),
-            const SizedBox(height: 20),
-            _buildMatchInfoCard(match, isDark),
-            const SizedBox(height: 16),
-            if (match.estatus == 'negociando') _buildNegotiationCard(context, match, isDark),
-            if (match.estatus == 'pendiente_pago') _buildFinancialCard(match, isDark),
+            Image.network(
+              'https://images.unsplash.com/photo-1574629810360-7efbbe195018?q=80&w=1000',
+              fit: BoxFit.cover,
+            ),
+            Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Colors.transparent, Colors.black.withValues(alpha: 0.8)],
+                ),
+              ),
+            ),
           ],
         ),
       ),
-      bottomNavigationBar: _buildBottomBar(context, match, isDark),
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back, color: Colors.white),
+        onPressed: () => context.pop(),
+      ),
+      actions: [
+        if (isOrganizer && (match.estatus == 'publicada' || match.estatus == 'negociando'))
+          IconButton(
+            icon: const Icon(Icons.delete_outline, color: AppColors.error),
+            onPressed: () => _handleCancelMatch(match.id),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildMainStatusCard(MatchEntity match, bool isDark, bool isOrganizer) {
+    String statusTitle = "";
+    String statusDesc = "";
+    IconData statusIcon = Icons.info;
+    Color statusColor = AppColors.primary;
+
+    switch (match.estatus) {
+      case 'publicada':
+        statusTitle = isOrganizer ? "Esperando Oponente" : "Partido Disponible";
+        statusDesc = isOrganizer 
+            ? "Tu partido ha sido publicado. Pronto un capitán te retará." 
+            : "¡Reta a este equipo y organiza el encuentro!";
+        statusIcon = Icons.hourglass_empty;
+        statusColor = Colors.blue;
+        break;
+      case 'negociando':
+        statusTitle = "En Negociación";
+        statusDesc = "Coordinando fecha y costos finales entre capitanes.";
+        statusIcon = Icons.handshake;
+        statusColor = Colors.orange;
+        break;
+      case 'pendiente_pago':
+        statusTitle = "Pendiente de Pago";
+        statusDesc = "Los términos fueron aceptados. Realiza tu pago para confirmar.";
+        statusIcon = Icons.payments_outlined;
+        statusColor = Colors.green;
+        break;
+      default:
+        statusTitle = match.estatus.toUpperCase();
+        statusDesc = "Sigue el proceso del partido.";
+    }
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: isDark 
+            ? [AppColors.surfaceDark, AppColors.surfaceDark.withValues(alpha: 0.8)]
+            : [Colors.white, Colors.white.withValues(alpha: 0.9)],
+        ),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: statusColor.withValues(alpha: 0.3)),
+        boxShadow: [
+          BoxShadow(color: statusColor.withValues(alpha: 0.1), blurRadius: 20, offset: const Offset(0, 10)),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: statusColor.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(statusIcon, color: statusColor, size: 32),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(statusTitle, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black)),
+                const SizedBox(height: 4),
+                Text(statusDesc, style: TextStyle(fontSize: 13, color: isDark ? Colors.grey : Colors.black54)),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
   Widget _buildMapPreview(MatchEntity match, bool isDark) {
+    if (match.latitudCancha != null && match.longitudCancha != null) {
+      final position = LatLng(match.latitudCancha!, match.longitudCancha!);
+      return Container(
+        height: 200,
+        width: double.infinity,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: Theme.of(context).dividerColor),
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(24),
+          child: Stack(
+            children: [
+              GoogleMap(
+                initialCameraPosition: CameraPosition(target: position, zoom: 15),
+                markers: {Marker(markerId: const MarkerId('court'), position: position)},
+                liteModeEnabled: true, // Optimizado para previews
+                zoomControlsEnabled: false,
+                mapToolbarEnabled: false,
+                onTap: (_) => _openInGoogleMaps(match),
+              ),
+              PositionDetector(onTap: () => _openInGoogleMaps(match)),
+              Positioned(
+                bottom: 12,
+                right: 12,
+                child: FloatingActionButton.small(
+                  onPressed: () => _openInGoogleMaps(match),
+                  backgroundColor: AppColors.primary,
+                  child: const Icon(Icons.directions, color: Colors.black),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return _buildMapPlaceholder(match);
+  }
+
+  Widget _buildMapPlaceholder(MatchEntity match) {
     return GestureDetector(
-      onTap: () async {
-        final query = match.nombreCancha ?? 'Cancha #${match.idCancha}';
-        final url = Uri.parse('https://www.google.com/maps/search/?api=1&query=${Uri.encodeComponent(query)}');
-        if (await canLaunchUrl(url)) {
-          await launchUrl(url, mode: LaunchMode.externalApplication);
-        } else {
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('No se pudo abrir Google Maps')),
-            );
-          }
-        }
-      },
+      onTap: () => _openInGoogleMaps(match),
       child: Container(
         height: 180,
         width: double.infinity,
         decoration: BoxDecoration(
           color: Theme.of(context).colorScheme.surface,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(24),
           border: Border.all(color: Theme.of(context).dividerColor),
         ),
         child: const Column(
@@ -143,20 +329,15 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> {
     );
   }
 
-  Widget _buildStatusBadge(String status) {
-    final isNeg = status == 'negociando';
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(
-        color: (isNeg ? Colors.blue : Colors.orange).withValues(alpha: 0.2),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: (isNeg ? Colors.blue : Colors.orange).withValues(alpha: 0.3)),
-      ),
-      child: Text(
-        status.toUpperCase(),
-        style: TextStyle(color: isNeg ? Colors.blue : Colors.orange, fontWeight: FontWeight.bold, fontSize: 14),
-      ),
-    );
+  void _openInGoogleMaps(MatchEntity match) async {
+    final query = match.nombreCancha ?? 'Cancha #${match.idCancha}';
+    final url = match.latitudCancha != null 
+      ? Uri.parse('https://www.google.com/maps/search/?api=1&query=${match.latitudCancha},${match.longitudCancha}')
+      : Uri.parse('https://www.google.com/maps/search/?api=1&query=${Uri.encodeComponent(query)}');
+    
+    if (await canLaunchUrl(url)) {
+      await launchUrl(url, mode: LaunchMode.externalApplication);
+    }
   }
 
   Widget _buildMatchInfoCard(MatchEntity match, bool isDark) {
@@ -164,80 +345,80 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> {
       children: [
         Row(
           children: [
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: Theme.of(context).scaffoldBackgroundColor,
-                shape: BoxShape.circle,
-              ),
-              child: ClipOval(
-                child: (match.logoEquipoA != null && match.logoEquipoA!.startsWith('http'))
-                    ? Image.network(
-                        match.logoEquipoA!,
-                        fit: BoxFit.cover,
-                        errorBuilder: (ctx, err, st) => const Center(child: Text('⚽', style: TextStyle(fontSize: 24))),
-                      )
-                    : const Center(child: Text('⚽', style: TextStyle(fontSize: 24))),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Organizador: ${match.nombreCapitanA ?? 'Capi'}', style: _titleStyle(isDark, context)),
-                GestureDetector(
-                  onTap: () {
-                    if (match.idEquipoA != null) {
-                      context.push('/team-dashboard/${match.idEquipoA}');
-                    }
-                  },
-                  child: Text(
-                    'Equipo: ${match.nombreEquipoA ?? 'Sin Equipo'}',
-                    style: const TextStyle(
-                      color: AppColors.primary,
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      decoration: TextDecoration.underline,
-                    ),
+            _buildTeamAvatar(match.logoEquipoA, 56),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(match.nombreEquipoA ?? 'Equipo Organizador', style: _titleStyle(isDark, context)),
+                  Text('Organizado por ${match.nombreCapitanA ?? 'Capi'}', 
+                    style: TextStyle(color: isDark ? Colors.grey : Colors.black54, fontSize: 13)),
+                  const SizedBox(height: 4),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(6)),
+                    child: Text(match.sportName ?? 'Fútbol', style: const TextStyle(color: AppColors.primary, fontSize: 11, fontWeight: FontWeight.bold)),
                   ),
-                ),
-                Text(match.sportName ?? 'Deporte Match', style: TextStyle(color: isDark ? Colors.grey : Colors.black54, fontSize: 13)),
-              ],
+                ],
+              ),
             ),
           ],
         ),
-        const SizedBox(height: 16),
-        _buildDetailRow(Icons.calendar_today, DateFormat('EEEE, d MMMM').format(match.fechaInicioEstimada), isDark),
-        const SizedBox(height: 10),
-        _buildDetailRow(Icons.location_on_outlined, match.nombreCancha ?? 'Cancha #${match.idCancha}', isDark),
+        const Divider(height: 32),
+        _buildDetailRow(Icons.calendar_today_rounded, DateFormat('EEEE, d MMMM • hh:mm a').format(match.fechaInicioEstimada), isDark),
+        const SizedBox(height: 12),
+        _buildDetailRow(Icons.location_on_rounded, match.nombreCancha ?? 'Ubicación pendiente', isDark),
+        const SizedBox(height: 12),
+        _buildDetailRow(Icons.attach_money_rounded, 'Costo estimado: \$${match.costoTotal}', isDark),
       ],
     ));
+  }
+
+  Widget _buildTeamAvatar(String? url, double size) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: Theme.of(context).scaffoldBackgroundColor,
+        shape: BoxShape.circle,
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+      ),
+      child: ClipOval(
+        child: (url != null && url.startsWith('http'))
+            ? Image.network(url, fit: BoxFit.cover, errorBuilder: (ctx, err, st) => const Icon(Icons.sports_soccer, size: 28))
+            : const Icon(Icons.sports_soccer, size: 28),
+      ),
+    );
   }
 
   Widget _buildNegotiationCard(BuildContext context, MatchEntity match, bool isDark) {
     return _buildCard(isDark, child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Términos de Negociación', style: _titleStyle(isDark, context)),
+        Row(
+          children: [
+            const Icon(Icons.handshake_outlined, color: Colors.orange),
+            const SizedBox(width: 8),
+            Text('Propuesta de Términos', style: _titleStyle(isDark, context)),
+          ],
+        ),
         const SizedBox(height: 16),
-        Text('Propón la fecha y el costo final para llegar a un acuerdo con el otro capitán.',
-            style: TextStyle(color: isDark ? Colors.grey : Colors.black54, fontSize: 13)),
-        const SizedBox(height: 20),
-        _buildNegotiationField('Costo Total Producido', _costController, Icons.attach_money, isDark),
+        _buildNegotiationField('Costo por Jugador / Total', _costController, Icons.attach_money, isDark),
         const SizedBox(height: 12),
-        _buildNegotiationField('Fecha Acordada', _dateController, Icons.calendar_today, isDark, onTap: () async {
+        _buildNegotiationField('Fecha y Hora Sugerida', _dateController, Icons.calendar_today, isDark, onTap: () async {
           final date = await showDatePicker(context: context, initialDate: DateTime.now(), firstDate: DateTime.now(), lastDate: DateTime.now().add(const Duration(days: 30)));
           if (date != null) {
             setState(() {
               selectedDate = date;
-              _dateController.text = DateFormat('yyyy-MM-dd').format(date);
+              _dateController.text = DateFormat('dd/MM/yyyy').format(date);
             });
           }
         }),
         const SizedBox(height: 20),
         SizedBox(
           width: double.infinity,
+          height: 50,
           child: ElevatedButton(
             onPressed: () {
               context.read<MatchesBloc>().add(ProposeTermsEvent(
@@ -246,7 +427,11 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> {
                 costo: double.tryParse(_costController.text) ?? 0.0,
               ));
             },
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.black),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary, 
+              foregroundColor: Colors.black,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
             child: const Text('Enviar Propuesta', style: TextStyle(fontWeight: FontWeight.bold)),
           ),
         ),
@@ -255,7 +440,7 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> {
   }
 
   Widget _buildFinancialCard(MatchEntity match, bool isDark) {
-    const totalPlayers = 22; // Asumimos 11 vs 11 por defecto
+    const totalPlayers = 22;
     final quota = match.costoTotal / totalPlayers;
     return _buildCard(isDark, child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -269,22 +454,55 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text('Tu Cuota', style: _titleStyle(isDark, context)),
-            Text('\$${quota.toStringAsFixed(2)}', style: const TextStyle(color: AppColors.primary, fontSize: 20, fontWeight: FontWeight.bold)),
+            Text('\$${quota.toStringAsFixed(2)}', style: const TextStyle(color: AppColors.primary, fontSize: 22, fontWeight: FontWeight.bold)),
           ],
         ),
       ],
     ));
   }
 
-  Widget _buildBottomBar(BuildContext context, MatchEntity match, bool isDark) {
+  Widget _buildBottomBar(BuildContext context, MatchEntity match, bool isDark, bool isOrganizer) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    
+    // Si está publicada y es el organizador, mostrar botones de gestión
+    if (match.estatus == 'publicada' && isOrganizer) {
+      return Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(color: colorScheme.surface, border: Border(top: BorderSide(color: theme.dividerColor))),
+        child: Row(
+          children: [
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: () {
+                  context.push('/crear-partido', extra: match);
+                },
+                icon: const Icon(Icons.edit_outlined),
+                label: const Text('Editar Datos'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: colorScheme.onSurface,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: ElevatedButton.icon(
+                onPressed: () => _handleCancelMatch(match.id),
+                icon: const Icon(Icons.cancel_outlined),
+                label: const Text('Cancelar'),
+                style: ElevatedButton.styleFrom(backgroundColor: AppColors.error, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 14)),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: colorScheme.surface,
-        border: Border(top: BorderSide(color: theme.dividerColor)),
-      ),
+      decoration: BoxDecoration(color: colorScheme.surface, border: Border(top: BorderSide(color: theme.dividerColor))),
       child: Row(
         children: [
           Expanded(
@@ -332,9 +550,8 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> {
           decoration: InputDecoration(
             prefixIcon: Icon(icon, color: textMuted, size: 20),
             filled: true,
-            fillColor: theme.colorScheme.surface,
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: theme.dividerColor)),
-            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: theme.dividerColor)),
+            fillColor: isDark ? AppColors.surfaceDark : Colors.grey[100],
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
           ),
           style: TextStyle(color: theme.colorScheme.onSurface),
         ),
@@ -346,11 +563,14 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> {
     final theme = Theme.of(context);
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(24),
         border: Border.all(color: theme.dividerColor),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 4)),
+        ],
       ),
       child: child,
     );
@@ -359,9 +579,9 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> {
   Widget _buildDetailRow(IconData icon, String text, bool isDark) {
     return Row(
       children: [
-        const Icon(Icons.calendar_today, size: 20, color: Color(0xFF9CA3AF)),
+        Icon(icon, size: 20, color: const Color(0xFF9CA3AF)),
         const SizedBox(width: 12),
-        Text(text, style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
+        Expanded(child: Text(text, style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 14))),
       ],
     );
   }
@@ -384,4 +604,20 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> {
         fontSize: 16,
         fontWeight: FontWeight.bold,
       );
+}
+
+class PositionDetector extends StatelessWidget {
+  final VoidCallback onTap;
+  const PositionDetector({super.key, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned.fill(
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: Container(color: Colors.transparent),
+      ),
+    );
+  }
 }

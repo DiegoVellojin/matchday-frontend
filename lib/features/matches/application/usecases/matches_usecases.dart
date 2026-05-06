@@ -97,3 +97,21 @@ class RegisterMatchResultUseCase {
     return repository.registerResult(matchId, golesA, golesB);
   }
 }
+
+class CancelMatchUseCase {
+  final IMatchesRepository repository;
+  CancelMatchUseCase(this.repository);
+
+  Future<Either<Failure, void>> execute(int matchId) {
+    return repository.cancelMatch(matchId);
+  }
+}
+
+class UpdateMatchUseCase {
+  final IMatchesRepository repository;
+  UpdateMatchUseCase(this.repository);
+
+  Future<Either<Failure, MatchEntity>> execute(MatchEntity match) {
+    return repository.updateMatch(match);
+  }
+}

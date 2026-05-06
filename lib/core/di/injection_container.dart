@@ -258,6 +258,8 @@ Future<void> init() async {
   sl.registerLazySingleton(() => ConfigureMatchUseCase(sl()));
   sl.registerLazySingleton(() => MarkTeamReadyUseCase(sl()));
   sl.registerLazySingleton(() => RegisterMatchResultUseCase(sl()));
+  sl.registerLazySingleton(() => CancelMatchUseCase(sl()));
+  sl.registerLazySingleton(() => UpdateMatchUseCase(sl()));
 
   // Catalogs (NUEVO)
   sl.registerLazySingleton(() => LocationService(dio: sl()));
@@ -356,6 +358,8 @@ Future<void> init() async {
       markTeamReadyUseCase: sl(),
       registerMatchResultUseCase: sl(),
       acceptEncounterUseCase: sl(),
+      cancelMatchUseCase: sl(),
+      updateMatchUseCase: sl(),
     ),
   );
 

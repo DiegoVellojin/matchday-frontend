@@ -179,7 +179,10 @@ final _router = GoRouter(
         ),
         GoRoute(
           path: '/crear-partido',
-          builder: (context, state) => const CreateMatchPage(),
+          builder: (context, state) {
+            final match = state.extra as MatchEntity?;
+            return CreateMatchPage(editMatch: match);
+          },
         ),
         GoRoute(
           path: '/configure-match',

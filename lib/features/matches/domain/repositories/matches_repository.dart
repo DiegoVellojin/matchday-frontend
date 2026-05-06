@@ -20,4 +20,6 @@ abstract class IMatchesRepository {
   Future<Either<Failure, void>> registerResult(int matchId, int golesA, int golesB);
   Future<Either<Failure, void>> joinMatch(int matchId, {int? teamId});
   Future<Either<Failure, List<MatchPlayer>>> getMatchPlayers(int matchId);
+  Future<Either<Failure, void>> cancelMatch(int matchId);
+  Future<Either<Failure, MatchEntity>> updateMatch(MatchEntity match);
 }

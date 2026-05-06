@@ -33,6 +33,8 @@ class MatchModel extends MatchEntity {
     super.resultadoGolesBCapA,
     super.resultadoGolesACapB,
     super.resultadoGolesBCapB,
+    super.latitudCancha,
+    super.longitudCancha,
   });
 
   factory MatchModel.fromJson(Map<String, dynamic> json) {
@@ -78,6 +80,8 @@ class MatchModel extends MatchEntity {
       resultadoGolesBCapA: json['resultado_goles_b_cap_a'],
       resultadoGolesACapB: json['resultado_goles_a_cap_b'],
       resultadoGolesBCapB: json['resultado_goles_b_cap_b'],
+      latitudCancha: json['latitud_cancha'] != null ? (json['latitud_cancha'] as num).toDouble() : null,
+      longitudCancha: json['longitud_cancha'] != null ? (json['longitud_cancha'] as num).toDouble() : null,
     );
   }
 
@@ -114,6 +118,8 @@ class MatchModel extends MatchEntity {
       'resultado_goles_b_cap_a': resultadoGolesBCapA,
       'resultado_goles_a_cap_b': resultadoGolesACapB,
       'resultado_goles_b_cap_b': resultadoGolesBCapB,
+      'latitud_cancha': latitudCancha,
+      'longitud_cancha': longitudCancha,
     };
   }
 }

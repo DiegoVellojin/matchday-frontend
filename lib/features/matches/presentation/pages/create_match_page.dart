@@ -21,7 +21,8 @@ import '../../../profile/presentation/bloc/profile_state.dart';
 import '../../../catalogs/presentation/bloc/add_court/add_court_bloc.dart' as import_add_court_bloc;
 import '../../../catalogs/presentation/pages/add_court_page.dart' as import_add_court_page;
 class CreateMatchPage extends StatefulWidget {
-  const CreateMatchPage({super.key});
+  final MatchEntity? editMatch;
+  const CreateMatchPage({super.key, this.editMatch});
 
   @override
   State<CreateMatchPage> createState() => _CreateMatchPageState();
@@ -57,7 +58,20 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
   @override
   void initState() {
     super.initState();
-    _dateController.text = DateFormat('yyyy-MM-dd').format(selectedDate);
+    if (widget.editMatch != null) {
+      final match = widget.editMatch!;
+      selectedSportId = match.idDeporte;
+      selectedTeamId = match.idEquipoA;
+      selectedCanchaId = match.idCancha;
+      selectedDate = match.fechaInicioEstimada;
+      startTime = TimeOfDay.fromDateTime(match.fechaInicioEstimada);
+      endTime = TimeOfDay.fromDateTime(match.fechaFinEstimada);
+      
+      _dateController.text = DateFormat('yyyy-MM-dd').format(selectedDate);
+      // Los controllers de tiempo se llenan en didChangeDependencies
+    } else {
+      _dateController.text = DateFormat('yyyy-MM-dd').format(selectedDate);
+    }
     _loadInitialData();
   }
 
@@ -67,6 +81,11 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
       _loadMyTeams(),
       _loadRegions(),
     ]);
+    
+    // Si estamos editando, cargar canchas de la región si es posible
+    if (widget.editMatch != null && selectedRegionId != null) {
+      _loadCanchas(selectedRegionId!);
+    }
   }
 
   Future<void> _loadSports() async {
@@ -76,7 +95,9 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
       (sports) {
         setState(() {
           _sports = sports;
-          if (_sports.isNotEmpty) selectedSportId = _sports.first.id;
+          if (widget.editMatch == null && _sports.isNotEmpty) {
+            selectedSportId = _sports.first.id;
+          }
           _isLoadingSports = false;
         });
       },
@@ -100,13 +121,15 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
 
         setState(() {
           if (userId != null) {
-            // Filtrar equipos donde el usuario es el capitán/organizador
             _myTeams = teams.where((t) => t.captainId == userId).toList();
-            if (_myTeams.isNotEmpty) selectedTeamId = _myTeams.first.id;
           } else {
-            // Si no tenemos ID real, mostramos todos los del usuario como fallback
             _myTeams = teams;
-            if (_myTeams.isNotEmpty) selectedTeamId = _myTeams.first.id;
+          }
+          
+          if (widget.editMatch == null && _myTeams.isNotEmpty && selectedSportId != null) {
+            final selectedSport = _sports.where((s) => s.id == selectedSportId).firstOrNull;
+            final filtered = _myTeams.where((t) => t.sportName == selectedSport?.name).toList();
+            if (filtered.isNotEmpty) selectedTeamId = filtered.first.id;
           }
           _isLoadingTeams = false;
         });
@@ -130,8 +153,6 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
   Future<void> _loadCanchas(int regionId) async {
     setState(() {
       _isLoadingCanchas = true;
-      _canchas = [];
-      selectedCanchaId = null;
     });
     
     final result = await sl<GetCanchasUseCase>()(regionId: regionId);
@@ -185,10 +206,15 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
         listener: (context, state) {
           if (state is SimilarMatchesFound) {
             if (state.similarMatches.isEmpty) {
-              _submitCreate();
+              _submit();
             } else {
               _showSimilarMatchesModal(state.similarMatches);
             }
+          } else if (state is MatchUpdated) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Partido actualizado con éxito'), backgroundColor: AppColors.primary),
+            );
+            context.pop();
           }
         },
         child: SingleChildScrollView(
@@ -409,10 +435,14 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
         ),
         child: ElevatedButton(
           onPressed: _canSubmit() ? () {
-            context.read<MatchesBloc>().add(SearchSimilarMatchesEvent(
-              sportId: selectedSportId!,
-              date: selectedDate,
-            ));
+            if (widget.editMatch != null) {
+              _submit();
+            } else {
+              context.read<MatchesBloc>().add(SearchSimilarMatchesEvent(
+                sportId: selectedSportId!,
+                date: selectedDate,
+              ));
+            }
           } : null,
           style: ElevatedButton.styleFrom(
             backgroundColor: AppColors.primary,
@@ -605,7 +635,7 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
     );
   }
 
-  void _submitCreate() {
+  void _submit() {
     final startDateTime = DateTime(
       selectedDate.year,
       selectedDate.month,
@@ -631,29 +661,31 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
       userId = int.tryParse(authState.user.id);
     }
     
-    // Fallback or error if no user ID
     if (userId == null) {
       _showError('No se pudo determinar el usuario. Por favor intenta de nuevo.');
       return;
     }
     
     final match = MatchEntity(
-      id: 0,
+      id: widget.editMatch?.id ?? 0,
       idUsuarioOrg: userId,
       idDeporte: selectedSportId!,
       idCancha: selectedCanchaId!,
       fechaInicioEstimada: startDateTime,
       fechaFinEstimada: endDateTime,
-      costoTotal: 50.0,
-      estatus: 'publicada',
+      costoTotal: widget.editMatch?.costoTotal ?? 50.0,
+      estatus: widget.editMatch?.estatus ?? 'publicada',
       idEquipoA: selectedTeamId,
     );
 
-    context.read<MatchesBloc>().add(CreateMatchEvent(match));
-
-    context.pop();
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Solicitud de creación enviada'), backgroundColor: AppColors.primary),
-    );
+    if (widget.editMatch != null) {
+      context.read<MatchesBloc>().add(UpdateMatchEvent(match));
+    } else {
+      context.read<MatchesBloc>().add(CreateMatchEvent(match));
+      context.pop();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Solicitud de creación enviada'), backgroundColor: AppColors.primary),
+      );
+    }
   }
 }
