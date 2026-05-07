@@ -6,6 +6,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/di/injection_container.dart';
 import '../bloc/matches_bloc.dart';
 import '../../domain/entities/match_entity.dart';
+import '../../domain/entities/match_status.dart';
 import '../../../teams/domain/entities/sport_entity.dart';
 import '../../../teams/domain/entities/team_entity.dart';
 import '../../../catalogs/domain/entities/region_entity.dart';
@@ -674,7 +675,7 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
       fechaInicioEstimada: startDateTime,
       fechaFinEstimada: endDateTime,
       costoTotal: widget.editMatch?.costoTotal ?? 50.0,
-      estatus: widget.editMatch?.estatus ?? 'publicada',
+      status: MatchStatus.fromString(widget.editMatch?.estatus ?? 'publicada'),
       idEquipoA: selectedTeamId,
     );
 
