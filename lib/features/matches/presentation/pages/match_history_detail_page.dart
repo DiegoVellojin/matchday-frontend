@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -79,9 +80,6 @@ class _MatchHistoryDetailPageState extends State<MatchHistoryDetailPage> {
   }
 
   Widget _buildContent(MatchEntity match, bool isDark) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final textMuted = isDark ? const Color(0xFF9CA3AF) : Colors.black54;
 
     final golesA = match.resultadoGolesACapA ?? match.resultadoGolesACapB ?? 0;
     final golesB = match.resultadoGolesBCapA ?? match.resultadoGolesBCapB ?? 0;
@@ -90,110 +88,31 @@ class _MatchHistoryDetailPageState extends State<MatchHistoryDetailPage> {
       padding: const EdgeInsets.all(20),
       child: Column(
         children: [
-          // Marcador Final
-          Container(
-            padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 16),
-            decoration: BoxDecoration(
-              color: colorScheme.surface,
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: theme.dividerColor),
-            ),
-            child: Column(
-              children: [
-                Text(
-                  'Resultado Final',
-                  style: TextStyle(color: textMuted, fontSize: 14, fontWeight: FontWeight.w500),
-                ),
-                const SizedBox(height: 24),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    _buildTeamInfo(context, match.nombreEquipoA ?? 'Equipo A', match.logoEquipoA, isDark),
-                    Row(
-                      children: [
-                        Text('$golesA', style: TextStyle(color: colorScheme.onSurface, fontSize: 48, fontWeight: FontWeight.bold)),
-                        const Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 16),
-                          child: Text('-', style: TextStyle(color: AppColors.primary, fontSize: 32, fontWeight: FontWeight.bold)),
-                        ),
-                        Text('$golesB', style: TextStyle(color: colorScheme.onSurface, fontSize: 48, fontWeight: FontWeight.bold)),
-                      ],
-                    ),
-                    _buildTeamInfo(context, match.nombreEquipoB ?? 'Equipo B', match.logoEquipoB, isDark),
-                  ],
-                ),
-                const SizedBox(height: 24),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.check_circle, color: AppColors.primary, size: 16),
-                      const SizedBox(width: 8),
-                      const Text(
-                        'Encuentro Finalizado',
-                        style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 12),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
+          // Marcador Final Dinámico
+          _buildOfficialScoreCard(golesA, golesB, match.nombreEquipoA ?? 'Equipo A', isDark)
+            .animate()
+            .scale(duration: 500.ms, curve: Curves.easeOutBack)
+            .fadeIn()
+            .shimmer(duration: 2.seconds, color: Colors.white.withValues(alpha: 0.1)),
           const SizedBox(height: 20),
 
           // Detalles del Partido
-          _buildInfoCard(match, isDark),
+          _buildInfoCard(match, isDark)
+            .animate()
+            .fadeIn(delay: 200.ms, duration: 600.ms)
+            .slideY(begin: 0.2, end: 0),
           const SizedBox(height: 20),
 
           // Jugadores
-          _buildPlayersSection(isDark, match),
+          _buildPlayersSection(isDark, match)
+            .animate()
+            .fadeIn(delay: 400.ms, duration: 600.ms),
           const SizedBox(height: 40),
         ],
       ),
     );
   }
 
-  Widget _buildTeamInfo(BuildContext context, String name, String? logo, bool isDark) {
-    final theme = Theme.of(context);
-    return Column(
-      children: [
-        Container(
-          width: 60,
-          height: 60,
-          decoration: BoxDecoration(
-            color: theme.scaffoldBackgroundColor,
-            shape: BoxShape.circle,
-            border: Border.all(color: theme.dividerColor),
-          ),
-          child: ClipOval(
-            child: logo != null 
-                ? Image.network(
-                    logo, 
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) => const Center(child: Icon(Icons.sports_soccer, size: 24, color: Colors.grey)),
-                  ) 
-                : const Center(child: Text('⚽', style: TextStyle(fontSize: 24))),
-          ),
-        ),
-        const SizedBox(height: 8),
-        SizedBox(
-          width: 80,
-          child: Text(
-            name,
-            textAlign: TextAlign.center,
-            style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 12, fontWeight: FontWeight.bold),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
-      ],
-    );
-  }
 
   Widget _buildInfoCard(MatchEntity match, bool isDark) {
     final theme = Theme.of(context);
@@ -286,5 +205,112 @@ class _MatchHistoryDetailPageState extends State<MatchHistoryDetailPage> {
         ],
       ),
     );
+  }
+  Widget _buildOfficialScoreCard(int f, int c, String teamName, bool isDark) {
+    final style = _getResultStyle(f, c);
+    final Color mainColor = style['color'] as Color;
+    
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(32),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            mainColor.withValues(alpha: 0.15),
+            mainColor.withValues(alpha: 0.05),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: mainColor.withValues(alpha: 0.4), width: 2),
+        boxShadow: [
+          BoxShadow(
+            color: mainColor.withValues(alpha: 0.1),
+            blurRadius: 20,
+            spreadRadius: 2,
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color: mainColor.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(style['icon'] as IconData, color: mainColor, size: 18),
+                const SizedBox(width: 8),
+                Text(
+                  style['label'] as String,
+                  style: TextStyle(color: mainColor, fontWeight: FontWeight.bold, fontSize: 14, letterSpacing: 1.2),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              _buildScoreDigit(f, isDark),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Text('-', style: TextStyle(fontSize: 48, fontWeight: FontWeight.w300, color: mainColor.withValues(alpha: 0.5))),
+              ),
+              _buildScoreDigit(c, isDark),
+            ],
+          ),
+          const SizedBox(height: 24),
+          const Text(
+            'Resultado Final Confirmado',
+            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.textMuted),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildScoreDigit(int value, bool isDark) {
+    return Container(
+      width: 70,
+      height: 90,
+      decoration: BoxDecoration(
+        color: isDark ? Colors.black26 : Colors.grey[100],
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+      ),
+      alignment: Alignment.center,
+      child: Text(
+        '$value',
+        style: const TextStyle(fontSize: 56, fontWeight: FontWeight.bold),
+      ),
+    );
+  }
+
+  Map<String, dynamic> _getResultStyle(int f, int c) {
+    if (f > c) {
+      return {
+        'label': 'VICTORIA',
+        'color': Colors.greenAccent,
+        'icon': Icons.emoji_events,
+      };
+    } else if (f < c) {
+      return {
+        'label': 'DERROTA',
+        'color': Colors.redAccent,
+        'icon': Icons.trending_down,
+      };
+    } else {
+      return {
+        'label': 'EMPATE',
+        'color': Colors.amberAccent,
+        'icon': Icons.drag_handle,
+      };
+    }
   }
 }

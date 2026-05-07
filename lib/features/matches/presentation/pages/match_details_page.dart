@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/di/injection_container.dart';
 import '../bloc/matches_bloc.dart';
 import '../../domain/entities/match_entity.dart';
+import '../../domain/entities/match_status.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../domain/repositories/matches_repository.dart';
 import '../../../profile/presentation/bloc/profile_bloc.dart';
 import '../../../profile/presentation/bloc/profile_state.dart';
 
@@ -23,6 +26,28 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> {
   final TextEditingController _costController = TextEditingController();
   final TextEditingController _dateController = TextEditingController();
   DateTime selectedDate = DateTime.now();
+  List<MatchPlayer> _players = [];
+  bool _isLoadingPlayers = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchPlayers();
+  }
+
+  Future<void> _fetchPlayers() async {
+    final repository = sl<IMatchesRepository>();
+    final result = await repository.getMatchPlayers(widget.matchId);
+    if (mounted) {
+      result.fold(
+        (_) => setState(() => _isLoadingPlayers = false),
+        (players) => setState(() {
+          _players = players;
+          _isLoadingPlayers = false;
+        }),
+      );
+    }
+  }
 
   void _handleContactar(MatchEntity match) async {
     final profileState = context.read<ProfileBloc>().state;
@@ -162,17 +187,46 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> {
               padding: const EdgeInsets.all(16.0),
               child: Column(
                 children: [
-                  _buildMainStatusCard(match, isDark, isOrganizer),
+                  _buildMainStatusCard(match, isDark, isOrganizer)
+                    .animate()
+                    .fadeIn(duration: 600.ms)
+                    .slideY(begin: 0.1, end: 0),
                   const SizedBox(height: 16),
-                  _buildMapPreview(match, isDark),
+                  
+                  if (match.estatus == 'completada') ...[
+                    _buildResultSection(match, isDark, currentUserId)
+                      .animate()
+                      .scale(duration: 500.ms, curve: Curves.easeOutBack)
+                      .shimmer(duration: 2.seconds, color: Colors.white.withValues(alpha: 0.1)),
+                    const SizedBox(height: 16),
+                  ],
+
+                  _buildMapPreview(match, isDark)
+                    .animate()
+                    .fadeIn(duration: 800.ms, delay: 200.ms),
                   const SizedBox(height: 16),
-                  _buildMatchInfoCard(match, isDark),
+                  
+                  _buildMatchInfoCard(match, isDark)
+                    .animate()
+                    .fadeIn(duration: 800.ms, delay: 400.ms),
                   const SizedBox(height: 16),
+                  
                   if (match.estatus == 'negociando')
-                    _buildNegotiationCard(context, match, isDark),
+                    _buildNegotiationCard(context, match, isDark)
+                      .animate()
+                      .fadeIn(duration: 800.ms, delay: 600.ms),
+                  
                   if (match.estatus == 'pendiente_pago')
-                    _buildFinancialCard(match, isDark),
-                  const SizedBox(height: 80), // Espacio para el bottom bar
+                    _buildFinancialCard(match, isDark)
+                      .animate()
+                      .fadeIn(duration: 800.ms, delay: 600.ms),
+                  
+                  const SizedBox(height: 16),
+                  _buildPlayersSection(isDark, match)
+                    .animate()
+                    .fadeIn(duration: 800.ms, delay: 700.ms),
+                  
+                  const SizedBox(height: 100),
                 ],
               ),
             ),
@@ -190,14 +244,29 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> {
       pinned: true,
       backgroundColor: AppColors.surface,
       flexibleSpace: FlexibleSpaceBar(
-        title: Text(
-          'Partido #${match.id}',
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 16,
-            color: Colors.white,
-            shadows: [Shadow(color: Colors.black, blurRadius: 4)],
-          ),
+        title: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              match.sportName?.toUpperCase() ?? 'PARTIDO',
+              style: const TextStyle(
+                fontWeight: FontWeight.w900,
+                fontSize: 10,
+                color: AppColors.primary,
+                letterSpacing: 2,
+              ),
+            ),
+            Text(
+              match.nombreEquipoA != null ? '${match.nombreEquipoA} vs ${match.nombreEquipoB}' : 'Detalles del Encuentro',
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
+                color: Colors.white,
+                shadows: [Shadow(color: Colors.black, blurRadius: 8)],
+              ),
+            ),
+          ],
         ),
         background: Stack(
           fit: StackFit.expand,
@@ -282,36 +351,25 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> {
     bool isDark,
     bool isOrganizer,
   ) {
-    String statusTitle = "";
-    String statusDesc = "";
-    IconData statusIcon = Icons.info;
-    Color statusColor = AppColors.primary;
+    String statusTitle = match.status.label;
+    String statusDesc = "Sigue el proceso del partido.";
+    IconData statusIcon = match.status.icon;
+    Color statusColor = match.status.color;
 
-    switch (match.estatus) {
-      case 'publicada':
-        statusTitle = isOrganizer ? "Esperando Oponente" : "Partido Disponible";
-        statusDesc = isOrganizer
-            ? "Tu partido ha sido publicado. Pronto un capitán te retará."
-            : "¡Reta a este equipo y organiza el encuentro!";
-        statusIcon = Icons.hourglass_empty;
-        statusColor = Colors.blue;
-        break;
-      case 'negociando':
-        statusTitle = "En Negociación";
-        statusDesc = "Coordinando fecha y costos finales entre capitanes.";
-        statusIcon = Icons.handshake;
-        statusColor = Colors.orange;
-        break;
-      case 'pendiente_pago':
-        statusTitle = "Pendiente de Pago";
-        statusDesc =
-            "Los términos fueron aceptados. Realiza tu pago para confirmar.";
-        statusIcon = Icons.payments_outlined;
-        statusColor = Colors.green;
-        break;
-      default:
-        statusTitle = match.estatus.toUpperCase();
-        statusDesc = "Sigue el proceso del partido.";
+    if (match.status is PublishedStatus) {
+      statusTitle = isOrganizer ? "Esperando Oponente" : "Partido Disponible";
+      statusDesc = isOrganizer
+          ? "Tu partido ha sido publicado. Pronto un capitán te retará."
+          : "¡Reta a este equipo y organiza el encuentro!";
+    } else if (match.status is NegotiatingStatus) {
+      statusDesc = "Coordinando fecha y costos finales entre capitanes.";
+    } else if (match.status is PendingPaymentStatus) {
+      statusDesc = "Los términos fueron aceptados. Realiza tu pago para confirmar.";
+    } else if (match.status is CompletedStatus) {
+      statusTitle = "Partido Finalizado";
+      statusDesc = "El encuentro ha concluido. Mira el marcador final.";
+    } else if (match.status is CancelledStatus) {
+      statusDesc = "Este partido ha sido cancelado.";
     }
 
     return Container(
@@ -859,6 +917,210 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> {
               fontWeight: FontWeight.bold,
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildResultSection(MatchEntity match, bool isDark, int? currentUserId) {
+    final golesA = match.resultadoGolesACapA ?? match.resultadoGolesACapB ?? 0;
+    final golesB = match.resultadoGolesBCapA ?? match.resultadoGolesBCapB ?? 0;
+
+    final isTeamA = currentUserId == match.idUsuarioOrg;
+    final myGoles = isTeamA ? golesA : golesB;
+    final rivalGoles = isTeamA ? golesB : golesA;
+
+    return _buildOfficialScoreCard(
+      myGoles, 
+      rivalGoles, 
+      isTeamA ? (match.nombreEquipoA ?? 'Mi Equipo') : (match.nombreEquipoB ?? 'Mi Equipo'), 
+      isDark
+    );
+  }
+
+  Widget _buildOfficialScoreCard(int f, int c, String teamName, bool isDark) {
+    final style = _getResultStyle(f, c);
+    final Color mainColor = style['color'] as Color;
+    
+    return Container(
+      padding: const EdgeInsets.all(32),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            mainColor.withValues(alpha: 0.15),
+            mainColor.withValues(alpha: 0.05),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: mainColor.withValues(alpha: 0.4), width: 2),
+        boxShadow: [
+          BoxShadow(
+            color: mainColor.withValues(alpha: 0.1),
+            blurRadius: 20,
+            spreadRadius: 2,
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color: mainColor.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(style['icon'] as IconData, color: mainColor, size: 18),
+                const SizedBox(width: 8),
+                Text(
+                  style['label'] as String,
+                  style: TextStyle(color: mainColor, fontWeight: FontWeight.bold, fontSize: 14, letterSpacing: 1.2),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              _buildScoreDigit(f, isDark),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Text('-', style: TextStyle(fontSize: 48, fontWeight: FontWeight.w300, color: mainColor.withValues(alpha: 0.5))),
+              ),
+              _buildScoreDigit(c, isDark),
+            ],
+          ),
+          const SizedBox(height: 24),
+          Text(
+            teamName,
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: AppColors.textMuted),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            f > c ? '¡Gran Victoria!' : (f < c ? 'A seguir mejorando' : 'Partido reñido'),
+            style: TextStyle(color: mainColor, fontSize: 14, fontStyle: FontStyle.italic),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildScoreDigit(int value, bool isDark) {
+    return Container(
+      width: 70,
+      height: 90,
+      decoration: BoxDecoration(
+        color: isDark ? Colors.black26 : Colors.grey[100],
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+      ),
+      alignment: Alignment.center,
+      child: Text(
+        '$value',
+        style: const TextStyle(fontSize: 56, fontWeight: FontWeight.bold),
+      ),
+    );
+  }
+
+  Map<String, dynamic> _getResultStyle(int f, int c) {
+    if (f > c) {
+      return {
+        'label': 'VICTORIA',
+        'color': Colors.greenAccent,
+        'icon': Icons.emoji_events,
+      };
+    } else if (f < c) {
+      return {
+        'label': 'DERROTA',
+        'color': Colors.redAccent,
+        'icon': Icons.trending_down,
+      };
+    } else {
+      return {
+        'label': 'EMPATE',
+        'color': Colors.amberAccent,
+        'icon': Icons.drag_handle,
+      };
+    }
+  }
+
+  Widget _buildPlayersSection(bool isDark, MatchEntity match) {
+    if (_isLoadingPlayers) return const Center(child: CircularProgressIndicator(color: AppColors.primary));
+    if (_players.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+          child: Text('Alineaciones Confirmadas', style: _titleStyle(isDark, context)),
+        ),
+        const SizedBox(height: 12),
+        _buildTeamLineup(match.nombreEquipoA ?? 'Equipo A', _players.where((p) => p.idEquipo == match.idEquipoA).toList(), isDark),
+        const SizedBox(height: 12),
+        _buildTeamLineup(match.nombreEquipoB ?? 'Equipo B', _players.where((p) => p.idEquipo == match.idEquipoB).toList(), isDark),
+      ],
+    );
+  }
+
+  Widget _buildTeamLineup(String teamName, List<MatchPlayer> players, bool isDark) {
+    return _buildCard(
+      isDark,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 4,
+                height: 16,
+                decoration: BoxDecoration(color: AppColors.primary, borderRadius: BorderRadius.circular(2)),
+              ),
+              const SizedBox(width: 8),
+              Text(teamName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: AppColors.primary)),
+              const Spacer(),
+              Text('${players.length} Jugadores', style: const TextStyle(fontSize: 12, color: AppColors.textMuted)),
+            ],
+          ),
+          const SizedBox(height: 16),
+          if (players.isEmpty)
+            const Center(child: Text('Sin jugadores registrados', style: TextStyle(color: AppColors.textMuted, fontSize: 12)))
+          else
+            Wrap(
+              spacing: 12,
+              runSpacing: 12,
+              children: players.map((p) => _buildPlayerChip(p, isDark)).toList(),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPlayerChip(MatchPlayer p, bool isDark) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: isDark ? Colors.black26 : Colors.grey[100],
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          CircleAvatar(
+            radius: 10,
+            backgroundColor: AppColors.primary.withValues(alpha: 0.2),
+            backgroundImage: (p.urlFotoPerfil != null && p.urlFotoPerfil!.startsWith('http')) ? NetworkImage(p.urlFotoPerfil!) : null,
+            child: (p.urlFotoPerfil == null || !p.urlFotoPerfil!.startsWith('http')) ? const Icon(Icons.person, size: 10, color: AppColors.primary) : null,
+          ),
+          const SizedBox(width: 8),
+          Text(p.nombreUsuario, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500)),
         ],
       ),
     );

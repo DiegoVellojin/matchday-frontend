@@ -10,6 +10,9 @@ import '../../../profile/presentation/bloc/profile_bloc.dart';
 import '../../../profile/presentation/bloc/profile_state.dart';
 import '../../domain/entities/match_entity.dart';
 import '../bloc/matches_bloc.dart';
+import 'register_result_page.dart';
+import 'confirm_result_page.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../../payments/presentation/widgets/verify_payment_modal.dart';
 
 class CaptainMatchDashboardPage extends StatefulWidget {
@@ -119,6 +122,11 @@ class _CaptainMatchDashboardPageState extends State<CaptainMatchDashboardPage>
         : (match.costoTotal / 22);
 
     final everyonePaid = myTeamPaid >= myTeamPlayers.length && myTeamPlayers.isNotEmpty;
+    final amIReady = isCaptainA ? match.equipoAListo : (isCaptainB ? match.equipoBListo : false);
+    final isConfirmed = match.estatus == 'confirmada';
+    
+    final myGolesFavor = isCaptainA ? match.resultadoGolesACapA : match.resultadoGolesBCapB;
+    final hasRegisteredResult = myGolesFavor != null;
 
     return BlocListener<MatchesBloc, MatchesState>(
       listener: (context, state) {
@@ -129,6 +137,10 @@ class _CaptainMatchDashboardPageState extends State<CaptainMatchDashboardPage>
               backgroundColor: Theme.of(context).primaryColor,
             ),
           );
+          // Navigator.pop(context); // Comentado para permitir ver el estado "Esperando rival"
+        }
+        if (state is MatchResultRegistered) {
+          // Si el resultado se registró, volvemos al dashboard de equipos o refrescamos
           Navigator.pop(context);
         }
       },
@@ -158,7 +170,7 @@ class _CaptainMatchDashboardPageState extends State<CaptainMatchDashboardPage>
                     ],
                   ),
                 ),
-                _buildStickyFooter(everyonePaid, myTeamPaid, myTeamPlayers.length, surface, accent, textMuted),
+                _buildStickyFooter(everyonePaid, myTeamPaid, myTeamPlayers.length, surface, accent, textMuted, amIReady, isConfirmed, hasRegisteredResult, currentUserId),
               ],
             ),
           );
@@ -233,7 +245,7 @@ class _CaptainMatchDashboardPageState extends State<CaptainMatchDashboardPage>
                         shape: BoxShape.circle,
                       ),
                       child: Hero(
-                        tag: 'team_logo_${match.idEquipoA}',
+                        tag: 'team_logo_dashboard_${match.id}_${match.idEquipoA}',
                         child: ClipOval(
                           child: (match.logoEquipoA != null && match.logoEquipoA!.startsWith('http'))
                               ? Image.network(
@@ -459,7 +471,7 @@ class _CaptainMatchDashboardPageState extends State<CaptainMatchDashboardPage>
       child: Row(
         children: [
           Hero(
-            tag: 'player_avatar_${player.idUsuario}',
+            tag: 'player_avatar_${widget.matchEntity.id}_${player.idUsuario}',
             child: CircleAvatar(
               backgroundColor: Theme.of(context).scaffoldBackgroundColor,
               backgroundImage: (player.urlFotoPerfil?.startsWith('http') ?? false)
@@ -520,7 +532,7 @@ class _CaptainMatchDashboardPageState extends State<CaptainMatchDashboardPage>
     );
   }
 
-  Widget _buildStickyFooter(bool everyonePaid, int paidCount, int totalCount, Color surface, Color accent, Color textMuted) {
+  Widget _buildStickyFooter(bool everyonePaid, int paidCount, int totalCount, Color surface, Color accent, Color textMuted, bool amIReady, bool isConfirmed, bool hasRegisteredResult, int? currentUserId) {
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
       decoration: BoxDecoration(
@@ -531,16 +543,42 @@ class _CaptainMatchDashboardPageState extends State<CaptainMatchDashboardPage>
         mainAxisSize: MainAxisSize.min,
         children: [
           AnimatedBouncingButton(
-            onTap: everyonePaid
-                ? () => context.read<MatchesBloc>().add(MarkTeamReadyEvent(widget.matchEntity.id))
-                : null,
+            onTap: isConfirmed 
+                ? () {
+                    if (hasRegisteredResult) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ConfirmarResultadoPage(
+                            match: widget.matchEntity,
+                            currentUserId: currentUserId!,
+                          ),
+                        ),
+                      );
+                    } else {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => RegisterResultPage(
+                            match: widget.matchEntity,
+                            currentUserId: currentUserId!,
+                          ),
+                        ),
+                      );
+                    }
+                  }
+                : (everyonePaid && !amIReady)
+                    ? () => context.read<MatchesBloc>().add(MarkTeamReadyEvent(widget.matchEntity.id))
+                    : null,
             child: Container(
               width: double.infinity,
               height: 60,
               decoration: BoxDecoration(
-                color: everyonePaid ? accent : Theme.of(context).dividerColor,
+                color: isConfirmed 
+                    ? AppColors.primary 
+                    : (amIReady ? Theme.of(context).dividerColor : (everyonePaid ? accent : Theme.of(context).dividerColor)),
                 borderRadius: BorderRadius.circular(16),
-                boxShadow: everyonePaid ? [
+                boxShadow: (everyonePaid && !amIReady) ? [
                   BoxShadow(
                     color: accent.withValues(alpha: 0.3),
                     blurRadius: 15,
@@ -550,15 +588,19 @@ class _CaptainMatchDashboardPageState extends State<CaptainMatchDashboardPage>
               ),
               alignment: Alignment.center,
               child: Text(
-                everyonePaid ? '✓ Confirmar Equipo Ready' : '⏳ Esperando Pagos ($paidCount/$totalCount)',
+                isConfirmed 
+                    ? (hasRegisteredResult ? '👀 Ver Resultado' : '🏆 Registrar Resultado')
+                    : (amIReady 
+                        ? '✓ Listo, esperando rival...' 
+                        : (everyonePaid ? '✓ Confirmar Equipo Ready' : '⏳ Esperando Pagos ($paidCount/$totalCount)')),
                 style: TextStyle(
                   fontWeight: FontWeight.bold, 
                   fontSize: 16,
-                  color: everyonePaid ? Colors.black : textMuted,
+                  color: (everyonePaid || isConfirmed) ? Colors.black : textMuted,
                 ),
               ),
             ),
-          ).withPulseGlow(color: accent, enabled: everyonePaid),
+          ).withPulseGlow(color: accent, enabled: everyonePaid && !amIReady),
           if (everyonePaid)
             Padding(
               padding: const EdgeInsets.only(top: 8),

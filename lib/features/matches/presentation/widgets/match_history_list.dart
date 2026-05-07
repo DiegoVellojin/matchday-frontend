@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../domain/entities/match_entity.dart';
 
@@ -46,7 +47,10 @@ class MatchHistoryList extends StatelessWidget {
     return Column(
       children: [
         if (showStats) ...[
-          _buildStatsSummary(wins, draws, losses),
+          _buildStatsSummary(wins, draws, losses)
+            .animate()
+            .fadeIn(duration: 600.ms)
+            .slideY(begin: -0.2, end: 0),
           const SizedBox(height: 24),
         ],
         ListView.separated(
@@ -55,7 +59,10 @@ class MatchHistoryList extends StatelessWidget {
           itemCount: matches.length,
           separatorBuilder: (context, index) => const SizedBox(height: 16),
           itemBuilder: (context, index) {
-            return _buildHistoryCard(context, matches[index], isDark);
+            return _buildHistoryCard(context, matches[index], isDark)
+              .animate()
+              .fadeIn(delay: (index * 100).ms, duration: 600.ms)
+              .slideX(begin: 0.1, end: 0);
           },
         ),
       ],
@@ -92,22 +99,36 @@ class MatchHistoryList extends StatelessWidget {
 
   Widget _buildStatItem(String label, String value, Color color) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 16),
+      padding: const EdgeInsets.symmetric(vertical: 20),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            color.withValues(alpha: 0.15),
+            color.withValues(alpha: 0.05),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withValues(alpha: 0.3), width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         children: [
           Text(
             value,
-            style: TextStyle(color: color, fontSize: 24, fontWeight: FontWeight.bold),
+            style: TextStyle(color: color, fontSize: 28, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 4),
           Text(
-            label,
-            style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.w500),
+            label.toUpperCase(),
+            style: TextStyle(color: color.withValues(alpha: 0.8), fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 0.5),
           ),
         ],
       ),
@@ -126,11 +147,18 @@ class MatchHistoryList extends StatelessWidget {
     return InkWell(
       onTap: () => context.push('/match-history-detail/${match.id}'),
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           color: colorScheme.surface,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(24),
           border: Border.all(color: theme.dividerColor),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 12,
+              offset: const Offset(0, 6),
+            ),
+          ],
         ),
         child: Column(
           children: [
@@ -140,74 +168,107 @@ class MatchHistoryList extends StatelessWidget {
                 Row(
                   children: [
                     Icon(Icons.calendar_today, size: 14, color: textMuted),
-                    const SizedBox(width: 6),
+                    const SizedBox(width: 8),
                     Text(
-                      DateFormat('EEEE, d MMMM', 'es_VE').format(match.fechaInicioEstimada),
-                      style: TextStyle(color: textMuted, fontSize: 12),
+                      DateFormat('EEE, d MMMM', 'es_VE').format(match.fechaInicioEstimada),
+                      style: TextStyle(color: textMuted, fontSize: 13, fontWeight: FontWeight.w500),
                     ),
                   ],
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
                     color: resultColor.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: resultColor.withValues(alpha: 0.3)),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: resultColor.withValues(alpha: 0.2)),
                   ),
-                  child: Text(
-                    result,
-                    style: TextStyle(color: resultColor, fontSize: 10, fontWeight: FontWeight.bold),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 6,
+                        height: 6,
+                        decoration: BoxDecoration(color: resultColor, shape: BoxShape.circle),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        result.toUpperCase(),
+                        style: TextStyle(color: resultColor, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 0.5),
+                      ),
+                    ],
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
             Row(
               children: [
                 Container(
-                  width: 40,
-                  height: 40,
+                  width: 50,
+                  height: 50,
                   decoration: BoxDecoration(
                     color: theme.scaffoldBackgroundColor, 
                     shape: BoxShape.circle, 
-                    border: Border.all(color: theme.dividerColor)
+                    border: Border.all(color: theme.dividerColor, width: 1.5),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.1),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
                   ),
                   child: ClipOval(
                     child: _getOpponentLogo(match) != null
                       ? Image.network(
                           _getOpponentLogo(match)!, 
                           fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) => const Center(child: Text('⚽', style: TextStyle(fontSize: 20))),
+                          errorBuilder: (context, error, stackTrace) => const Center(child: Text('⚽', style: TextStyle(fontSize: 24))),
                         )
-                      : const Center(child: Text('⚽', style: TextStyle(fontSize: 20))),
+                      : const Center(child: Text('⚽', style: TextStyle(fontSize: 24))),
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 16),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         'vs ${_getOpponentName(match)}',
-                        style: TextStyle(color: colorScheme.onSurface, fontWeight: FontWeight.bold, fontSize: 15),
+                        style: TextStyle(color: colorScheme.onSurface, fontWeight: FontWeight.bold, fontSize: 16),
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 6),
                       Row(
                         children: [
-                          Icon(Icons.location_on, size: 12, color: textMuted),
-                          const SizedBox(width: 4),
-                          Text(
-                            match.nombreCancha ?? 'Ubicación',
-                            style: TextStyle(color: textMuted, fontSize: 12),
+                          Icon(Icons.location_on, size: 14, color: AppColors.primary.withValues(alpha: 0.7)),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
+                              match.nombreCancha ?? 'Ubicación por definir',
+                              style: TextStyle(color: textMuted, fontSize: 13),
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
                         ],
                       ),
                     ],
                   ),
                 ),
-                Text(
-                  score,
-                  style: TextStyle(color: colorScheme.onSurface, fontSize: 22, fontWeight: FontWeight.bold),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: isDark ? Colors.black26 : Colors.grey[100],
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    score,
+                    style: TextStyle(
+                      color: colorScheme.onSurface, 
+                      fontSize: 24, 
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 1.0,
+                    ),
+                  ),
                 ),
               ],
             ),
