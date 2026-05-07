@@ -14,6 +14,7 @@ class GetMatchesUseCase {
     int? canchaId,
     DateTime? date,
     bool? mine,
+    int? teamId,
   }) {
     return repository.getMatches(
       sportId: sportId, 
@@ -22,6 +23,7 @@ class GetMatchesUseCase {
       canchaId: canchaId,
       date: date,
       mine: mine,
+      teamId: teamId,
     );
   }
 }

@@ -16,7 +16,8 @@ class LoadMatchesEvent extends MatchesEvent {
   final int? canchaId;
   final DateTime? date;
   final bool? mine;
-
+  final int? teamId;
+  
   LoadMatchesEvent({
     this.sportId, 
     this.status,
@@ -24,10 +25,11 @@ class LoadMatchesEvent extends MatchesEvent {
     this.canchaId,
     this.date,
     this.mine,
+    this.teamId,
   });
 
   @override
-  List<Object?> get props => [sportId, status, regionId, canchaId, date, mine];
+  List<Object?> get props => [sportId, status, regionId, canchaId, date, mine, teamId];
 }
 
 class LoadMatchDetailsEvent extends MatchesEvent {
@@ -217,6 +219,7 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
       canchaId: event.canchaId,
       date: event.date,
       mine: event.mine,
+      teamId: event.teamId,
     );
     result.fold(
       (failure) => emit(MatchesError(failure.message)),

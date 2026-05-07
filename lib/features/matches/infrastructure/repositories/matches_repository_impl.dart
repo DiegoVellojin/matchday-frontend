@@ -18,6 +18,7 @@ class MatchesRepositoryImpl implements IMatchesRepository {
     int? canchaId,
     DateTime? date,
     bool? mine,
+    int? teamId,
   }) async {
     try {
       final results = await remoteDataSource.getMatches(
@@ -27,6 +28,7 @@ class MatchesRepositoryImpl implements IMatchesRepository {
         canchaId: canchaId,
         date: date,
         mine: mine,
+        teamId: teamId,
       );
       return Right(results);
     } catch (e) {

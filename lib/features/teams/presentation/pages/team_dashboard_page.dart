@@ -13,6 +13,8 @@ import '../../../profile/presentation/bloc/profile_bloc.dart';
 import '../../../profile/presentation/bloc/profile_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../../matches/presentation/bloc/matches_bloc.dart';
+import '../../../matches/presentation/widgets/match_history_list.dart';
 
 
 class TeamDashboardPage extends StatefulWidget {
@@ -29,8 +31,6 @@ class _TeamDashboardPageState extends State<TeamDashboardPage> {
   late Future<TeamEntity> _teamFuture;
   late Future<List<Map<String, dynamic>>> _membersFuture;
   late Future<List<Map<String, dynamic>>> _requestsFuture;
-
-  final List<Map<String, dynamic>> matchHistory = [];
 
   @override
   void initState() {
@@ -67,47 +67,50 @@ class _TeamDashboardPageState extends State<TeamDashboardPage> {
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      body: FutureBuilder<TeamEntity>(
-        future: _teamFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(
-              child: CircularProgressIndicator(color: AppColors.primary),
-            );
-          } else if (snapshot.hasError) {
-            return Center(
-              child: Text(
-                'Error: ${snapshot.error}',
-                style: TextStyle(color: colorScheme.onSurface),
-              ),
-            );
-          } else if (!snapshot.hasData) {
-            return Center(
-              child: Text(
-                'Equipo no encontrado.',
-                style: TextStyle(color: colorScheme.onSurface),
-              ),
-            );
-          }
-
-          final team = snapshot.data!;
-
-          return SafeArea(
-            child: Column(
-              children: [
-                _buildHeader(context, team, colorScheme),
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(16.0),
-                    child: _activeTab == 'roster'
-                        ? _buildRosterTab(team, colorScheme)
-                        : _buildHistoryTab(colorScheme),
-                  ),
+      body: BlocProvider(
+        create: (context) => sl<MatchesBloc>()..add(LoadMatchesEvent(teamId: widget.teamId, status: 'completada')),
+        child: FutureBuilder<TeamEntity>(
+          future: _teamFuture,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(
+                child: CircularProgressIndicator(color: AppColors.primary),
+              );
+            } else if (snapshot.hasError) {
+              return Center(
+                child: Text(
+                  'Error: ${snapshot.error}',
+                  style: TextStyle(color: colorScheme.onSurface),
                 ),
-              ],
-            ),
-          );
-        },
+              );
+            } else if (!snapshot.hasData) {
+              return Center(
+                child: Text(
+                  'Equipo no encontrado.',
+                  style: TextStyle(color: colorScheme.onSurface),
+                ),
+              );
+            }
+
+            final team = snapshot.data!;
+
+            return SafeArea(
+              child: Column(
+                children: [
+                  _buildHeader(context, team, colorScheme),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.all(16.0),
+                      child: _activeTab == 'roster'
+                          ? _buildRosterTab(team, colorScheme)
+                          : _buildHistoryTab(colorScheme),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
       ),
       bottomNavigationBar: FutureBuilder<TeamEntity>(
         future: _teamFuture,
@@ -305,9 +308,27 @@ class _TeamDashboardPageState extends State<TeamDashboardPage> {
             children: [
               _buildStatCard('Jugadores', '${team.currentMembers}/${team.maxMembers}', colorScheme),
               const SizedBox(width: 8),
-              _buildStatCard('Partidos', '0', colorScheme),
+              BlocBuilder<MatchesBloc, MatchesState>(
+                builder: (context, state) {
+                  final count = state is MatchesLoaded ? state.matches.length : 0;
+                  return _buildStatCard('Partidos', '$count', colorScheme);
+                },
+              ),
               const SizedBox(width: 8),
-              _buildStatCard('Victorias', '0', colorScheme),
+              BlocBuilder<MatchesBloc, MatchesState>(
+                builder: (context, state) {
+                  int wins = 0;
+                  if (state is MatchesLoaded) {
+                    wins = state.matches.where((m) {
+                      final isTeamA = m.idEquipoA == team.id;
+                      final ourScore = isTeamA ? (m.resultadoGolesACapA ?? 0) : (m.resultadoGolesBCapA ?? 0);
+                      final oppScore = isTeamA ? (m.resultadoGolesBCapA ?? 0) : (m.resultadoGolesACapA ?? 0);
+                      return ourScore > oppScore;
+                    }).length;
+                  }
+                  return _buildStatCard('Victorias', '$wins', colorScheme);
+                },
+              ),
               if (team.soyMiembro) ...[
                 const SizedBox(width: 8),
                 Expanded(
@@ -665,148 +686,25 @@ class _TeamDashboardPageState extends State<TeamDashboardPage> {
   }
 
   Widget _buildHistoryTab(ColorScheme colorScheme) {
-    if (matchHistory.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32.0),
-          child: Column(
-            children: [
-              Icon(Icons.sports_soccer, color: colorScheme.onSurfaceVariant, size: 48),
-              const SizedBox(height: 16),
-              Text(
-                'No hay historial de partidos todavía.',
-                style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 16),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: matchHistory.map((match) => _buildMatchCard(match, colorScheme)).toList(),
-    );
-  }
-
-  Widget _buildMatchCard(Map<String, dynamic> match, ColorScheme colorScheme) {
-    final isWon = match['won'] as bool;
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: colorScheme.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: colorScheme.outlineVariant),
-      ),
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  Icon(Icons.calendar_today, color: colorScheme.onSurfaceVariant, size: 14),
-                  const SizedBox(width: 6),
-                  Text(
-                    match['date'],
-                    style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 12),
-                  ),
-                ],
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: isWon
-                      ? AppColors.primary.withValues(alpha: 0.2)
-                      : AppColors.error.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  isWon ? 'Ganado' : 'Perdido',
-                  style: TextStyle(
-                    color: isWon ? AppColors.primary : AppColors.error,
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Row(
-                  children: [
-                    CircleAvatar(
-                      backgroundColor: colorScheme.surfaceContainerHighest,
-                      child: const Text('⚽'),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Elite Strikers',
-                            style: TextStyle(color: colorScheme.onSurface, fontWeight: FontWeight.bold),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          Text(
-                            'Nuestro Equipo',
-                            style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 11),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: Text(
-                  '${match['ourScore']} - ${match['opponentScore']}',
-                  style: TextStyle(
-                    color: colorScheme.onSurface,
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              Expanded(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Text(
-                            match['opponent'],
-                            style: TextStyle(color: colorScheme.onSurface, fontWeight: FontWeight.bold),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          Text(
-                            'Rival',
-                            style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 11),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    CircleAvatar(
-                      backgroundColor: colorScheme.surfaceContainerHighest,
-                      child: const Text('⚽'),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
+    return BlocBuilder<MatchesBloc, MatchesState>(
+      builder: (context, state) {
+        if (state is MatchesLoading) {
+          return const Center(
+            child: Padding(
+              padding: EdgeInsets.all(32.0),
+              child: CircularProgressIndicator(color: AppColors.primary),
+            ),
+          );
+        } else if (state is MatchesError) {
+          return Center(child: Text(state.message));
+        } else if (state is MatchesLoaded) {
+          return MatchHistoryList(
+            matches: state.matches,
+            perspectiveTeamId: widget.teamId,
+          );
+        }
+        return const SizedBox.shrink();
+      },
     );
   }
 }

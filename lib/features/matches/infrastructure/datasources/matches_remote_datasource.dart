@@ -9,6 +9,7 @@ abstract class MatchesRemoteDataSource {
     int? canchaId,
     DateTime? date,
     bool? mine,
+    int? teamId,
   });
   Future<MatchModel> createMatch(MatchModel match);
   Future<MatchModel> getMatchDetails(int id);
@@ -36,6 +37,7 @@ class MatchesRemoteDataSourceImpl implements MatchesRemoteDataSource {
     int? canchaId,
     DateTime? date,
     bool? mine,
+    int? teamId,
   }) async {
     final response = await network.get('/matches/', queryParameters: {
       'sport_id': sportId,
@@ -44,6 +46,7 @@ class MatchesRemoteDataSourceImpl implements MatchesRemoteDataSource {
       'cancha_id': canchaId,
       'fecha': date?.toIso8601String(),
       'mine': mine,
+      'team_id': teamId,
     }..removeWhere((_, v) => v == null));
     return (response.data as List).map((e) => MatchModel.fromJson(e)).toList();
   }

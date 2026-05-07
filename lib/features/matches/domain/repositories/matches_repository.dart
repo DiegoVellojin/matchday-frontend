@@ -10,6 +10,7 @@ abstract class IMatchesRepository {
     int? canchaId,
     DateTime? date,
     bool? mine,
+    int? teamId,
   });
   Future<Either<Failure, MatchEntity>> createMatch(MatchEntity match);
   Future<Either<Failure, MatchEntity>> getMatchDetails(int id);
