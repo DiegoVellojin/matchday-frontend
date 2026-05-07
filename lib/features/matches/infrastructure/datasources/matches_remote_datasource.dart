@@ -1,5 +1,5 @@
-import 'package:dio/dio.dart';
 import '../../../../core/network/network_robot.dart';
+import '../../../../core/error/api_error_handler.dart';
 import '../models/match_model.dart';
 
 abstract class MatchesRemoteDataSource {
@@ -52,7 +52,7 @@ class MatchesRemoteDataSourceImpl implements MatchesRemoteDataSource {
       }..removeWhere((_, v) => v == null));
       return (response.data as List).map((e) => MatchModel.fromJson(e)).toList();
     } catch (e) {
-      throw _handleError(e, 'Error al obtener la lista de partidos');
+      throw ApiErrorHandler.handle(e, 'Error al obtener la lista de partidos');
     }
   }
 
@@ -62,7 +62,7 @@ class MatchesRemoteDataSourceImpl implements MatchesRemoteDataSource {
       final response = await network.post('/matches/', data: match.toJson());
       return MatchModel.fromJson(response.data);
     } catch (e) {
-      throw _handleError(e, 'Error al crear el partido');
+      throw ApiErrorHandler.handle(e, 'Error al crear el partido');
     }
   }
 
@@ -72,7 +72,7 @@ class MatchesRemoteDataSourceImpl implements MatchesRemoteDataSource {
       final response = await network.get('/matches/$id');
       return MatchModel.fromJson(response.data);
     } catch (e) {
-      throw _handleError(e, 'Error al obtener detalles del partido');
+      throw ApiErrorHandler.handle(e, 'Error al obtener detalles del partido');
     }
   }
 
@@ -82,7 +82,7 @@ class MatchesRemoteDataSourceImpl implements MatchesRemoteDataSource {
       final response = await network.post('/matches/$matchId/accept/$teamId');
       return MatchModel.fromJson(response.data);
     } catch (e) {
-      throw _handleError(e, 'Error al aceptar el encuentro');
+      throw ApiErrorHandler.handle(e, 'Error al aceptar el encuentro');
     }
   }
 
@@ -95,7 +95,7 @@ class MatchesRemoteDataSourceImpl implements MatchesRemoteDataSource {
       });
       return MatchModel.fromJson(response.data);
     } catch (e) {
-      throw _handleError(e, 'Error al proponer términos');
+      throw ApiErrorHandler.handle(e, 'Error al proponer términos');
     }
   }
 
@@ -111,7 +111,7 @@ class MatchesRemoteDataSourceImpl implements MatchesRemoteDataSource {
       });
       return MatchModel.fromJson(response.data);
     } catch (e) {
-      throw _handleError(e, 'Error al configurar el partido');
+      throw ApiErrorHandler.handle(e, 'Error al configurar el partido');
     }
   }
 
@@ -121,7 +121,7 @@ class MatchesRemoteDataSourceImpl implements MatchesRemoteDataSource {
       final response = await network.post('/matches/$matchId/ready');
       return MatchModel.fromJson(response.data);
     } catch (e) {
-      throw _handleError(e, 'Error al marcar equipo como listo');
+      throw ApiErrorHandler.handle(e, 'Error al marcar equipo como listo');
     }
   }
 
@@ -133,7 +133,7 @@ class MatchesRemoteDataSourceImpl implements MatchesRemoteDataSource {
         'goles_b': golesB,
       });
     } catch (e) {
-      throw _handleError(e, 'Error al registrar el resultado');
+      throw ApiErrorHandler.handle(e, 'Error al registrar el resultado');
     }
   }
 
@@ -144,7 +144,7 @@ class MatchesRemoteDataSourceImpl implements MatchesRemoteDataSource {
         'team_id': teamId,
       }..removeWhere((_, v) => v == null));
     } catch (e) {
-      throw _handleError(e, 'Error al unirse al partido');
+      throw ApiErrorHandler.handle(e, 'Error al unirse al partido');
     }
   }
 
@@ -154,7 +154,7 @@ class MatchesRemoteDataSourceImpl implements MatchesRemoteDataSource {
       final response = await network.get('/matches/$matchId/players');
       return (response.data as List).map((e) => MatchPlayerModel.fromJson(e)).toList();
     } catch (e) {
-      throw _handleError(e, 'Error al obtener jugadores del partido');
+      throw ApiErrorHandler.handle(e, 'Error al obtener jugadores del partido');
     }
   }
 
@@ -163,7 +163,7 @@ class MatchesRemoteDataSourceImpl implements MatchesRemoteDataSource {
     try {
       await network.delete('/matches/$matchId');
     } catch (e) {
-      throw _handleError(e, 'Error al cancelar el partido');
+      throw ApiErrorHandler.handle(e, 'Error al cancelar el partido');
     }
   }
 
@@ -173,25 +173,7 @@ class MatchesRemoteDataSourceImpl implements MatchesRemoteDataSource {
       final response = await network.put('/matches/${match.id}', data: match.toJson());
       return MatchModel.fromJson(response.data);
     } catch (e) {
-      throw _handleError(e, 'Error al actualizar el partido');
+      throw ApiErrorHandler.handle(e, 'Error al actualizar el partido');
     }
-  }
-
-  Exception _handleError(dynamic e, String defaultMessage) {
-    if (e is DioException) {
-      if (e.type == DioExceptionType.connectionTimeout || 
-          e.type == DioExceptionType.receiveTimeout) {
-        return Exception('Estamos preparando la cancha... El servidor está despertando, por favor intenta de nuevo en unos segundos. 🏟️⚽');
-      }
-
-      if (e.response != null && e.response!.data != null) {
-        final data = e.response!.data;
-        if (data is Map && data.containsKey('detail')) {
-          return Exception(data['detail'].toString());
-        }
-      }
-      return Exception('$defaultMessage. 🛠️');
-    }
-    return Exception(e.toString());
   }
 }

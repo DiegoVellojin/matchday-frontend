@@ -32,7 +32,7 @@ class MatchesRepositoryImpl implements IMatchesRepository {
       );
       return Right(results);
     } catch (e) {
-      return Left(ServerFailure(e.toString()));
+      return Left(ServerFailure(e.toString().replaceAll('Exception: ', '')));
     }
   }
 
@@ -55,7 +55,7 @@ class MatchesRepositoryImpl implements IMatchesRepository {
       final result = await remoteDataSource.createMatch(model);
       return Right(result);
     } catch (e) {
-      return Left(ServerFailure(e.toString()));
+      return Left(ServerFailure(e.toString().replaceAll('Exception: ', '')));
     }
   }
 
@@ -65,7 +65,7 @@ class MatchesRepositoryImpl implements IMatchesRepository {
       final result = await remoteDataSource.getMatchDetails(id);
       return Right(result);
     } catch (e) {
-      return Left(ServerFailure(e.toString()));
+      return Left(ServerFailure(e.toString().replaceAll('Exception: ', '')));
     }
   }
 
@@ -75,7 +75,7 @@ class MatchesRepositoryImpl implements IMatchesRepository {
       final result = await remoteDataSource.acceptEncounter(matchId, teamId);
       return Right(result);
     } catch (e) {
-      return Left(ServerFailure(e.toString()));
+      return Left(ServerFailure(e.toString().replaceAll('Exception: ', '')));
     }
   }
 
@@ -85,7 +85,7 @@ class MatchesRepositoryImpl implements IMatchesRepository {
       final result = await remoteDataSource.proposeTerms(matchId, fecha, costo);
       return Right(result);
     } catch (e) {
-      return Left(ServerFailure(e.toString()));
+      return Left(ServerFailure(e.toString().replaceAll('Exception: ', '')));
     }
   }
 
@@ -95,7 +95,7 @@ class MatchesRepositoryImpl implements IMatchesRepository {
       final result = await remoteDataSource.configureMatch(matchId, fecha, costo, banco, cedula, telefono);
       return Right(result);
     } catch (e) {
-      return Left(ServerFailure(e.toString()));
+      return Left(ServerFailure(e.toString().replaceAll('Exception: ', '')));
     }
   }
 
@@ -105,7 +105,7 @@ class MatchesRepositoryImpl implements IMatchesRepository {
       final result = await remoteDataSource.markTeamReady(matchId);
       return Right(result);
     } catch (e) {
-      return Left(ServerFailure(e.toString()));
+      return Left(ServerFailure(e.toString().replaceAll('Exception: ', '')));
     }
   }
 
@@ -115,7 +115,7 @@ class MatchesRepositoryImpl implements IMatchesRepository {
       await remoteDataSource.registerResult(matchId, golesA, golesB);
       return const Right(null);
     } catch (e) {
-      return Left(ServerFailure(e.toString()));
+      return Left(ServerFailure(e.toString().replaceAll('Exception: ', '')));
     }
   }
 
@@ -125,7 +125,7 @@ class MatchesRepositoryImpl implements IMatchesRepository {
       await remoteDataSource.joinMatch(matchId, teamId: teamId);
       return const Right(null);
     } catch (e) {
-      return Left(ServerFailure(e.toString()));
+      return Left(ServerFailure(e.toString().replaceAll('Exception: ', '')));
     }
   }
 
@@ -135,7 +135,7 @@ class MatchesRepositoryImpl implements IMatchesRepository {
       final result = await remoteDataSource.getMatchPlayers(matchId);
       return Right(result);
     } catch (e) {
-      return Left(ServerFailure(e.toString()));
+      return Left(ServerFailure(e.toString().replaceAll('Exception: ', '')));
     }
   }
 
@@ -145,7 +145,7 @@ class MatchesRepositoryImpl implements IMatchesRepository {
       await remoteDataSource.cancelMatch(matchId);
       return const Right(null);
     } catch (e) {
-      return Left(ServerFailure(e.toString()));
+      return Left(ServerFailure(e.toString().replaceAll('Exception: ', '')));
     }
   }
 
@@ -168,7 +168,7 @@ class MatchesRepositoryImpl implements IMatchesRepository {
       final result = await remoteDataSource.updateMatch(model);
       return Right(result);
     } catch (e) {
-      return Left(ServerFailure(e.toString()));
+      return Left(ServerFailure(e.toString().replaceAll('Exception: ', '')));
     }
   }
 }

@@ -1,5 +1,5 @@
-import 'package:dio/dio.dart';
 import '../../../../core/network/network_robot.dart';
+import '../../../../core/error/api_error_handler.dart';
 import '../../../teams/infrastructure/models/team_model.dart';
 import '../models/profile_model.dart';
 
@@ -13,7 +13,7 @@ class ProfileRemoteDataSource {
       final response = await networkRobot.get('/users/me');
       return UserProfileModel.fromJson(response.data);
     } catch (e) {
-      throw _handleError(e, 'Error al obtener el perfil');
+      throw ApiErrorHandler.handle(e, 'Error al obtener el perfil');
     }
   }
 
@@ -23,7 +23,7 @@ class ProfileRemoteDataSource {
       final List<dynamic> data = response.data;
       return data.map((json) => TeamModel.fromJson(json)).toList();
     } catch (e) {
-      throw _handleError(e, 'Error al obtener mis equipos');
+      throw ApiErrorHandler.handle(e, 'Error al obtener mis equipos');
     }
   }
 
@@ -45,25 +45,7 @@ class ProfileRemoteDataSource {
       );
       return UserProfileModel.fromJson(response.data);
     } catch (e) {
-      throw _handleError(e, 'Error al actualizar el perfil');
+      throw ApiErrorHandler.handle(e, 'Error al actualizar el perfil');
     }
-  }
-
-  Exception _handleError(dynamic e, String defaultMessage) {
-    if (e is DioException) {
-      if (e.type == DioExceptionType.connectionTimeout || 
-          e.type == DioExceptionType.receiveTimeout) {
-        return Exception('Estamos preparando la cancha... El servidor está despertando, por favor intenta de nuevo en unos segundos. 🏟️⚽');
-      }
-
-      if (e.response != null && e.response!.data != null) {
-        final data = e.response!.data;
-        if (data is Map && data.containsKey('detail')) {
-          return Exception(data['detail'].toString());
-        }
-      }
-      return Exception('$defaultMessage. 🛠️');
-    }
-    return Exception(e.toString());
   }
 }

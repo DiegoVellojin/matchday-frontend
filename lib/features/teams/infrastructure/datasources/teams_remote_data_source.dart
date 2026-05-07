@@ -1,5 +1,5 @@
-import 'package:dio/dio.dart';
 import '../../../../core/network/network_robot.dart';
+import '../../../../core/error/api_error_handler.dart';
 import '../models/team_model.dart';
 import '../models/sport_model.dart';
 
@@ -15,26 +15,8 @@ class TeamsRemoteDataSource {
 
       return data.map((json) => SportModel.fromJson(json)).toList();
     } catch (e) {
-      throw _handleError(e, 'Error al obtener la lista de deportes');
+      throw ApiErrorHandler.handle(e, 'Error al obtener la lista de deportes');
     }
-  }
-
-  Exception _handleError(dynamic e, String defaultMessage) {
-    if (e is DioException) {
-      if (e.type == DioExceptionType.connectionTimeout || 
-          e.type == DioExceptionType.receiveTimeout) {
-        return Exception('Estamos preparando la cancha... El servidor está despertando, por favor intenta de nuevo en unos segundos. 🏟️⚽');
-      }
-
-      if (e.response != null && e.response!.data != null) {
-        final data = e.response!.data;
-        if (data is Map && data.containsKey('detail')) {
-          return Exception(data['detail'].toString());
-        }
-      }
-      return Exception('$defaultMessage. 🛠️');
-    }
-    return Exception(e.toString());
   }
 
   Future<List<TeamModel>> getDiscoverableTeams() async {
@@ -43,7 +25,7 @@ class TeamsRemoteDataSource {
       final List<dynamic> data = response.data;
       return data.map((json) => TeamModel.fromJson(json)).toList();
     } catch (e) {
-      throw _handleError(e, 'Error al obtener los equipos del servidor');
+      throw ApiErrorHandler.handle(e, 'Error al obtener los equipos del servidor');
     }
   }
 
@@ -53,7 +35,7 @@ class TeamsRemoteDataSource {
       final List<dynamic> data = response.data;
       return data.map((json) => TeamModel.fromJson(json)).toList();
     } catch (e) {
-      throw _handleError(e, 'Error al obtener tus equipos');
+      throw ApiErrorHandler.handle(e, 'Error al obtener tus equipos');
     }
   }
 
@@ -62,7 +44,7 @@ class TeamsRemoteDataSource {
       final response = await networkRobot.get('/teams/$teamId');
       return TeamModel.fromJson(response.data);
     } catch (e) {
-      throw _handleError(e, 'Error al obtener los detalles del equipo');
+      throw ApiErrorHandler.handle(e, 'Error al obtener los detalles del equipo');
     }
   }
 
@@ -72,7 +54,7 @@ class TeamsRemoteDataSource {
       final List<dynamic> data = response.data;
       return data.map((e) => Map<String, dynamic>.from(e)).toList();
     } catch (e) {
-      throw _handleError(e, 'Error al obtener los miembros del equipo');
+      throw ApiErrorHandler.handle(e, 'Error al obtener los miembros del equipo');
     }
   }
 
@@ -91,7 +73,7 @@ class TeamsRemoteDataSource {
     try {
       await networkRobot.post('/teams/$teamId/join');
     } catch (e) {
-      throw _handleError(e, 'Error al enviar la solicitud al capitán');
+      throw ApiErrorHandler.handle(e, 'Error al enviar la solicitud al capitán');
     }
   }
 
@@ -102,7 +84,7 @@ class TeamsRemoteDataSource {
         data: {'accept': accept},
       );
     } catch (e) {
-      throw _handleError(e, 'Error al procesar la solicitud');
+      throw ApiErrorHandler.handle(e, 'Error al procesar la solicitud');
     }
   }
 
@@ -129,7 +111,7 @@ class TeamsRemoteDataSource {
         },
       );
     } catch (e) {
-      throw _handleError(e, 'Error al crear el equipo en el servidor');
+      throw ApiErrorHandler.handle(e, 'Error al crear el equipo en el servidor');
     }
   }
 
@@ -157,7 +139,7 @@ class TeamsRemoteDataSource {
         }..removeWhere((_, v) => v == null),
       );
     } catch (e) {
-      throw _handleError(e, 'Error al actualizar el equipo');
+      throw ApiErrorHandler.handle(e, 'Error al actualizar el equipo');
     }
   }
 
@@ -165,7 +147,7 @@ class TeamsRemoteDataSource {
     try {
       await networkRobot.delete('/teams/$teamId');
     } catch (e) {
-      throw _handleError(e, 'Error al eliminar el equipo');
+      throw ApiErrorHandler.handle(e, 'Error al eliminar el equipo');
     }
   }
 
@@ -176,7 +158,7 @@ class TeamsRemoteDataSource {
     try {
       await networkRobot.put('/teams/$teamId/transfer-captain/$newCaptainId');
     } catch (e) {
-      throw _handleError(e, 'Error al transferir la capitanía');
+      throw ApiErrorHandler.handle(e, 'Error al transferir la capitanía');
     }
   }
 
@@ -184,7 +166,7 @@ class TeamsRemoteDataSource {
     try {
       await networkRobot.delete('/teams/$teamId/leave');
     } catch (e) {
-      throw _handleError(e, 'Error al salir del equipo');
+      throw ApiErrorHandler.handle(e, 'Error al salir del equipo');
     }
   }
 
@@ -192,7 +174,7 @@ class TeamsRemoteDataSource {
     try {
       await networkRobot.delete('/teams/$teamId/members/$userId');
     } catch (e) {
-      throw _handleError(e, 'Error al expulsar al miembro');
+      throw ApiErrorHandler.handle(e, 'Error al expulsar al miembro');
     }
   }
 }
