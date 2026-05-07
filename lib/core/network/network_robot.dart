@@ -12,8 +12,8 @@ class NetworkRobot {
   NetworkRobot(this._dio, this._storage) {
     // Configuración global del cliente HTTP.
     _dio.options.baseUrl = 'https://matchday-backend-3qot.onrender.com/api/v1';
-    _dio.options.connectTimeout = const Duration(seconds: 15);
-    _dio.options.receiveTimeout = const Duration(seconds: 15);
+    _dio.options.connectTimeout = const Duration(seconds: 60);
+    _dio.options.receiveTimeout = const Duration(seconds: 60);
 
     // Interceptores para la gestión de tokens y debugging.
     _dio.interceptors.add(

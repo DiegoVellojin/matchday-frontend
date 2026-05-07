@@ -45,9 +45,7 @@ class AuthRemoteDataSource {
       }
       throw Exception('Fallo al autenticar con Google');
     } on DioException catch (e) {
-      throw Exception(
-        e.response?.data['detail'] ?? 'Error validando Google en el servidor',
-      );
+      throw _handleError(e, 'Error al autenticar con Google');
     }
   }
 
@@ -60,7 +58,7 @@ class AuthRemoteDataSource {
       );
       return response.data['access_token'];
     } on DioException catch (e) {
-      throw Exception(e.response?.data['detail'] ?? 'Credenciales inválidas');
+      throw _handleError(e, 'Credenciales inválidas');
     }
   }
 
@@ -77,9 +75,7 @@ class AuthRemoteDataSource {
       );
       return response.data['access_token'];
     } on DioException catch (e) {
-      throw Exception(
-        e.response?.data['detail'] ?? 'Error al registrar usuario',
-      );
+      throw _handleError(e, 'Error al registrar usuario');
     }
   }
 
@@ -91,9 +87,7 @@ class AuthRemoteDataSource {
         data: {'email': email},
       );
     } on DioException catch (e) {
-      throw Exception(
-        e.response?.data['detail'] ?? 'Error al procesar la solicitud',
-      );
+      throw _handleError(e, 'Error al procesar la solicitud');
     }
   }
 
@@ -105,9 +99,7 @@ class AuthRemoteDataSource {
         data: {'token': token, 'new_password': newPassword},
       );
     } on DioException catch (e) {
-      throw Exception(
-        e.response?.data['detail'] ?? 'Error al actualizar contraseña',
-      );
+      throw _handleError(e, 'Error al actualizar contraseña');
     }
   }
 
@@ -115,5 +107,23 @@ class AuthRemoteDataSource {
   Future<void> signOut() async {
     await _ensureInitialized();
     await _googleSignIn.disconnect();
+  }
+
+  Exception _handleError(dynamic e, String defaultMessage) {
+    if (e is DioException) {
+      if (e.type == DioExceptionType.connectionTimeout || 
+          e.type == DioExceptionType.receiveTimeout) {
+        return Exception('Estamos preparando la cancha... El servidor está despertando, por favor intenta de nuevo en unos segundos. 🏟️⚽');
+      }
+
+      if (e.response != null && e.response!.data != null) {
+        final data = e.response!.data;
+        if (data is Map && data.containsKey('detail')) {
+          return Exception(data['detail'].toString());
+        }
+      }
+      return Exception('$defaultMessage. 🛠️');
+    }
+    return Exception(e.toString());
   }
 }

@@ -21,13 +21,18 @@ class TeamsRemoteDataSource {
 
   Exception _handleError(dynamic e, String defaultMessage) {
     if (e is DioException) {
+      if (e.type == DioExceptionType.connectionTimeout || 
+          e.type == DioExceptionType.receiveTimeout) {
+        return Exception('Estamos preparando la cancha... El servidor está despertando, por favor intenta de nuevo en unos segundos. 🏟️⚽');
+      }
+
       if (e.response != null && e.response!.data != null) {
         final data = e.response!.data;
         if (data is Map && data.containsKey('detail')) {
           return Exception(data['detail'].toString());
         }
       }
-      return Exception('$defaultMessage: ${e.message}');
+      return Exception('$defaultMessage. 🛠️');
     }
     return Exception(e.toString());
   }

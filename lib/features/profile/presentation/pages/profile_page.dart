@@ -234,14 +234,13 @@ class _ProfilePageState extends State<ProfilePage> {
                         Row(
                           children: [
                             Flexible(
-                              child: Text(
-                                profile.name,
+                              child: _MarqueeText(
+                                text: profile.name,
                                 style: const TextStyle(
                                   fontSize: 22,
                                   fontWeight: FontWeight.w900,
                                   letterSpacing: -0.5,
                                 ),
-                                overflow: TextOverflow.ellipsis,
                               ),
                             ),
                             const SizedBox(width: 6),
@@ -589,6 +588,81 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Widget personalizado para nombres largos con efecto Marquee (deslizamiento).
+class _MarqueeText extends StatefulWidget {
+  final String text;
+  final TextStyle style;
+
+  const _MarqueeText({required this.text, required this.style});
+
+  @override
+  State<_MarqueeText> createState() => _MarqueeTextState();
+}
+
+class _MarqueeTextState extends State<_MarqueeText> {
+  late ScrollController _scrollController;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController = ScrollController();
+    // Iniciar la animación después del primer frame
+    WidgetsBinding.instance.addPostFrameCallback((_) => _startScrolling());
+  }
+
+  void _startScrolling() async {
+    // Pequeño delay inicial
+    await Future.delayed(const Duration(milliseconds: 500));
+    if (!mounted || !_scrollController.hasClients) return;
+
+    // Solo animamos si el texto es más largo que el contenedor
+    final maxScroll = _scrollController.position.maxScrollExtent;
+    if (maxScroll <= 0) return;
+
+    while (mounted) {
+      await Future.delayed(const Duration(seconds: 2));
+      if (!mounted) break;
+
+      // Deslizar hasta el final
+      await _scrollController.animateTo(
+        maxScroll,
+        duration: Duration(milliseconds: (maxScroll * 40).toInt()),
+        curve: Curves.linear,
+      );
+
+      await Future.delayed(const Duration(seconds: 2));
+      if (!mounted) break;
+
+      // Regresar al inicio suavemente
+      await _scrollController.animateTo(
+        0,
+        duration: const Duration(milliseconds: 1000),
+        curve: Curves.easeOut,
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      controller: _scrollController,
+      scrollDirection: Axis.horizontal,
+      physics: const NeverScrollableScrollPhysics(),
+      child: Text(
+        widget.text,
+        style: widget.style,
+        maxLines: 1,
       ),
     );
   }
