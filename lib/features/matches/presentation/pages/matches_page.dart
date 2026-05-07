@@ -21,6 +21,7 @@ import '../../../catalogs/application/usecases/get_regions_usecase.dart';
 import '../../../catalogs/application/usecases/get_canchas_usecase.dart';
 import '../../../profile/presentation/bloc/profile_bloc.dart';
 import '../../../profile/presentation/bloc/profile_state.dart';
+import '../utils/match_action_handler.dart';
 
 class MatchesPage extends StatefulWidget {
   const MatchesPage({super.key});
@@ -569,7 +570,6 @@ class _MatchesPageState extends State<MatchesPage> with AutomaticKeepAliveClient
   }
 
   Widget _buildMatchCard(MatchEntity match, bool isDark, int? currentUserId) {
-    final isOrganizer = currentUserId != null && match.idUsuarioOrg == currentUserId;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -660,66 +660,32 @@ class _MatchesPageState extends State<MatchesPage> with AutomaticKeepAliveClient
                 const SizedBox(height: 4),
                 _buildInfoRow(Icons.person_outline, 'Organizador: ${match.nombreCapitanA ?? 'Capi'}', isDark),
                 const SizedBox(height: 16),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      final isCaptainB = currentUserId != null && match.idCapitanB == currentUserId;
-                      final isAnyCaptain = isOrganizer || isCaptainB;
-
-                      if (match.estatus == 'publicada') {
-                        if (isOrganizer) {
-                          context.push('/match-details/${match.id}');
-                        } else {
-                          context.push('/accept-encounter', extra: {'match': match});
-                        }
-                      } else if (match.estatus == 'negociando') {
-                        if (isAnyCaptain) {
-                          context.push('/configure-match', extra: {'matchEntity': match});
-                        } else {
-                          context.push('/player-match-dashboard', extra: {'match': match});
-                        }
-                      } else if (match.estatus == 'pendiente_pago' || match.estatus == 'confirmada') {
-                        if (isAnyCaptain) {
-                          context.push('/match-dashboard', extra: {'matchEntity': match});
-                        } else {
-                          context.push('/player-match-dashboard', extra: {'match': match});
-                        }
-                      } else if (match.estatus == 'completada') {
-                        context.push('/match-history-detail/${match.id}');
-                      } else {
-                        context.push('/match-details/${match.id}');
-                      }
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: Colors.black,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                    ),
-                    child: Builder(
-                      builder: (context) {
-                        final isCaptainB = currentUserId != null && match.idCapitanB == currentUserId;
-                        final isAnyCaptain = isOrganizer || isCaptainB;
-
-                        String label = 'Ver Detalles';
-                        if (match.estatus == 'publicada') {
-                          label = isOrganizer ? 'Administrar Partido' : 'Aceptar Encuentro';
-                        } else if (match.estatus == 'negociando') {
-                          label = isAnyCaptain ? 'Configurar Encuentro' : 'Ver Encuentro';
-                        } else if (match.estatus == 'pendiente_pago' || match.estatus == 'confirmada') {
-                          label = isAnyCaptain ? 'Administrar Partido' : 'Ver Encuentro';
-                        }
-                        
-                        return Text(
-                          label,
+                Builder(
+                  builder: (ctx) {
+                    final action = MatchActionHandler.resolve(
+                      context: ctx,
+                      match: match,
+                      currentUserId: currentUserId,
+                    );
+                    return SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: action.onTap,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: Colors.black,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                        ),
+                        child: Text(
+                          action.label,
                           style: const TextStyle(fontWeight: FontWeight.bold),
-                        );
-                      }
-                    ),
-                  ),
+                        ),
+                      ),
+                    );
+                  },
                 ),
               ],
             ),
