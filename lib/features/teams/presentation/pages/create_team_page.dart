@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/utils/image_picker_utils.dart';
 import '../../../../core/widgets/matchday_image_picker.dart';
 
@@ -11,7 +12,10 @@ import '../../../../core/theme/app_colors.dart';
 
 import '../../application/usecases/create_team_usecase.dart';
 import '../../../catalogs/application/usecases/get_sports_usecase.dart' as cat_sports;
+import '../bloc/teams_bloc.dart';
+import '../bloc/teams_state.dart';
 import '../../domain/entities/sport_entity.dart';
+import '../../../../features/main_hub/presentation/widgets/form_skeleton.dart';
 
 class CreateTeamPage extends StatefulWidget {
   const CreateTeamPage({super.key});
@@ -37,7 +41,19 @@ class _CreateTeamPageState extends State<CreateTeamPage> {
   @override
   void initState() {
     super.initState();
-    _loadSports();
+    
+    // Optimizamos: Si ya tenemos los deportes en el TeamsBloc, los usamos de una vez
+    // para evitar que el usuario vea el esqueleto de carga innecesariamente.
+    final teamsState = context.read<TeamsBloc>().state;
+    if (teamsState is TeamsLoaded) {
+      _sports = teamsState.sports;
+      if (_sports.isNotEmpty) {
+        _selectedSportId = _sports.first.id;
+      }
+      _isLoadingSports = false;
+    } else {
+      _loadSports();
+    }
   }
 
   Future<void> _loadSports() async {
@@ -200,11 +216,11 @@ class _CreateTeamPageState extends State<CreateTeamPage> {
           bottom: BorderSide(color: colorScheme.outlineVariant, width: 1),
         ),
       ),
-      body: _isLoading
-          ? const Center(
-              child: CircularProgressIndicator(color: AppColors.primary),
-            )
-          : SingleChildScrollView(
+      body: _isLoadingSports
+          ? const FormSkeleton(hasImagePicker: true)
+          : _isLoading 
+            ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
+            : SingleChildScrollView(
               padding: const EdgeInsets.all(16.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

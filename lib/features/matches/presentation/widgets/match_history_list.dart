@@ -74,15 +74,48 @@ class MatchHistoryList extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.history, size: 64, color: isDark ? Colors.grey[600] : Colors.grey[400]),
-          const SizedBox(height: 16),
+          const SizedBox(height: 40),
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.history_toggle_off,
+              size: 64,
+              color: AppColors.primary.withValues(alpha: 0.5),
+            ),
+          )
+          .animate(onPlay: (controller) => controller.repeat())
+          .shimmer(duration: 2000.ms, color: AppColors.primary.withValues(alpha: 0.2)),
+          
+          const SizedBox(height: 24),
           Text(
-            'No hay partidos finalizados aún.',
-            style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 16),
+            'Historial limpio',
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurface,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
           ),
+          const SizedBox(height: 8),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 40),
+            child: Text(
+              'Este equipo aún no ha completado ningún partido. ¡Es hora de saltar al campo!',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: AppColors.textMuted,
+                fontSize: 13,
+                height: 1.5,
+              ),
+            ),
+          ),
+          const SizedBox(height: 40),
         ],
       ),
-    );
+    ).animate().fadeIn(duration: 600.ms);
   }
 
   Widget _buildStatsSummary(int wins, int draws, int losses) {

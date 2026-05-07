@@ -13,6 +13,7 @@ import '../../domain/entities/profile_entity.dart';
 import '../bloc/profile_bloc.dart';
 import '../bloc/profile_event.dart';
 import '../bloc/profile_state.dart';
+import '../widgets/edit_profile_skeleton.dart';
 
 class EditProfilePage extends StatefulWidget {
   final UserProfileEntity profile;
@@ -247,6 +248,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
         body: BlocBuilder<ProfileBloc, ProfileState>(
           builder: (context, state) {
             final isLoading = state is ProfileUpdating;
+            
+            if (state is ProfileInitial || state is ProfileLoading) {
+              return const EditProfileSkeleton();
+            }
 
             return Form(
               key: _formKey,

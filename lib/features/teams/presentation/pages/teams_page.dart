@@ -13,6 +13,7 @@ import '../../../../core/widgets/matchday_search_bar.dart';
 import '../../../../core/widgets/matchday_filter_chips.dart';
 import '../../../../core/widgets/matchday_loading_bar.dart';
 import '../../../../core/widgets/animated_bouncing_button.dart';
+import '../widgets/team_discovery_skeleton.dart';
 
 class TeamsPage extends StatefulWidget {
   const TeamsPage({super.key});
@@ -371,7 +372,7 @@ class _TeamsViewState extends State<_TeamsView> {
                   final teamsToShow = state is TeamsLoaded ? state.teams : _cachedTeams;
 
                   if (state is TeamsLoading && teamsToShow.isEmpty) {
-                    return const Center(child: CircularProgressIndicator(color: AppColors.primary));
+                    return const TeamDiscoverySkeleton();
                   }
 
                   final filteredTeams = teamsToShow.where((team) {

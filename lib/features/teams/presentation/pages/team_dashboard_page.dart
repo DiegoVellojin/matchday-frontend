@@ -12,9 +12,9 @@ import 'package:share_plus/share_plus.dart';
 import '../../../profile/presentation/bloc/profile_bloc.dart';
 import '../../../profile/presentation/bloc/profile_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../../../matches/presentation/bloc/matches_bloc.dart';
 import '../../../matches/presentation/widgets/match_history_list.dart';
+import '../widgets/team_dashboard_skeleton.dart';
 
 
 class TeamDashboardPage extends StatefulWidget {
@@ -73,40 +73,51 @@ class _TeamDashboardPageState extends State<TeamDashboardPage> {
           future: _teamFuture,
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(
-                child: CircularProgressIndicator(color: AppColors.primary),
-              );
+              return const TeamDashboardSkeleton();
             } else if (snapshot.hasError) {
               return Center(
-                child: Text(
-                  'Error: ${snapshot.error}',
-                  style: TextStyle(color: colorScheme.onSurface),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.error_outline, color: AppColors.error, size: 48),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Error: ${snapshot.error}',
+                      style: TextStyle(color: colorScheme.onSurface),
+                    ),
+                    const SizedBox(height: 24),
+                    ElevatedButton(
+                      onPressed: () => setState(() => _loadTeam()),
+                      child: const Text('Reintentar'),
+                    ),
+                  ],
                 ),
               );
             } else if (!snapshot.hasData) {
-              return Center(
-                child: Text(
-                  'Equipo no encontrado.',
-                  style: TextStyle(color: colorScheme.onSurface),
-                ),
-              );
+              return const Center(child: Text('Equipo no encontrado.'));
             }
 
             final team = snapshot.data!;
 
-            return SafeArea(
-              child: Column(
-                children: [
-                  _buildHeader(context, team, colorScheme),
-                  Expanded(
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.all(16.0),
-                      child: _activeTab == 'roster'
-                          ? _buildRosterTab(team, colorScheme)
-                          : _buildHistoryTab(colorScheme),
-                    ),
-                  ),
-                ],
+            return NestedScrollView(
+              headerSliverBuilder: (context, innerBoxIsScrolled) {
+                return [
+                  _buildSliverAppBar(context, team, colorScheme),
+                ];
+              },
+              body: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 20.0),
+                child: Column(
+                  children: [
+                    _buildStatsRow(team, colorScheme),
+                    const SizedBox(height: 24),
+                    _buildTabs(colorScheme),
+                    const SizedBox(height: 20),
+                    _activeTab == 'roster'
+                        ? _buildRosterTab(team, colorScheme)
+                        : _buildHistoryTab(colorScheme),
+                  ],
+                ),
               ),
             );
           },
@@ -169,243 +180,129 @@ class _TeamDashboardPageState extends State<TeamDashboardPage> {
     );
   }
 
-  Widget _buildHeader(BuildContext context, TeamEntity team, ColorScheme colorScheme) {
-    return Container(
-      color: colorScheme.surface,
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              IconButton(
-                icon: Icon(Icons.arrow_back, color: colorScheme.onSurface),
-                onPressed: () {
-                  if (context.canPop()) {
-                    context.pop();
-                  } else {
-                    context.go('/hub');
-                  }
-                },
-              ),
-              IconButton(
-                icon: const Icon(Icons.share, color: AppColors.primary),
-                onPressed: () {
-                  SharePlus.instance.share(
-                    ShareParams(
-                      text: '¡Únete a mi equipo ${team.name} en MatchDay! ⚽🏆 Ingresa aquí: https://matchday-backend-3qot.onrender.com/api/v1/teams/${team.id}/share',
-                    ),
-                  );
-                },
-              ),
-              if (team.soyMiembro)
-                BlocBuilder<ProfileBloc, ProfileState>(
-                  builder: (context, profileState) {
-                    final currentUserId = profileState is ProfileLoaded ? profileState.profile.id : null;
-                    return IconButton(
-                      icon: const Icon(Icons.settings, color: AppColors.textMuted),
-                      onPressed: currentUserId == null ? null : () async {
-                        final updated = await context.push<bool>(
-                          '/team-settings/${team.id}',
-                          extra: {
-                            'team': team,
-                            'currentUserId': currentUserId,
-                          },
-                        );
-                        if (updated == true) {
-                          _loadTeam();
-                        }
-                      },
-                    );
-                  },
-                ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          // Team Hero
-          Container(
-            width: 80,
-            height: 80,
-            decoration: BoxDecoration(
-              color: Theme.of(context).scaffoldBackgroundColor,
-              shape: BoxShape.circle,
-              border: Border.all(color: AppColors.primary, width: 2),
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(40),
-              child: team.logo.startsWith('http')
-                  ? Image.network(
-                      team.logo,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) => Center(
-                        child: Text(
-                          team.logo.isNotEmpty && team.logo.length < 4 ? team.logo : '🛡️',
-                          style: const TextStyle(fontSize: 40),
-                        ),
-                      ),
-                    )
-                  : Center(
-                      child: Text(
-                        team.logo.isNotEmpty ? team.logo : '🛡️',
-                        style: const TextStyle(fontSize: 40),
-                      ),
-                    ),
-            ),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            team.name,
-            style: TextStyle(
-              color: colorScheme.onSurface,
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            team.sportName,
-            style: const TextStyle(
-              color: AppColors.primary,
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          if (team.isRecruiting)
-            Padding(
-              padding: const EdgeInsets.only(top: 8.0),
-              child: Text(
-                '¡Buscando nuevos miembros!',
-                style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 12),
-              ),
-            ),
-          if (team.chatUrl != null && team.soyMiembro)
-            Padding(
-              padding: const EdgeInsets.only(top: 12.0),
-              child: SizedBox(
-                width: double.infinity,
-                child: OutlinedButton.icon(
-                  onPressed: () async {
-                    final url = Uri.parse(team.chatUrl!);
-                    if (await canLaunchUrl(url)) {
-                      await launchUrl(url, mode: LaunchMode.externalApplication);
-                    }
-                  },
-                  icon: const Icon(Icons.chat, size: 18),
-                  label: const Text('Ir al Chat del Equipo'),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.primary,
-                    side: const BorderSide(color: AppColors.primary),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          const SizedBox(height: 16),
-          // Stats Row
-          Row(
-            children: [
-              _buildStatCard('Jugadores', '${team.currentMembers}/${team.maxMembers}', colorScheme),
-              const SizedBox(width: 8),
-              BlocBuilder<MatchesBloc, MatchesState>(
-                builder: (context, state) {
-                  final count = state is MatchesLoaded ? state.matches.length : 0;
-                  return _buildStatCard('Partidos', '$count', colorScheme);
-                },
-              ),
-              const SizedBox(width: 8),
-              BlocBuilder<MatchesBloc, MatchesState>(
-                builder: (context, state) {
-                  int wins = 0;
-                  if (state is MatchesLoaded) {
-                    wins = state.matches.where((m) {
-                      final isTeamA = m.idEquipoA == team.id;
-                      final ourScore = isTeamA ? (m.resultadoGolesACapA ?? 0) : (m.resultadoGolesBCapA ?? 0);
-                      final oppScore = isTeamA ? (m.resultadoGolesBCapA ?? 0) : (m.resultadoGolesACapA ?? 0);
-                      return ourScore > oppScore;
-                    }).length;
-                  }
-                  return _buildStatCard('Victorias', '$wins', colorScheme);
-                },
-              ),
-              if (team.soyMiembro) ...[
-                const SizedBox(width: 8),
-                Expanded(
-                  child: GestureDetector(
-                    onTap: () => context.push('/pagos'),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      decoration: BoxDecoration(
-                        color: AppColors.warning.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: AppColors.warning.withValues(alpha: 0.3),
-                        ),
-                      ),
-                      child: const Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.attach_money, color: AppColors.warning, size: 20),
-                          SizedBox(height: 4),
-                          Text(
-                            'Pagos',
-                            style: TextStyle(
-                              color: AppColors.warning,
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ],
-          ),
-          const SizedBox(height: 16),
-          // Tabs
-          Container(
-            padding: const EdgeInsets.all(4),
-            decoration: BoxDecoration(
-              color: colorScheme.surfaceContainerHighest,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Row(
-              children: [
-                _buildTabButton('roster', 'Plantilla', colorScheme),
-                _buildTabButton('history', 'Historial', colorScheme),
-              ],
-            ),
-          ),
-        ],
+  Widget _buildSliverAppBar(BuildContext context, TeamEntity team, ColorScheme colorScheme) {
+    return SliverAppBar(
+      expandedHeight: 280,
+      pinned: true,
+      stretch: true,
+      backgroundColor: colorScheme.surface,
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back),
+        onPressed: () => context.canPop() ? context.pop() : context.go('/hub'),
       ),
-    );
-  }
-
-  Widget _buildStatCard(String label, String value, ColorScheme colorScheme) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        decoration: BoxDecoration(
-          color: colorScheme.surfaceContainerHighest,
-          borderRadius: BorderRadius.circular(12),
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.share, color: AppColors.primary),
+          onPressed: () {
+            SharePlus.instance.share(
+              ShareParams(
+                text: '¡Únete a mi equipo ${team.name} en MatchDay! ⚽🏆 Ingresa aquí: https://matchday-backend-3qot.onrender.com/api/v1/teams/${team.id}/share',
+              ),
+            );
+          },
         ),
-        child: Column(
+        if (team.soyMiembro)
+          BlocBuilder<ProfileBloc, ProfileState>(
+            builder: (context, profileState) {
+              final currentUserId = profileState is ProfileLoaded ? profileState.profile.id : null;
+              return IconButton(
+                icon: const Icon(Icons.settings),
+                onPressed: currentUserId == null ? null : () async {
+                  final updated = await context.push<bool>(
+                    '/team-settings/${team.id}',
+                    extra: {
+                      'team': team,
+                      'currentUserId': currentUserId,
+                    },
+                  );
+                  if (updated == true) _loadTeam();
+                },
+              );
+            },
+          ),
+      ],
+      flexibleSpace: FlexibleSpaceBar(
+        stretchModes: const [StretchMode.zoomBackground, StretchMode.blurBackground],
+        title: Text(
+          team.name,
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w900,
+            fontSize: 18,
+            letterSpacing: -0.5,
+          ),
+        ),
+        background: Stack(
+          fit: StackFit.expand,
           children: [
-            Text(
-              value,
-              style: const TextStyle(
-                color: AppColors.primary,
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
+            // Background Image/Logo
+            if (team.logo.startsWith('http'))
+              Image.network(team.logo, fit: BoxFit.cover)
+            else
+              Container(
+                color: AppColors.primary.withValues(alpha: 0.1),
+                child: Center(
+                  child: Text(
+                    team.logo.isNotEmpty ? team.logo : '🛡️',
+                    style: const TextStyle(fontSize: 80),
+                  ),
+                ),
+              ),
+            // Gradient Overlay
+            Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.black.withValues(alpha: 0.3),
+                    Colors.black.withValues(alpha: 0.8),
+                  ],
+                ),
               ),
             ),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 11),
+            // Team Info Overlay
+            Positioned(
+              bottom: 60,
+              left: 16,
+              right: 16,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      team.sportName.toUpperCase(),
+                      style: const TextStyle(
+                        color: Colors.black,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  if (team.isRecruiting)
+                    Row(
+                      children: [
+                        const Icon(Icons.person_add, color: AppColors.primary, size: 14),
+                        const SizedBox(width: 4),
+                        const Text(
+                          'RECLUTANDO',
+                          style: TextStyle(
+                            color: AppColors.primary,
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                ],
+              ),
             ),
           ],
         ),
@@ -413,28 +310,103 @@ class _TeamDashboardPageState extends State<TeamDashboardPage> {
     );
   }
 
-  Widget _buildTabButton(String tabName, String label, ColorScheme colorScheme) {
+  Widget _buildStatsRow(TeamEntity team, ColorScheme colorScheme) {
+    return Row(
+      children: [
+        _buildStatCard('Jugadores', '${team.currentMembers}/${team.maxMembers}', Icons.people_outline),
+        const SizedBox(width: 8),
+        BlocBuilder<MatchesBloc, MatchesState>(
+          builder: (context, state) {
+            final count = state is MatchesLoaded ? state.matches.length : 0;
+            return _buildStatCard('Partidos', '$count', Icons.sports_soccer_outlined);
+          },
+        ),
+        const SizedBox(width: 8),
+        BlocBuilder<MatchesBloc, MatchesState>(
+          builder: (context, state) {
+            int wins = 0;
+            if (state is MatchesLoaded) {
+              wins = state.matches.where((m) {
+                final isTeamA = m.idEquipoA == team.id;
+                final ourScore = isTeamA ? (m.resultadoGolesACapA ?? 0) : (m.resultadoGolesBCapA ?? 0);
+                final oppScore = isTeamA ? (m.resultadoGolesBCapA ?? 0) : (m.resultadoGolesACapA ?? 0);
+                return ourScore > oppScore;
+              }).length;
+            }
+            return _buildStatCard('Victorias', '$wins', Icons.emoji_events_outlined);
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTabs(ColorScheme colorScheme) {
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: colorScheme.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: colorScheme.outlineVariant),
+      ),
+      child: Row(
+        children: [
+          _buildTabButton('roster', 'Plantilla'),
+          _buildTabButton('history', 'Historial'),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatCard(String label, String value, IconData icon) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: isDark ? AppColors.border : Colors.grey.shade200),
+        ),
+        child: Column(
+          children: [
+            Icon(icon, color: AppColors.primary.withValues(alpha: 0.5), size: 16),
+            const SizedBox(height: 4),
+            Text(
+              value,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+            Text(
+              label,
+              style: const TextStyle(color: AppColors.textMuted, fontSize: 10, fontWeight: FontWeight.w600),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTabButton(String tabName, String label) {
     final isSelected = _activeTab == tabName;
     return Expanded(
       child: GestureDetector(
-        onTap: () {
-          setState(() {
-            _activeTab = tabName;
-          });
-        },
+        onTap: () => setState(() => _activeTab = tabName),
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 10),
           decoration: BoxDecoration(
             color: isSelected ? AppColors.primary : Colors.transparent,
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(12),
           ),
           child: Text(
             label,
             textAlign: TextAlign.center,
             style: TextStyle(
-              color: isSelected ? Colors.black : colorScheme.onSurfaceVariant,
+              color: isSelected ? Colors.black : AppColors.textMuted,
               fontWeight: FontWeight.bold,
-              fontSize: 14,
+              fontSize: 13,
             ),
           ),
         ),

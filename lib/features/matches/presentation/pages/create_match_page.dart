@@ -21,6 +21,10 @@ import '../../../profile/presentation/bloc/profile_bloc.dart';
 import '../../../profile/presentation/bloc/profile_state.dart';
 import '../../../catalogs/presentation/bloc/add_court/add_court_bloc.dart' as import_add_court_bloc;
 import '../../../catalogs/presentation/pages/add_court_page.dart' as import_add_court_page;
+import '../../../teams/presentation/bloc/teams_bloc.dart';
+import '../../../teams/presentation/bloc/teams_state.dart';
+import '../../../../features/main_hub/presentation/widgets/form_skeleton.dart';
+
 class CreateMatchPage extends StatefulWidget {
   final MatchEntity? editMatch;
   const CreateMatchPage({super.key, this.editMatch});
@@ -73,15 +77,42 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
     } else {
       _dateController.text = DateFormat('yyyy-MM-dd').format(selectedDate);
     }
+
+    // Optimizamos: Intentamos obtener datos de los Blocs existentes para evitar parpadeos
+    final teamsState = context.read<TeamsBloc>().state;
+    if (teamsState is TeamsLoaded) {
+      _sports = teamsState.sports;
+      // Filtramos solo los equipos donde soy capitán
+      final profileState = context.read<ProfileBloc>().state;
+      if (profileState is ProfileLoaded) {
+        _myTeams = teamsState.teams.where((t) => t.captainId == profileState.profile.id).toList();
+      } else {
+        _myTeams = teamsState.teams;
+      }
+      
+      if (widget.editMatch == null) {
+        if (_sports.isNotEmpty) selectedSportId = _sports.first.id;
+        if (_myTeams.isNotEmpty && selectedSportId != null) {
+          final selectedSport = _sports.where((s) => s.id == selectedSportId).firstOrNull;
+          final filtered = _myTeams.where((t) => t.sportName == selectedSport?.name).toList();
+          if (filtered.isNotEmpty) selectedTeamId = filtered.first.id;
+        }
+      }
+      
+      _isLoadingSports = false;
+      _isLoadingTeams = false;
+    }
+
     _loadInitialData();
   }
 
   Future<void> _loadInitialData() async {
-    await Future.wait([
-      _loadSports(),
-      _loadMyTeams(),
-      _loadRegions(),
-    ]);
+    final List<Future<void>> futures = [];
+    if (_sports.isEmpty) futures.add(_loadSports());
+    if (_myTeams.isEmpty) futures.add(_loadMyTeams());
+    futures.add(_loadRegions()); // Las regiones aún no se cachean globalmente
+
+    await Future.wait(futures);
     
     // Si estamos editando, cargar canchas de la región si es posible
     if (widget.editMatch != null && selectedRegionId != null) {
@@ -90,7 +121,9 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
   }
 
   Future<void> _loadSports() async {
-    final result = await sl<cat_sports.GetSportsUseCase>()();
+    if (_sports.isNotEmpty) return;
+    final useCase = sl<cat_sports.GetSportsUseCase>();
+    final result = await useCase();
     result.fold(
       (failure) => _showError('Error al cargar deportes'),
       (sports) {
@@ -218,8 +251,10 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
             context.pop();
           }
         },
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
+        child: (_isLoadingSports || _isLoadingTeams || _isLoadingRegions)
+            ? const FormSkeleton()
+            : SingleChildScrollView(
+                padding: const EdgeInsets.all(20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [

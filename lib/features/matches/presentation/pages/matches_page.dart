@@ -22,6 +22,7 @@ import '../../../catalogs/application/usecases/get_canchas_usecase.dart';
 import '../../../profile/presentation/bloc/profile_bloc.dart';
 import '../../../profile/presentation/bloc/profile_state.dart';
 import '../utils/match_action_handler.dart';
+import '../widgets/matches_skeleton.dart';
 
 class MatchesPage extends StatefulWidget {
   const MatchesPage({super.key});
@@ -137,7 +138,7 @@ class _MatchesPageState extends State<MatchesPage> with AutomaticKeepAliveClient
                     final matchesToShow = state is MatchesLoaded ? state.matches : _cachedMatches;
                     
                     if (state is MatchesLoading && matchesToShow.isEmpty) {
-                      return const Center(child: CircularProgressIndicator(color: AppColors.primary));
+                      return const MatchesSkeleton();
                     }
                     
                     if (state is MatchesError) {

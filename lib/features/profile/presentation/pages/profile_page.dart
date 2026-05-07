@@ -15,6 +15,8 @@ import '../bloc/profile_bloc.dart';
 import '../bloc/profile_event.dart';
 import '../bloc/profile_state.dart';
 import '../../../../core/widgets/matchday_loading_bar.dart';
+import '../widgets/profile_skeleton.dart';
+import 'dart:ui';
 
 import '../../domain/entities/profile_entity.dart';
 
@@ -65,7 +67,7 @@ class _ProfilePageState extends State<ProfilePage> {
               child: BlocBuilder<ProfileBloc, ProfileState>(
                 builder: (context, state) {
                   if (state is ProfileLoading && _cachedProfile == null) {
-                    return const Center(child: CircularProgressIndicator(color: AppColors.primary));
+                    return const ProfileSkeleton();
                   }
 
                   if (_cachedProfile != null) {
@@ -303,37 +305,61 @@ class _ProfilePageState extends State<ProfilePage> {
 
   Widget _buildStatCard(IconData icon, String value, String label) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: isDark ? AppColors.border : Colors.grey.shade300,
-        ),
-      ),
+    final colorScheme = Theme.of(context).colorScheme;
 
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, color: AppColors.primary, size: 28),
-          const SizedBox(height: 8),
-          Text(
-            value,
-            style: TextStyle(
-              color: Theme.of(context).colorScheme.onSurface,
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(20),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        child: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: isDark 
+              ? colorScheme.surface.withValues(alpha: 0.6)
+              : colorScheme.surface.withValues(alpha: 0.8),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: isDark 
+                ? Colors.white.withValues(alpha: 0.1) 
+                : Colors.black.withValues(alpha: 0.05),
+              width: 1,
             ),
           ),
-
-          const SizedBox(height: 4),
-          Text(
-            label,
-            textAlign: TextAlign.center,
-            style: const TextStyle(color: AppColors.textMuted, fontSize: 11),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(icon, color: AppColors.primary, size: 22),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                value,
+                style: TextStyle(
+                  color: colorScheme.onSurface,
+                  fontSize: 20,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: -0.5,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                label,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: AppColors.textMuted,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w600,
+                  height: 1.1,
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

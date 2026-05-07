@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
 import 'dart:io';
+import 'package:flutter/material.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/storage/firebase_storage_service.dart';
@@ -14,6 +14,7 @@ import '../../application/usecases/transfer_captain_usecase.dart';
 import '../../application/usecases/leave_team_usecase.dart';
 import '../../application/usecases/kick_member_usecase.dart' as discovery_kick;
 import '../../application/usecases/get_team_members_usecase.dart';
+import '../widgets/team_settings_skeleton.dart';
 
 /// Pantalla de configuración y administración del equipo.
 ///
@@ -49,6 +50,7 @@ class _TeamSettingsPageState extends State<TeamSettingsPage> {
   List<SportEntity> _sports = [];
   int? _selectedSportId;
   bool _isLoadingSports = false;
+  bool _isInitialLoading = true;
 
   @override
   void initState() {
@@ -73,7 +75,10 @@ class _TeamSettingsPageState extends State<TeamSettingsPage> {
     final result = await sl<GetTeamMembersUseCase>().call(widget.team.id);
     result.fold(
       (failure) => null,
-      (members) => setState(() => _members = members),
+      (members) => setState(() {
+        _members = members;
+        _isInitialLoading = false;
+      }),
     );
   }
 
@@ -133,10 +138,16 @@ class _TeamSettingsPageState extends State<TeamSettingsPage> {
     final colorScheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
+    if (_isInitialLoading) {
+      return const Scaffold(
+        body: TeamSettingsSkeleton(),
+      );
+    }
+
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        title: const Text('Ajustes del Equipo'),
+        title: Text(isCaptain ? 'Gestión de Equipo' : 'Detalles del Equipo'),
         backgroundColor: colorScheme.surface,
         foregroundColor: colorScheme.onSurface,
         elevation: 0,
@@ -149,7 +160,7 @@ class _TeamSettingsPageState extends State<TeamSettingsPage> {
                       height: 20,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Icon(Icons.check, color: AppColors.primary),
+                  : const Icon(Icons.save_outlined, color: AppColors.primary),
               onPressed: (_isLoading || _isUploadingImage)
                   ? null
                   : _saveChanges,
@@ -162,67 +173,72 @@ class _TeamSettingsPageState extends State<TeamSettingsPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             if (isCaptain) ...[
-              _buildSectionTitle('Información General'),
-              MatchDayImagePicker(
-                imageFile: _imageFile,
-                imageUrl: _currentLogoUrl,
-                onPickImage: _pickImage,
-                placeholder: widget.team.logo.length < 4
-                    ? widget.team.logo
-                    : Icons.camera_alt_outlined,
-                label: 'Cambiar logo',
+              _buildSectionTitle('Identidad Visual'),
+              _buildManagementCard(
+                child: MatchDayImagePicker(
+                  imageFile: _imageFile,
+                  imageUrl: _currentLogoUrl,
+                  onPickImage: _pickImage,
+                  placeholder: widget.team.logo.length < 4
+                      ? widget.team.logo
+                      : Icons.camera_alt_outlined,
+                  label: 'Cambiar logo',
+                ),
               ),
 
               const SizedBox(height: 24),
-              _buildTextField('Nombre del Equipo', _nameController),
-              const SizedBox(height: 16),
-              _buildTextField(
-                'Descripción',
-                _descriptionController,
-                maxLines: 3,
-              ),
-              const SizedBox(height: 16),
-              _buildSectionTitle('Deporte'),
-              _isLoadingSports 
-                ? const LinearProgressIndicator(color: AppColors.primary)
-                : _buildSportDropdown(isDark),
-              const SizedBox(height: 24),
-              _buildTextField(
-                'URL del Grupo (WhatsApp/Telegram)',
-                _chatUrlController,
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildTextField(
-                      'Miembros Máximos',
-                      _maxMembersController,
-                      keyboardType: TextInputType.number,
+              _buildSectionTitle('Ajustes Principales'),
+              _buildManagementCard(
+                child: Column(
+                  children: [
+                    _buildTextField('Nombre del Equipo', _nameController),
+                    const SizedBox(height: 16),
+                    _buildTextField(
+                      'Descripción',
+                      _descriptionController,
+                      maxLines: 3,
                     ),
-                  ),
-                  const SizedBox(width: 16),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Reclutando',
-                        style: TextStyle(
-                          color: AppColors.textMuted,
-                          fontSize: 12,
-                        ),
-                      ),
-                      Switch(
-                        value: _isRecruiting,
-                        onChanged: (val) => setState(() => _isRecruiting = val),
-                        activeThumbColor: AppColors.primary,
-                      ),
-                    ],
-                  ),
-                ],
+                  ],
+                ),
               ),
+              
+              const SizedBox(height: 24),
+              _buildSectionTitle('Deporte & Competición'),
+              _buildManagementCard(
+                child: Column(
+                  children: [
+                    _isLoadingSports 
+                      ? const LinearProgressIndicator(color: AppColors.primary)
+                      : _buildSportDropdown(isDark),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildTextField(
+                            'Miembros Máximos',
+                            _maxMembersController,
+                            keyboardType: TextInputType.number,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        _buildRecruitingSwitch(),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              
+              const SizedBox(height: 24),
+              _buildSectionTitle('Comunicación'),
+              _buildManagementCard(
+                child: _buildTextField(
+                  'URL del Grupo (WhatsApp/Telegram)',
+                  _chatUrlController,
+                ),
+              ),
+              
               const SizedBox(height: 32),
-              _buildSectionTitle('Gestión de Miembros'),
+              _buildSectionTitle('Plantilla del Equipo'),
               _buildMembersList(colorScheme),
               const SizedBox(height: 32),
               _buildDangerZone(),
@@ -230,14 +246,63 @@ class _TeamSettingsPageState extends State<TeamSettingsPage> {
               _buildSectionTitle('Información del Equipo'),
               _buildTeamHeader(),
               const SizedBox(height: 24),
-              _buildSectionTitle('Miembros del Equipo'),
+              _buildSectionTitle('Miembros de la Plantilla'),
               _buildMembersList(colorScheme),
               const SizedBox(height: 32),
               _buildPlayerActions(),
             ],
+            const SizedBox(height: 40),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildManagementCard({required Widget child}) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: isDark ? AppColors.border : Colors.grey.shade200,
+        ),
+        boxShadow: [
+          if (!isDark)
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+        ],
+      ),
+      child: child,
+    );
+  }
+
+  Widget _buildRecruitingSwitch() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Reclutando',
+          style: TextStyle(
+            color: AppColors.textMuted,
+            fontSize: 12,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Transform.scale(
+          scale: 0.8,
+          child: Switch(
+            value: _isRecruiting,
+            onChanged: (val) => setState(() => _isRecruiting = val),
+            activeThumbColor: AppColors.primary,
+          ),
+        ),
+      ],
     );
   }
 

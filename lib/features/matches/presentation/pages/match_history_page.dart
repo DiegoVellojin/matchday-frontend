@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/di/injection_container.dart';
 import '../bloc/matches_bloc.dart';
 import '../../../profile/presentation/bloc/profile_bloc.dart';
 import '../../../profile/presentation/bloc/profile_state.dart';
 import '../widgets/match_history_list.dart';
+import '../widgets/match_history_skeleton.dart';
 
 class MatchHistoryPage extends StatelessWidget {
   const MatchHistoryPage({super.key});
@@ -54,7 +54,7 @@ class _MatchHistoryView extends StatelessWidget {
       body: BlocBuilder<MatchesBloc, MatchesState>(
         builder: (context, state) {
           if (state is MatchesLoading) {
-            return const Center(child: CircularProgressIndicator(color: AppColors.primary));
+            return const MatchHistorySkeleton();
           } else if (state is MatchesError) {
             return Center(child: Text(state.message));
           } else if (state is MatchesLoaded) {

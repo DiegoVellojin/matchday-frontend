@@ -13,6 +13,7 @@ import '../bloc/my_teams_event.dart';
 import '../bloc/my_teams_state.dart';
 import '../../../../core/widgets/matchday_filter_chips.dart';
 import '../../../../core/widgets/matchday_loading_bar.dart';
+import '../widgets/my_teams_skeleton.dart';
 
 import '../../../payments/presentation/bloc/payments_bloc.dart';
 import '../../../payments/presentation/bloc/payments_event.dart';
@@ -120,7 +121,7 @@ class _MyTeamsPageState extends State<MyTeamsPage> with AutomaticKeepAliveClient
                             final teams = _getFilteredTeams(teamsToShow, currentUserId);
                             
                             if (myTeamsState is MyTeamsLoading && teamsToShow.isEmpty) {
-                              return const Center(child: CircularProgressIndicator(color: AppColors.primary));
+                              return const MyTeamsSkeleton();
                             }
 
                             if (teams.isEmpty && myTeamsState is! MyTeamsLoading) {
@@ -426,11 +427,66 @@ class _MyTeamsPageState extends State<MyTeamsPage> with AutomaticKeepAliveClient
   }
 
   Widget _buildEmptyState() {
-    return const Center(
-      child: Text(
-        'No se encontraron equipos en esta categoría.',
-        style: TextStyle(color: AppColors.textMuted),
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.sports_soccer_outlined,
+              size: 64,
+              color: AppColors.primary.withValues(alpha: 0.5),
+            ),
+          )
+          .animate(onPlay: (controller) => controller.repeat())
+          .shimmer(duration: 2000.ms, color: AppColors.primary.withValues(alpha: 0.2))
+          .scale(duration: 1000.ms, begin: const Offset(1, 1), end: const Offset(1.1, 1.1), curve: Curves.easeInOut),
+          
+          const SizedBox(height: 24),
+          Text(
+            '¡Cancha vacía!',
+            style: TextStyle(
+              color: isDark ? Colors.white : Colors.black87,
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 40),
+            child: Text(
+              'Aún no perteneces a ningún equipo en esta categoría. ¡Es hora de fichar por uno!',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: AppColors.textMuted,
+                fontSize: 14,
+                height: 1.5,
+              ),
+            ),
+          ),
+          const SizedBox(height: 32),
+          ElevatedButton.icon(
+            onPressed: () => context.push('/create-team'),
+            icon: const Icon(Icons.add, size: 20),
+            label: const Text('CREAR MI EQUIPO'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.black,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              elevation: 0,
+            ),
+          ),
+        ],
       ),
-    );
+    ).animate().fadeIn(duration: 600.ms);
   }
 }
