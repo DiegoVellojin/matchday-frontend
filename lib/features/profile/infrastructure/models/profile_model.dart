@@ -7,6 +7,8 @@ class UserProfileModel extends UserProfileEntity {
     required super.email,
     required super.role,
     required super.rating,
+    required super.partidosJugados,
+    required super.partidosOrganizados,
     super.photoUrl,
     super.phone,
   });
@@ -18,6 +20,8 @@ class UserProfileModel extends UserProfileEntity {
       email: json['email_usuario'] ?? '',
       role: json['rol_usuario'] ?? 'Jugador',
       rating: (json['reliability_score'] ?? 5.0).toDouble(),
+      partidosJugados: json['partidos_jugados'] ?? 0,
+      partidosOrganizados: json['partidos_organizados'] ?? 0,
       photoUrl: json['url_foto_perfil'],
       phone: json['telefono_usuario'],
     );
@@ -30,6 +34,8 @@ class UserProfileModel extends UserProfileEntity {
       'email_usuario': email,
       'rol_usuario': role,
       'reliability_score': rating,
+      'partidos_jugados': partidosJugados,
+      'partidos_organizados': partidosOrganizados,
       'url_foto_perfil': photoUrl,
       'telefono_usuario': phone,
     };

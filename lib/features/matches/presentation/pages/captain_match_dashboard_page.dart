@@ -245,9 +245,9 @@ class _CaptainMatchDashboardPageState extends State<CaptainMatchDashboardPage>
                         shape: BoxShape.circle,
                       ),
                       child: Hero(
-                        tag: 'team_logo_dashboard_${match.id}_${match.idEquipoA}',
+                        tag: 'team_logo_${match.idEquipoA}_match_${match.id}',
                         child: ClipOval(
-                          child: (match.logoEquipoA != null && match.logoEquipoA!.startsWith('http'))
+                          child: (match.logoEquipoA != null && match.logoEquipoA!.isNotEmpty && match.logoEquipoA != 'null')
                               ? Image.network(
                                   match.logoEquipoA!,
                                   fit: BoxFit.cover,
@@ -474,10 +474,10 @@ class _CaptainMatchDashboardPageState extends State<CaptainMatchDashboardPage>
             tag: 'player_avatar_${widget.matchEntity.id}_${player.idUsuario}',
             child: CircleAvatar(
               backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-              backgroundImage: (player.urlFotoPerfil?.startsWith('http') ?? false)
+              backgroundImage: (player.urlFotoPerfil != null && player.urlFotoPerfil!.isNotEmpty && player.urlFotoPerfil != 'null')
                   ? NetworkImage(player.urlFotoPerfil!)
                   : null,
-              child: !(player.urlFotoPerfil?.startsWith('http') ?? false)
+              child: (player.urlFotoPerfil == null || player.urlFotoPerfil!.isEmpty || player.urlFotoPerfil == 'null')
                   ? const Text('👤', style: TextStyle(fontSize: 18))
                   : null,
             ),

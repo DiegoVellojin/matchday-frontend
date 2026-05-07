@@ -85,7 +85,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                 .fadeIn(duration: 600.ms)
                                 .slideY(begin: -0.2, end: 0, curve: Curves.easeOutBack),
                             const SizedBox(height: 24),
-                            _buildStatistics(profile.rating)
+                            _buildStatistics(profile)
                                 .animate()
                                 .fadeIn(duration: 600.ms, delay: 200.ms)
                                 .slideY(begin: 0.2, end: 0, curve: Curves.easeOutQuad),
@@ -159,64 +159,134 @@ class _ProfilePageState extends State<ProfilePage> {
 
   Widget _buildProfileHeader(dynamic profile) {
     final photoUrl = profile.photoUrl as String?;
+    final colorScheme = Theme.of(context).colorScheme;
 
-    return Column(
-      children: [
-        Container(
-          width: 96,
-          height: 96,
-          decoration: BoxDecoration(
-            color: AppColors.primary.withValues(alpha: 0.2),
-
-            shape: BoxShape.circle,
-            border: Border.all(color: AppColors.primary, width: 2),
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(48),
-            child: photoUrl != null && photoUrl.startsWith('http')
-                ? Image.network(
-                    photoUrl, 
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) => const Center(child: Icon(Icons.person, size: 48, color: Colors.grey)),
-                  )
-                : const Center(
-                    child: Text('👤', style: TextStyle(fontSize: 48)),
-                  ),
-          ),
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            AppColors.primary.withValues(alpha: 0.15),
+            colorScheme.surface,
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
-        const SizedBox(height: 16),
-        Text(
-          profile.name,
-          style: TextStyle(
-            color: Theme.of(context).colorScheme.onSurface,
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.2), width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.2),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
           ),
-        ),
-
-        const SizedBox(height: 8),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-          decoration: BoxDecoration(
-            color: AppColors.primary.withValues(alpha: 0.15),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
-
-          ),
-          child: Text(
-            profile.role,
-            style: const TextStyle(
-              color: AppColors.primary,
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: Stack(
+          children: [
+            // Elementos decorativos de fondo
+            Positioned(
+              top: -20,
+              right: -20,
+              child: Icon(
+                Icons.sports_soccer,
+                size: 120,
+                color: AppColors.primary.withValues(alpha: 0.05),
+              ),
             ),
-          ),
+            Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Row(
+                children: [
+                  // Foto con borde premium
+                  Container(
+                    width: 90,
+                    height: 90,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(color: AppColors.primary, width: 2.5),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.primary.withValues(alpha: 0.3),
+                          blurRadius: 12,
+                        ),
+                      ],
+                    ),
+                    child: CircleAvatar(
+                      radius: 45,
+                      backgroundColor: colorScheme.surface,
+                      backgroundImage: photoUrl != null && photoUrl.startsWith('http')
+                          ? NetworkImage(photoUrl)
+                          : null,
+                      child: photoUrl == null || !photoUrl.startsWith('http')
+                          ? const Icon(Icons.person, size: 45, color: AppColors.textMuted)
+                          : null,
+                    ),
+                  ),
+                  const SizedBox(width: 20),
+                  // Información del Jugador
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Flexible(
+                              child: Text(
+                                profile.name,
+                                style: const TextStyle(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: -0.5,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            const Icon(Icons.verified, color: AppColors.primary, size: 18),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'ID: #${profile.id.toString().padLeft(6, '0')}',
+                          style: TextStyle(
+                            color: AppColors.textMuted,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 1.2,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            profile.role.toUpperCase(),
+                            style: const TextStyle(
+                              color: Colors.black,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
-      ],
+      ),
     );
   }
 
-  Widget _buildStatistics(double rating) {
+  Widget _buildStatistics(UserProfileEntity profile) {
     return GridView.count(
       crossAxisCount: 3,
       shrinkWrap: true,
@@ -225,9 +295,9 @@ class _ProfilePageState extends State<ProfilePage> {
       crossAxisSpacing: 12,
       childAspectRatio: 0.85,
       children: [
-        _buildStatCard(Icons.emoji_events, '0', 'Partidos\nJugados'),
-        _buildStatCard(Icons.workspace_premium, '0', 'Organizados'),
-        _buildStatCard(Icons.star, rating.toStringAsFixed(1), 'Calificación'),
+        _buildStatCard(Icons.emoji_events, profile.partidosJugados.toString(), 'Partidos\nJugados'),
+        _buildStatCard(Icons.workspace_premium, profile.partidosOrganizados.toString(), 'Organizados'),
+        _buildStatCard(Icons.star, profile.rating.toStringAsFixed(1), 'Calificación'),
       ],
     );
   }
@@ -401,10 +471,20 @@ class _ProfilePageState extends State<ProfilePage> {
         const SizedBox(height: 12),
 
         _buildMenuButton(
+          label: 'Gestión de Pagos',
+          icon: Icons.account_balance_wallet_outlined,
+          iconColor: Colors.orange,
+          showBadge: true,
+          onPressed: () => context.push('/payment-management'),
+        ),
+        const SizedBox(height: 12),
+
+        _buildMenuButton(
           label: 'Historial de Partidos',
           onPressed: () => context.push('/match-history'),
         ),
         const SizedBox(height: 12),
+
         _buildMenuButton(
           label: 'Configuración',
           onPressed: () {
@@ -420,29 +500,59 @@ class _ProfilePageState extends State<ProfilePage> {
   Widget _buildMenuButton({
     required String label,
     required VoidCallback onPressed,
+    IconData? icon,
+    Color? iconColor,
+    bool showBadge = false,
   }) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return SizedBox(
       width: double.infinity,
-        child: AnimatedBouncingButton(
-          onTap: onPressed,
-          child: Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surface,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: isDark ? AppColors.border : Colors.grey.shade300,
-              ),
-            ),
-            alignment: Alignment.center,
-            child: Text(
-              label,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+      child: AnimatedBouncingButton(
+        onTap: onPressed,
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surface,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: isDark ? AppColors.border : Colors.grey.shade300,
             ),
           ),
+          child: Stack(
+            clipBehavior: Clip.none,
+            alignment: Alignment.center,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  if (icon != null) ...[
+                    Icon(icon, color: iconColor ?? AppColors.primary, size: 20),
+                    const SizedBox(width: 8),
+                  ],
+                  Text(
+                    label,
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+              if (showBadge)
+                Positioned(
+                  top: -4,
+                  right: 12,
+                  child: Container(
+                    width: 8,
+                    height: 8,
+                    decoration: const BoxDecoration(
+                      color: Colors.orange,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                ),
+            ],
+          ),
         ),
+      ),
     );
   }
 

@@ -161,7 +161,7 @@ class AppRouter {
             },
           ),
           GoRoute(
-            path: '/pagos',
+            path: '/payment-management',
             pageBuilder: (context, state) => _buildTransitionPage(context: context, state: state, child: const PaymentManagementPage()),
           ),
           GoRoute(

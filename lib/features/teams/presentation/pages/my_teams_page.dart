@@ -198,12 +198,6 @@ class _MyTeamsPageState extends State<MyTeamsPage> with AutomaticKeepAliveClient
     bool hasDebt,
     double debtAmount,
   ) {
-    final hasLogo =
-        team.logo.isNotEmpty &&
-        team.logo != '⚽' &&
-        team.logo != '🏀' &&
-        team.logo != '🎾';
-
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: const EdgeInsets.all(16),
@@ -240,10 +234,12 @@ class _MyTeamsPageState extends State<MyTeamsPage> with AutomaticKeepAliveClient
                     child: CircleAvatar(
                       radius: 26,
                       backgroundColor: isDark ? AppColors.background : Colors.grey.shade100,
-                      backgroundImage: hasLogo ? NetworkImage(team.logo) : null,
-                      child: !hasLogo
+                      backgroundImage: (team.logo.isNotEmpty && team.logo != '⚽' && team.logo != '🏀' && team.logo != '🎾' && team.logo != 'null') 
+                          ? NetworkImage(team.logo) 
+                          : null,
+                      child: (team.logo.isEmpty || team.logo == '⚽' || team.logo == '🏀' || team.logo == '🎾' || team.logo == 'null')
                           ? Text(
-                              team.logo.isNotEmpty ? team.logo : '⚽',
+                              team.logo.isNotEmpty && team.logo != 'null' ? team.logo : '⚽',
                               style: const TextStyle(fontSize: 24),
                             )
                           : null,

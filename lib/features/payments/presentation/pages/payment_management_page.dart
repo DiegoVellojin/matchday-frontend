@@ -7,7 +7,6 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/matchday_loading_bar.dart';
 import '../../domain/entities/payment_entity.dart';
 import '../bloc/payments_bloc.dart';
-import '../bloc/payments_event.dart';
 import '../bloc/payments_state.dart';
 
 enum PaymentFilter { all, pending, paid }
@@ -38,98 +37,96 @@ class _PaymentManagementPageState extends State<PaymentManagementPage> {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: AppBar(
-          backgroundColor: colorScheme.surface,
-          title: Text(
-            'Gestión de Pagos',
-            style: TextStyle(
-              color: colorScheme.onSurface,
-              fontWeight: FontWeight.bold,
+      body: CustomScrollView(
+        slivers: [
+          SliverAppBar(
+            expandedHeight: 120,
+            floating: true,
+            pinned: true,
+            elevation: 0,
+            backgroundColor: colorScheme.surface,
+            flexibleSpace: FlexibleSpaceBar(
+              title: Text(
+                'Gestión de Pagos',
+                style: TextStyle(
+                  color: colorScheme.onSurface,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                ),
+              ),
+              centerTitle: false,
+              titlePadding: const EdgeInsets.only(left: 56, bottom: 16),
+            ),
+            iconTheme: IconThemeData(color: colorScheme.onSurface),
+          ),
+          SliverToBoxAdapter(
+            child: Column(
+              children: [
+                // BARRA DE CARGA "FULL PERSISTENCIA"
+                BlocBuilder<PaymentsBloc, PaymentsState>(
+                  builder: (context, state) {
+                    return MatchDayLoadingBar(isLoading: state is PaymentsLoading);
+                  },
+                ),
+                BlocConsumer<PaymentsBloc, PaymentsState>(
+                  listener: (context, state) {
+                    if (state is PaymentsError) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(state.message), backgroundColor: Colors.redAccent),
+                      );
+                    }
+                    if (state is PaymentsLoaded) {
+                      setState(() => _cachedPayments = state.payments);
+                    }
+                  },
+                  builder: (context, state) {
+                    final paymentsToShow = state is PaymentsLoaded ? state.payments : _cachedPayments;
+                    final payments = _getFilteredPayments(paymentsToShow);
+                    final totalDebt = _calculateTotalDebt(paymentsToShow);
+
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildSummaryCard(totalDebt)
+                              .animate()
+                              .fadeIn(duration: 600.ms)
+                              .scale(begin: const Offset(0.95, 0.95), end: const Offset(1, 1), curve: Curves.easeOutBack),
+                          const SizedBox(height: 24),
+                          _buildMicroFilters(colorScheme),
+                          const SizedBox(height: 16),
+                          if (payments.isEmpty && state is! PaymentsLoading)
+                            _buildEmptyState()
+                          else
+                            ListView.separated(
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              itemCount: payments.length,
+                              separatorBuilder: (_, _) => const SizedBox(height: 12),
+                              itemBuilder: (context, index) {
+                                return _buildPaymentCard(
+                                  context,
+                                  payments[index],
+                                  colorScheme,
+                                  isDark,
+                                ).animate()
+                                 .fadeIn(duration: 400.ms, delay: (index * 50).ms)
+                                 .slideX(begin: 0.05, end: 0, curve: Curves.easeOutQuad);
+                              },
+                            ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ],
             ),
           ),
-          iconTheme: IconThemeData(color: colorScheme.onSurface),
-          elevation: 0,
-        ),
-        body: Column(
-          children: [
-            // BARRA DE CARGA "FULL PERSISTENCIA"
-            BlocBuilder<PaymentsBloc, PaymentsState>(
-              builder: (context, state) {
-                return MatchDayLoadingBar(isLoading: state is PaymentsLoading);
-              },
-            ),
-
-            Expanded(
-              child: BlocConsumer<PaymentsBloc, PaymentsState>(
-                listener: (context, state) {
-                  if (state is PaymentsError) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(state.message), backgroundColor: Colors.redAccent),
-                    );
-                  }
-                  if (state is PaymentsLoaded) {
-                    setState(() => _cachedPayments = state.payments);
-                  }
-                },
-                builder: (context, state) {
-                  final paymentsToShow = state is PaymentsLoaded ? state.payments : _cachedPayments;
-
-                  if (state is PaymentsLoading && paymentsToShow.isEmpty) {
-                    return const Center(child: CircularProgressIndicator(color: AppColors.primary));
-                  }
-
-                  final payments = _getFilteredPayments(paymentsToShow);
-                  final totalDebt = _calculateTotalDebt(paymentsToShow);
-
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildSummaryCard(totalDebt)
-                            .animate()
-                            .fadeIn(duration: 600.ms)
-                            .slideY(begin: -0.2, end: 0, curve: Curves.easeOutQuad),
-                        const SizedBox(height: 20),
-                        _buildMicroFilters(colorScheme)
-                            .animate()
-                            .fadeIn(duration: 600.ms, delay: 200.ms),
-                        const SizedBox(height: 16),
-                        Expanded(
-                          child: payments.isEmpty && state is! PaymentsLoading
-                              ? _buildEmptyState()
-                              : RefreshIndicator(
-                                  onRefresh: () async {
-                                    context.read<PaymentsBloc>().add(LoadMyPaymentsEvent());
-                                  },
-                                  child: ListView.separated(
-                                    physics: const AlwaysScrollableScrollPhysics(),
-                                    itemCount: payments.length,
-                                    separatorBuilder: (_, _) => const SizedBox(height: 12),
-                                    itemBuilder: (context, index) {
-                                      return _buildPaymentCard(
-                                        context,
-                                        payments[index],
-                                        colorScheme,
-                                        isDark,
-                                      ).animate()
-                                       .fadeIn(duration: 400.ms, delay: (index * 50 + 400).ms)
-                                       .slideX(begin: 0.1, end: 0, curve: Curves.easeOutQuad);
-                                    },
-                                  ),
-                                ),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
-            ),
-          ],
-        ),
+        ],
+      ),
     );
   }
 
@@ -153,41 +150,77 @@ class _PaymentManagementPageState extends State<PaymentManagementPage> {
   Widget _buildSummaryCard(double totalDebt) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [AppColors.primary, AppColors.primary.withValues(alpha: 0.7)],
+        gradient: const LinearGradient(
+          colors: [AppColors.primary, Color(0xFF2AB58E)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withValues(alpha: 0.3),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            color: AppColors.primary.withValues(alpha: 0.4),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Stack(
         children: [
-          const Text(
-            'Deuda Total Pendiente',
-            style: TextStyle(
-              color: AppColors.background,
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
+          Positioned(
+            right: -20,
+            bottom: -20,
+            child: Icon(
+              Icons.account_balance_wallet,
+              size: 100,
+              color: Colors.white.withValues(alpha: 0.1),
             ),
           ),
-          const SizedBox(height: 8),
-          Text(
-            '\$${totalDebt.toStringAsFixed(2)}',
-            style: const TextStyle(
-              color: AppColors.background,
-              fontSize: 32,
-              fontWeight: FontWeight.bold,
-            ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Row(
+                children: [
+                  Icon(Icons.info_outline, color: Colors.black54, size: 16),
+                  SizedBox(width: 8),
+                  Text(
+                    'DEUDA TOTAL PENDIENTE',
+                    style: TextStyle(
+                      color: Colors.black54,
+                      fontSize: 12,
+                      letterSpacing: 1.2,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Text(
+                '\$${totalDebt.toStringAsFixed(2)}',
+                style: const TextStyle(
+                  color: Colors.black,
+                  fontSize: 40,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(30),
+                ),
+                child: const Text(
+                  'Saldo actualizado hoy',
+                  style: TextStyle(
+                    color: Colors.black87,
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -210,21 +243,30 @@ class _PaymentManagementPageState extends State<PaymentManagementPage> {
     final isSelected = _activeFilter == filter;
     return GestureDetector(
       onTap: () => setState(() => _activeFilter = filter),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: AnimatedContainer(
+        duration: 300.ms,
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
         decoration: BoxDecoration(
           color: isSelected ? AppColors.primary : colorScheme.surface,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(30),
           border: Border.all(
             color: isSelected ? AppColors.primary : colorScheme.outlineVariant,
+            width: 1.5,
           ),
+          boxShadow: isSelected ? [
+            BoxShadow(
+              color: AppColors.primary.withValues(alpha: 0.3),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            )
+          ] : null,
         ),
         child: Text(
           text,
           style: TextStyle(
             color: isSelected ? Colors.black : colorScheme.onSurfaceVariant,
             fontSize: 13,
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w800,
           ),
         ),
       ),
@@ -233,11 +275,18 @@ class _PaymentManagementPageState extends State<PaymentManagementPage> {
 
   Widget _buildPaymentCard(BuildContext context, PaymentEntity payment, ColorScheme colorScheme, bool isDark) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: colorScheme.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: colorScheme.outlineVariant),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.5)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Row(
         children: [

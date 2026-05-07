@@ -603,13 +603,25 @@ class _MatchesPageState extends State<MatchesPage> with AutomaticKeepAliveClient
                 shape: BoxShape.circle,
               ),
               child: Hero(
-                tag: 'team_logo_${match.idEquipoA}',
+                tag: 'team_logo_${match.idEquipoA}_match_${match.id}',
                 child: ClipOval(
-                  child: match.logoEquipoA != null
+                  child: (match.logoEquipoA != null && match.logoEquipoA!.isNotEmpty && match.logoEquipoA != 'null')
                       ? Image.network(
                           match.logoEquipoA!,
                           fit: BoxFit.cover,
                           errorBuilder: (context, error, stackTrace) => const Center(child: Text('⚽', style: TextStyle(fontSize: 24))),
+                          loadingBuilder: (context, child, loadingProgress) {
+                            if (loadingProgress == null) return child;
+                            return Center(
+                              child: CircularProgressIndicator(
+                                value: loadingProgress.expectedTotalBytes != null
+                                    ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
+                                    : null,
+                                strokeWidth: 2,
+                                color: AppColors.primary.withValues(alpha: 0.5),
+                              ),
+                            );
+                          },
                         )
                       : const Center(
                           child: Text(
