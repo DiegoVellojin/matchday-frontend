@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'match_status.dart';
 
 class MatchEntity extends Equatable {
   final int id;
@@ -6,7 +7,7 @@ class MatchEntity extends Equatable {
   final DateTime fechaFinEstimada;
   final DateTime? fechaAcordada;
   final double costoTotal;
-  final String estatus;
+  final MatchStatus status;
   final int idUsuarioOrg;
   final int idDeporte;
   final int idCancha;
@@ -46,7 +47,7 @@ class MatchEntity extends Equatable {
     required this.fechaFinEstimada,
     this.fechaAcordada,
     required this.costoTotal,
-    required this.estatus,
+    required this.status,
     required this.idUsuarioOrg,
     required this.idDeporte,
     required this.idCancha,
@@ -76,6 +77,9 @@ class MatchEntity extends Equatable {
     this.longitudCancha,
   });
 
+  /// Getter de compatibilidad para evitar romper código existente que use '.estatus'
+  String get estatus => status.name;
+
   @override
   List<Object?> get props => [
         id,
@@ -83,7 +87,7 @@ class MatchEntity extends Equatable {
         fechaFinEstimada,
         fechaAcordada,
         costoTotal,
-        estatus,
+        status,
         idUsuarioOrg,
         idDeporte,
         idCancha,

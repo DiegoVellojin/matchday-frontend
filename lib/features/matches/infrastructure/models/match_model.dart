@@ -1,4 +1,5 @@
 import '../../domain/entities/match_entity.dart';
+import '../../domain/entities/match_status.dart';
 
 class MatchModel extends MatchEntity {
   const MatchModel({
@@ -7,7 +8,7 @@ class MatchModel extends MatchEntity {
     required super.fechaFinEstimada,
     super.fechaAcordada,
     required super.costoTotal,
-    required super.estatus,
+    required super.status,
     required super.idUsuarioOrg,
     required super.idDeporte,
     required super.idCancha,
@@ -46,7 +47,7 @@ class MatchModel extends MatchEntity {
           ? DateTime.parse(json['fecha_acordada']) 
           : null,
       costoTotal: (json['costo_total_partida'] as num).toDouble(),
-      estatus: json['estatus_partida'],
+      status: MatchStatus.fromString(json['estatus_partida']),
       idUsuarioOrg: json['fk_id_usuario_org'],
       idDeporte: json['fk_id_deporte'],
       idCancha: json['fk_id_cancha'],
@@ -92,7 +93,7 @@ class MatchModel extends MatchEntity {
       'fecha_fin_estimada': fechaFinEstimada.toIso8601String(),
       'fecha_acordada': fechaAcordada?.toIso8601String(),
       'costo_total_partida': costoTotal,
-      'estatus_partida': estatus,
+      'estatus_partida': status.name,
       'fk_id_usuario_org': idUsuarioOrg,
       'fk_id_deporte': idDeporte,
       'fk_id_cancha': idCancha,
