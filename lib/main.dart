@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 import 'core/di/injection_container.dart' as di;
 import 'core/theme/app_theme.dart';
 import 'core/theme/bloc/theme_bloc.dart';
@@ -15,7 +16,9 @@ import 'features/notifications/presentation/bloc/notifications_event.dart';
 void main() async {
   // 1. Aseguramos que Flutter esté listo
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
 
   // 2. Inicializamos GetIt ANTES de correr la app
   await di.init();

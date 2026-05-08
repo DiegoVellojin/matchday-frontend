@@ -151,6 +151,8 @@ class _UploadReceiptPageState extends State<UploadReceiptPage> {
                   delegate: SliverChildListDelegate([
                     const SizedBox(height: 8),
                     _buildPaymentSummaryCard(theme),
+                    const SizedBox(height: 24),
+                    _buildCaptainBankDetails(theme),
                     const SizedBox(height: 32),
                     Text(
                       'PASO 1: SELECCIONAR ARCHIVO',
@@ -189,6 +191,70 @@ class _UploadReceiptPageState extends State<UploadReceiptPage> {
     );
   }
 
+  Widget _buildCaptainBankDetails(ThemeData theme) {
+    if (widget.pago.banco == null && widget.pago.cedula == null && widget.pago.telefono == null) {
+      return const SizedBox.shrink();
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.account_balance_wallet_outlined, color: AppColors.primary, size: 20),
+              const SizedBox(width: 10),
+              Text(
+                'DATOS DEL CAPITÁN (PAGO MÓVIL)',
+                style: theme.textTheme.labelMedium?.copyWith(
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1.1,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          _bankInfoRow(Icons.account_balance, 'Banco', widget.pago.banco ?? 'No especificado'),
+          const SizedBox(height: 10),
+          _bankInfoRow(Icons.badge_outlined, 'Cédula', widget.pago.cedula ?? 'No especificado'),
+          const SizedBox(height: 10),
+          _bankInfoRow(Icons.phone_android, 'Teléfono', widget.pago.telefono ?? 'No especificado'),
+        ],
+      ),
+    );
+  }
+
+  Widget _bankInfoRow(IconData icon, String label, String value) {
+    return Row(
+      children: [
+        Icon(icon, size: 16, color: AppColors.textMuted),
+        const SizedBox(width: 12),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(label, style: const TextStyle(color: AppColors.textMuted, fontSize: 10)),
+            Text(value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+          ],
+        ),
+        const Spacer(),
+        IconButton(
+          onPressed: () {
+            // Copiar al portapapeles (opcional)
+          },
+          icon: const Icon(Icons.copy_all, size: 18, color: AppColors.primary),
+          visualDensity: VisualDensity.compact,
+        ),
+      ],
+    );
+  }
+
   Widget _buildPaymentSummaryCard(ThemeData theme) {
     return Container(
       padding: const EdgeInsets.all(24),
@@ -214,11 +280,21 @@ class _UploadReceiptPageState extends State<UploadReceiptPage> {
                 decoration: BoxDecoration(
                   color: AppColors.primary.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
+                  border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
                 ),
-                alignment: Alignment.center,
-                child: Text(
-                  widget.pago.teamLogo ?? '⚽',
-                  style: const TextStyle(fontSize: 28),
+                child: ClipOval(
+                  child: (widget.pago.teamLogo != null && widget.pago.teamLogo!.startsWith('http'))
+                      ? Image.network(
+                          widget.pago.teamLogo!,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) => const Center(child: Text('⚽', style: TextStyle(fontSize: 24))),
+                        )
+                      : Center(
+                          child: Text(
+                            widget.pago.teamLogo ?? '⚽',
+                            style: const TextStyle(fontSize: 24),
+                          ),
+                        ),
                 ),
               ),
               const SizedBox(width: 16),
@@ -306,6 +382,7 @@ class _UploadReceiptPageState extends State<UploadReceiptPage> {
     return TextField(
       controller: _referenciaController,
       style: const TextStyle(fontWeight: FontWeight.bold),
+      onChanged: (value) => setState(() {}),
       decoration: InputDecoration(
         hintText: 'Número de referencia...',
         prefixIcon: const Icon(Icons.pin_outlined, color: AppColors.primary),
@@ -328,19 +405,23 @@ class _UploadReceiptPageState extends State<UploadReceiptPage> {
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primary,
           foregroundColor: Colors.black,
-          disabledBackgroundColor: theme.dividerColor,
+          disabledBackgroundColor: theme.dividerColor.withValues(alpha: 0.1),
+          disabledForegroundColor: AppColors.textMuted,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-          elevation: 8,
+          elevation: canSubmit ? 8 : 0,
           shadowColor: AppColors.primary.withValues(alpha: 0.4),
         ),
         child: _isUploading || state is PaymentsLoading
             ? const SizedBox(height: 24, width: 24, child: CircularProgressIndicator(color: Colors.black, strokeWidth: 3))
-            : const Row(
+            : Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.check_circle_outline),
-                  SizedBox(width: 12),
-                  Text('ENVIAR COMPROBANTE', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, letterSpacing: 1.1)),
+                  Icon(canSubmit ? Icons.check_circle_outline : Icons.lock_outline),
+                  const SizedBox(width: 12),
+                  Text(
+                    canSubmit ? 'ENVIAR COMPROBANTE' : 'COMPLETA LOS DATOS',
+                    style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16, letterSpacing: 1.1),
+                  ),
                 ],
               ),
       ),

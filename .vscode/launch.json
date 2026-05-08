@@ -1,0 +1,23 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "MatchDay (Android)",
+      "request": "launch",
+      "type": "dart",
+      "deviceId": "c692c60f"
+    },
+    {
+      "name": "MatchDay (iOS)",
+      "request": "launch",
+      "type": "dart",
+      "deviceId": "0ACD90FF-426B-4371-9F70-D19C6397E15A"
+    }
+  ],
+  "compounds": [
+    {
+      "name": "MatchDay (All Mobile)",
+      "configurations": ["MatchDay (Android)", "MatchDay (iOS)"]
+    }
+  ]
+}

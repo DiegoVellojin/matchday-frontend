@@ -13,6 +13,8 @@ import '../bloc/matches_bloc.dart';
 import 'register_result_page.dart';
 import 'confirm_result_page.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../payments/presentation/bloc/payments_bloc.dart';
+import '../../../payments/presentation/bloc/payments_state.dart';
 import '../../../payments/presentation/widgets/verify_payment_modal.dart';
 
 class CaptainMatchDashboardPage extends StatefulWidget {
@@ -76,6 +78,7 @@ class _CaptainMatchDashboardPageState extends State<CaptainMatchDashboardPage>
         'nombre': player.nombreUsuario,
         'url_foto_perfil': player.urlFotoPerfil ?? '',
         'url_recibo_pago': player.urlReciboPago ?? '',
+        'referencia': player.referenciaPago ?? '',
       },
       monto: cuota,
       partidaId: widget.matchEntity.id,
@@ -128,22 +131,37 @@ class _CaptainMatchDashboardPageState extends State<CaptainMatchDashboardPage>
     final myGolesFavor = isCaptainA ? match.resultadoGolesACapA : match.resultadoGolesBCapB;
     final hasRegisteredResult = myGolesFavor != null;
 
-    return BlocListener<MatchesBloc, MatchesState>(
-      listener: (context, state) {
-        if (state is TeamMarkedReady) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Text('¡Equipo marcado como listo! 🎉'),
-              backgroundColor: Theme.of(context).primaryColor,
-            ),
-          );
-          // Navigator.pop(context); // Comentado para permitir ver el estado "Esperando rival"
-        }
-        if (state is MatchResultRegistered) {
-          // Si el resultado se registró, volvemos al dashboard de equipos o refrescamos
-          Navigator.pop(context);
-        }
-      },
+    return MultiBlocListener(
+      listeners: [
+        BlocListener<MatchesBloc, MatchesState>(
+          listener: (context, state) {
+            if (state is TeamMarkedReady) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: const Text('¡Equipo marcado como listo! 🎉'),
+                  backgroundColor: Theme.of(context).primaryColor,
+                ),
+              );
+            }
+            if (state is MatchResultRegistered) {
+              Navigator.pop(context);
+            }
+          },
+        ),
+        BlocListener<PaymentsBloc, PaymentsState>(
+          listener: (context, state) {
+            if (state is PaymentVerifiedSuccess) {
+              _fetchPlayers(); // Recargar lista al verificar un pago
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Pago verificado correctamente ✅'),
+                  backgroundColor: AppColors.primary,
+                ),
+              );
+            }
+          },
+        ),
+      ],
       child: Builder(
         builder: (context) {
           final theme = Theme.of(context);

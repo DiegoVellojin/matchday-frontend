@@ -648,6 +648,9 @@ class _TeamSettingsPageState extends State<TeamSettingsPage> {
     );
 
     setState(() => _isLoading = false);
+    
+    if (!mounted) return;
+
     result.fold(
       (failure) => ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -695,10 +698,13 @@ class _TeamSettingsPageState extends State<TeamSettingsPage> {
                 newCaptainId: userId,
               );
               setState(() => _isLoading = false);
+              
+              if (!mounted) return;
+
               result.fold(
-                (f) => ScaffoldMessenger.of(
-                  context,
-                ).showSnackBar(SnackBar(content: Text(f.message))),
+                (f) => ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(f.message)),
+                ),
                 (_) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Capitanía transferida')),
@@ -745,10 +751,13 @@ class _TeamSettingsPageState extends State<TeamSettingsPage> {
                 userId: userId,
               );
               setState(() => _isLoading = false);
+              
+              if (!mounted) return;
+
               result.fold(
-                (f) => ScaffoldMessenger.of(
-                  context,
-                ).showSnackBar(SnackBar(content: Text(f.message))),
+                (f) => ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(f.message)),
+                ),
                 (_) => _loadMembers(),
               );
             },
@@ -786,11 +795,16 @@ class _TeamSettingsPageState extends State<TeamSettingsPage> {
               Navigator.pop(context);
               setState(() => _isLoading = true);
               final result = await sl<DeleteTeamUseCase>().call(widget.team.id);
+              
+              // Verificación de seguridad: si el usuario se salió de la pantalla mientras borraba, no hacemos nada más
+              if (!mounted) return;
+              
               setState(() => _isLoading = false);
+              
               result.fold(
-                (f) => ScaffoldMessenger.of(
-                  context,
-                ).showSnackBar(SnackBar(content: Text(f.message))),
+                (f) => ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(f.message)),
+                ),
                 (_) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Equipo eliminado')),
@@ -834,10 +848,13 @@ class _TeamSettingsPageState extends State<TeamSettingsPage> {
               setState(() => _isLoading = true);
               final result = await sl<LeaveTeamUseCase>().call(widget.team.id);
               setState(() => _isLoading = false);
+              
+              if (!mounted) return;
+
               result.fold(
-                (f) => ScaffoldMessenger.of(
-                  context,
-                ).showSnackBar(SnackBar(content: Text(f.message))),
+                (f) => ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(f.message)),
+                ),
                 (_) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Has salido del equipo')),

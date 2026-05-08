@@ -13,7 +13,9 @@ class AuthRemoteDataSource {
 
   Future<void> _ensureInitialized() async {
     if (!_isInitialized) {
-      await _googleSignIn.initialize();
+      await _googleSignIn.initialize(
+        serverClientId: '698674151416-grmtdvvsfrpkhlnjno0gq457g80s0kei.apps.googleusercontent.com',
+      );
       _isInitialized = true;
     }
   }
@@ -29,10 +31,11 @@ class AuthRemoteDataSource {
         ],
       );
 
+      // En tu versión, authentication parece no ser un Future
       final String? idToken = googleUser.authentication.idToken;
 
       if (idToken != null) {
-        debugPrint("🚀 Enviando Google Token a Render...");
+        debugPrint("🚀 Enviando Google Token a Render con Server Audience...");
         final response = await dio.post(
           '${ApiConstants.baseUrl}${ApiConstants.authGoogle}',
           data: {"id_token": idToken},
@@ -40,13 +43,14 @@ class AuthRemoteDataSource {
         return response.data['access_token'];
       }
       return null;
-    } on GoogleSignInException catch (e) {
-      if (e.code.name == 'canceled' || e.code.name == 'sign_in_canceled') {
+    } on DioException catch (e) {
+      throw ApiErrorHandler.handle(e, 'Error al autenticar con Google');
+    } on Exception catch (e) {
+      debugPrint("❌ Error en Google Sign In: $e");
+      if (e.toString().contains('canceled')) {
         return null;
       }
       throw Exception('Fallo al autenticar con Google');
-    } on DioException catch (e) {
-      throw ApiErrorHandler.handle(e, 'Error al autenticar con Google');
     }
   }
 

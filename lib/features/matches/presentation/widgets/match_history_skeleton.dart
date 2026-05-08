@@ -9,8 +9,8 @@ class MatchHistorySkeleton extends StatelessWidget {
     return ListView.separated(
       padding: const EdgeInsets.all(16),
       itemCount: 5,
-      separatorBuilder: (_, __) => const SizedBox(height: 16),
-      itemBuilder: (_, __) => Container(
+      separatorBuilder: (_, _) => const SizedBox(height: 16),
+      itemBuilder: (_, _) => Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           border: Border.all(color: Colors.grey.withValues(alpha: 0.1)),
@@ -33,7 +33,11 @@ class MatchHistorySkeleton extends StatelessWidget {
                     ],
                   ),
                 ),
-                MatchDayShimmer.rounded(height: 24, width: 60, borderRadius: 12),
+                MatchDayShimmer.rounded(
+                  height: 24,
+                  width: 60,
+                  borderRadius: 12,
+                ),
               ],
             ),
             const SizedBox(height: 16),

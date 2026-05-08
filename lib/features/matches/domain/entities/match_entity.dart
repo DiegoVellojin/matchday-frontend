@@ -40,6 +40,9 @@ class MatchEntity extends Equatable {
   final int? resultadoGolesBCapB;
   final double? latitudCancha;
   final double? longitudCancha;
+  final String? bancoReceptor;
+  final String? cedulaReceptora;
+  final String? telefonoReceptor;
 
   const MatchEntity({
     required this.id,
@@ -75,6 +78,9 @@ class MatchEntity extends Equatable {
     this.resultadoGolesBCapB,
     this.latitudCancha,
     this.longitudCancha,
+    this.bancoReceptor,
+    this.cedulaReceptora,
+    this.telefonoReceptor,
   });
 
   /// Getter de compatibilidad para evitar romper código existente que use '.estatus'
@@ -115,6 +121,9 @@ class MatchEntity extends Equatable {
         resultadoGolesBCapB,
         latitudCancha,
         longitudCancha,
+        bancoReceptor,
+        cedulaReceptora,
+        telefonoReceptor,
       ];
 }
 
@@ -124,6 +133,7 @@ class MatchPlayer extends Equatable {
   final String? urlFotoPerfil;
   final String estatusPago;
   final String? urlReciboPago;
+  final String? referenciaPago;
   final int? idEquipo;
 
   const MatchPlayer({
@@ -132,6 +142,7 @@ class MatchPlayer extends Equatable {
     this.urlFotoPerfil,
     required this.estatusPago,
     this.urlReciboPago,
+    this.referenciaPago,
     this.idEquipo,
   });
 
@@ -142,6 +153,7 @@ class MatchPlayer extends Equatable {
         urlFotoPerfil,
         estatusPago,
         urlReciboPago,
+        referenciaPago,
         idEquipo,
       ];
 }

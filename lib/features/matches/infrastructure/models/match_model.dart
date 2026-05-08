@@ -36,6 +36,9 @@ class MatchModel extends MatchEntity {
     super.resultadoGolesBCapB,
     super.latitudCancha,
     super.longitudCancha,
+    super.bancoReceptor,
+    super.cedulaReceptora,
+    super.telefonoReceptor,
   });
 
   factory MatchModel.fromJson(Map<String, dynamic> json) {
@@ -83,6 +86,9 @@ class MatchModel extends MatchEntity {
       resultadoGolesBCapB: json['resultado_goles_b_cap_b'],
       latitudCancha: json['latitud_cancha'] != null ? (json['latitud_cancha'] as num).toDouble() : null,
       longitudCancha: json['longitud_cancha'] != null ? (json['longitud_cancha'] as num).toDouble() : null,
+      bancoReceptor: json['banco_receptor'],
+      cedulaReceptora: json['cedula_receptora'],
+      telefonoReceptor: json['telefono_receptor'],
     );
   }
 
@@ -121,6 +127,9 @@ class MatchModel extends MatchEntity {
       'resultado_goles_b_cap_b': resultadoGolesBCapB,
       'latitud_cancha': latitudCancha,
       'longitud_cancha': longitudCancha,
+      'banco_receptor': bancoReceptor,
+      'cedula_receptora': cedulaReceptora,
+      'telefono_receptor': telefonoReceptor,
     };
   }
 }
@@ -132,6 +141,7 @@ class MatchPlayerModel extends MatchPlayer {
     super.urlFotoPerfil,
     required super.estatusPago,
     super.urlReciboPago,
+    super.referenciaPago,
     super.idEquipo,
   });
 
@@ -142,6 +152,7 @@ class MatchPlayerModel extends MatchPlayer {
       urlFotoPerfil: json['url_foto_perfil'],
       estatusPago: json['estatus_pago'],
       urlReciboPago: json['url_recibo_pago'],
+      referenciaPago: json['referencia_pago'],
       idEquipo: json['id_equipo'],
     );
   }

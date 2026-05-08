@@ -8,6 +8,9 @@ class PaymentEntity {
   final bool isPaid;
   final String estatusPago;
   final String? urlReciboPago;
+  final String? banco;
+  final String? cedula;
+  final String? telefono;
 
   const PaymentEntity({
     required this.idPartida,
@@ -18,5 +21,8 @@ class PaymentEntity {
     required this.isPaid,
     required this.estatusPago,
     this.urlReciboPago,
+    this.banco,
+    this.cedula,
+    this.telefono,
   });
 }

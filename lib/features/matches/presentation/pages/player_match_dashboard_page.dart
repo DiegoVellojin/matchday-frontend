@@ -1,17 +1,72 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:intl/intl.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../domain/entities/match_entity.dart';
-import 'package:intl/intl.dart';
+import '../../domain/repositories/matches_repository.dart';
+import '../../../payments/domain/entities/payment_entity.dart';
+import '../../../profile/presentation/bloc/profile_bloc.dart';
+import '../../../profile/presentation/bloc/profile_state.dart';
 
-class PlayerMatchDashboardPage extends StatelessWidget {
+class PlayerMatchDashboardPage extends StatefulWidget {
   final MatchEntity match;
 
   const PlayerMatchDashboardPage({super.key, required this.match});
 
+  @override
+  State<PlayerMatchDashboardPage> createState() => _PlayerMatchDashboardPageState();
+}
+
+class _PlayerMatchDashboardPageState extends State<PlayerMatchDashboardPage> {
+  List<MatchPlayer> _players = [];
+  bool _isLoadingPlayers = true;
+  double _cuota = 0.0;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchPlayers();
+  }
+
+  Future<void> _fetchPlayers() async {
+    final repository = context.read<IMatchesRepository>();
+    final result = await repository.getMatchPlayers(widget.match.id);
+
+    if (mounted) {
+      result.fold(
+        (failure) => setState(() => _isLoadingPlayers = false),
+        (players) {
+          setState(() {
+            _players = players;
+            
+            // Determinar mi equipo para calcular la cuota
+            final profileState = context.read<ProfileBloc>().state;
+            int? myTeamId;
+            if (profileState is ProfileLoaded) {
+              final myId = profileState.profile.id;
+              // Si soy el organizador o estoy en equipo A
+              final amIInA = players.any((p) => p.idUsuario == myId && p.idEquipo == widget.match.idEquipoA);
+              myTeamId = amIInA ? widget.match.idEquipoA : widget.match.idEquipoB;
+            }
+
+            final myTeamPlayers = players.where((p) => p.idEquipo == (myTeamId ?? widget.match.idEquipoB)).toList();
+            
+            if (myTeamPlayers.isNotEmpty) {
+              _cuota = widget.match.costoTotal / 2 / myTeamPlayers.length;
+            } else {
+              _cuota = widget.match.costoTotal / 22; // Backup
+            }
+            _isLoadingPlayers = false;
+          });
+        },
+      );
+    }
+  }
+
   void _openGoogleMaps() async {
-    // Por ahora usamos una búsqueda genérica si no tenemos coordenadas
-    final query = Uri.encodeComponent(match.nombreCancha ?? 'Cancha de fútbol');
+    final query = Uri.encodeComponent(widget.match.nombreCancha ?? 'Cancha de fútbol');
     final url = 'https://www.google.com/maps/search/?api=1&query=$query';
     if (await canLaunchUrl(Uri.parse(url))) {
       await launchUrl(Uri.parse(url));
@@ -43,15 +98,10 @@ class PlayerMatchDashboardPage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Card de Equipos
             _buildTeamsCard(context, isDark),
             const SizedBox(height: 20),
-
-            // Info del Partido (Fecha, Cancha, Mapa)
             _buildMatchInfoCard(context, isDark),
             const SizedBox(height: 20),
-
-            // Estado de Pagos (Vista Jugador)
             _buildPaymentsStatusCard(context, isDark),
             const SizedBox(height: 100),
           ],
@@ -63,6 +113,20 @@ class PlayerMatchDashboardPage extends StatelessWidget {
 
   Widget _buildTeamsCard(BuildContext context, bool isDark) {
     final theme = Theme.of(context);
+    
+    // Lógica para saber cuál es "Mi Equipo" y cuál el "Rival"
+    final profileState = context.read<ProfileBloc>().state;
+    bool amIInA = true;
+    if (profileState is ProfileLoaded) {
+      final myId = profileState.profile.id;
+      amIInA = _players.any((p) => p.idUsuario == myId && p.idEquipo == widget.match.idEquipoA) || widget.match.idUsuarioOrg == myId;
+    }
+
+    final myName = amIInA ? (widget.match.nombreEquipoA ?? 'Mi Equipo') : (widget.match.nombreEquipoB ?? 'Mi Equipo');
+    final myLogo = amIInA ? widget.match.logoEquipoA : widget.match.logoEquipoB;
+    final rivalName = amIInA ? (widget.match.nombreEquipoB ?? 'Rival') : (widget.match.nombreEquipoA ?? 'Rival');
+    final rivalLogo = amIInA ? widget.match.logoEquipoB : widget.match.logoEquipoA;
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -74,11 +138,11 @@ class PlayerMatchDashboardPage extends StatelessWidget {
         children: [
           Row(
             children: [
-              _teamAvatar(context, match.logoEquipoA, 'A'),
+              _teamAvatar(context, rivalLogo, 'R'),
               const Spacer(),
               const Text('VS', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 20)),
               const Spacer(),
-              _teamAvatar(context, match.logoEquipoB, 'B'),
+              _teamAvatar(context, myLogo, 'M'),
             ],
           ),
           const SizedBox(height: 12),
@@ -86,17 +150,17 @@ class PlayerMatchDashboardPage extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  match.nombreEquipoA ?? 'Equipo A',
+                  rivalName,
                   textAlign: TextAlign.center,
-                  style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontWeight: FontWeight.bold),
+                  style: TextStyle(color: theme.colorScheme.onSurface, fontWeight: FontWeight.bold),
                 ),
               ),
               const SizedBox(width: 40),
               Expanded(
                 child: Text(
-                  match.nombreEquipoB ?? 'Tu Equipo',
+                  myName,
                   textAlign: TextAlign.center,
-                  style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontWeight: FontWeight.bold),
+                  style: TextStyle(color: theme.colorScheme.onSurface, fontWeight: FontWeight.bold),
                 ),
               ),
             ],
@@ -113,7 +177,7 @@ class PlayerMatchDashboardPage extends StatelessWidget {
       height: 70,
       decoration: BoxDecoration(color: theme.scaffoldBackgroundColor, shape: BoxShape.circle, border: Border.all(color: theme.dividerColor)),
       child: ClipOval(
-        child: url != null && url.isNotEmpty
+        child: url != null && url.isNotEmpty && url != 'null'
             ? Image.network(
                 url,
                 fit: BoxFit.cover,
@@ -139,9 +203,9 @@ class PlayerMatchDashboardPage extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _infoRow(context, Icons.calendar_today, 'Fecha', DateFormat('EEEE d MMMM', 'es_VE').format(match.fechaInicioEstimada), isDark),
+          _infoRow(context, Icons.calendar_today, 'Fecha', DateFormat('EEEE d MMMM', 'es_VE').format(widget.match.fechaInicioEstimada), isDark),
           Divider(color: theme.dividerColor, height: 24),
-          _infoRow(context, Icons.access_time, 'Hora', '${DateFormat('jm').format(match.fechaInicioEstimada)} - ${DateFormat('jm').format(match.fechaFinEstimada)}', isDark),
+          _infoRow(context, Icons.access_time, 'Hora', '${DateFormat('jm').format(widget.match.fechaInicioEstimada)} - ${DateFormat('jm').format(widget.match.fechaFinEstimada)}', isDark),
           Divider(color: theme.dividerColor, height: 24),
           Row(
             children: [
@@ -151,7 +215,7 @@ class PlayerMatchDashboardPage extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(match.nombreCancha ?? 'Cancha por definir', style: TextStyle(color: theme.colorScheme.onSurface, fontWeight: FontWeight.bold)),
+                    Text(widget.match.nombreCancha ?? 'Cancha por definir', style: TextStyle(color: theme.colorScheme.onSurface, fontWeight: FontWeight.bold)),
                     Text('Ver ubicación en el mapa', style: TextStyle(color: textMuted, fontSize: 12)),
                   ],
                 ),
@@ -169,6 +233,7 @@ class PlayerMatchDashboardPage extends StatelessWidget {
   }
 
   Widget _infoRow(BuildContext context, IconData icon, String label, String value, bool isDark) {
+    final theme = Theme.of(context);
     final textMuted = isDark ? const Color(0xFF9CA3AF) : Colors.black54;
     return Row(
       children: [
@@ -178,7 +243,7 @@ class PlayerMatchDashboardPage extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(label, style: TextStyle(color: textMuted, fontSize: 12)),
-            Text(value, style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontWeight: FontWeight.bold)),
+            Text(value, style: TextStyle(color: theme.colorScheme.onSurface, fontWeight: FontWeight.bold)),
           ],
         ),
       ],
@@ -188,6 +253,27 @@ class PlayerMatchDashboardPage extends StatelessWidget {
   Widget _buildPaymentsStatusCard(BuildContext context, bool isDark) {
     final theme = Theme.of(context);
     final textMuted = isDark ? const Color(0xFF9CA3AF) : Colors.black54;
+
+    // Calculamos progreso de MI equipo
+    final profileState = context.read<ProfileBloc>().state;
+    int? myTeamId;
+    int? rivalTeamId;
+    if (profileState is ProfileLoaded) {
+      final myId = profileState.profile.id;
+      final amIInA = _players.any((p) => p.idUsuario == myId && p.idEquipo == widget.match.idEquipoA) || widget.match.idUsuarioOrg == myId;
+      myTeamId = amIInA ? widget.match.idEquipoA : widget.match.idEquipoB;
+      rivalTeamId = amIInA ? widget.match.idEquipoB : widget.match.idEquipoA;
+    }
+
+    // Datos mi equipo
+    final myTeamPlayers = _players.where((p) => p.idEquipo == (myTeamId ?? widget.match.idEquipoB)).toList();
+    final myPaidCount = myTeamPlayers.where((p) => p.estatusPago == 'verificado').length;
+    final myTotalCount = myTeamPlayers.length;
+
+    // Datos rival
+    final rivalTeamPlayers = _players.where((p) => p.idEquipo == rivalTeamId).toList();
+    final rivalPaidCount = rivalTeamPlayers.where((p) => p.estatusPago == 'verificado').length;
+    final rivalTotalCount = rivalTeamPlayers.length;
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -199,23 +285,61 @@ class PlayerMatchDashboardPage extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Estado del Equipo', style: TextStyle(color: theme.colorScheme.onSurface, fontWeight: FontWeight.bold, fontSize: 16)),
-          const SizedBox(height: 16),
-          Text(
-            'El seguimiento detallado de pagos de tus compañeros estará disponible una vez que todos confirmen.',
-            style: TextStyle(color: textMuted, fontSize: 13),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('Estado de Pagos', style: TextStyle(color: theme.colorScheme.onSurface, fontWeight: FontWeight.bold, fontSize: 16)),
+              if (!_isLoadingPlayers)
+                Text(
+                  'Cuota: \$${_cuota.toStringAsFixed(2)}',
+                  style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 14),
+                ),
+            ],
           ),
+          const SizedBox(height: 20),
+          
+          // Mi Equipo
+          _buildTeamProgress('Tu Equipo', myPaidCount, myTotalCount, AppColors.primary, theme),
+          const SizedBox(height: 16),
+          
+          // Equipo Rival
+          _buildTeamProgress('Equipo Rival', rivalPaidCount, rivalTotalCount, Colors.cyan, theme),
+          
+          const SizedBox(height: 20),
+          Divider(color: theme.dividerColor),
           const SizedBox(height: 12),
           Text(
-            'El partido se confirmará cuando todos los jugadores realicen su pago.',
-            style: TextStyle(color: textMuted, fontSize: 12),
+            _isLoadingPlayers ? 'Calculando cuota...' : 'Recuerda que el partido solo se confirmará cuando los 2 equipos estén al día.',
+            style: TextStyle(color: textMuted, fontSize: 12, fontStyle: FontStyle.italic),
           ),
         ],
       ),
     );
   }
 
-
+  Widget _buildTeamProgress(String label, int paid, int total, Color color, ThemeData theme) {
+    final progress = total > 0 ? paid / total : 0.0;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(label, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+            Text('$paid de $total pagados', style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.bold)),
+          ],
+        ),
+        const SizedBox(height: 8),
+        LinearProgressIndicator(
+          value: progress,
+          backgroundColor: theme.dividerColor,
+          color: color,
+          minHeight: 6,
+          borderRadius: BorderRadius.circular(10),
+        ),
+      ],
+    );
+  }
 
   Widget _buildBottomBar(BuildContext context, bool isDark) {
     final theme = Theme.of(context);
@@ -230,19 +354,46 @@ class PlayerMatchDashboardPage extends StatelessWidget {
           width: double.infinity,
           height: 52,
           child: ElevatedButton(
-            onPressed: () {
-              // Navegar a subir comprobante
-              // context.push('/upload-receipt', extra: {'match': match});
+            onPressed: _isLoadingPlayers ? null : () {
+              // Determinar mi equipo para los datos de navegación
+              final profileState = context.read<ProfileBloc>().state;
+              bool amIInA = true;
+              if (profileState is ProfileLoaded) {
+                final myId = profileState.profile.id;
+                amIInA = _players.any((p) => p.idUsuario == myId && p.idEquipo == widget.match.idEquipoA) || widget.match.idUsuarioOrg == myId;
+              }
+
+              final myName = amIInA ? (widget.match.nombreEquipoA ?? 'Tu Equipo') : (widget.match.nombreEquipoB ?? 'Tu Equipo');
+              final myLogo = amIInA ? widget.match.logoEquipoA : widget.match.logoEquipoB;
+
+              final payment = PaymentEntity(
+                idPartida: widget.match.id,
+                teamName: myName,
+                teamLogo: myLogo,
+                concepto: widget.match.sportName ?? 'Partido de fútbol',
+                monto: _cuota,
+                isPaid: false,
+                estatusPago: 'pendiente',
+                banco: widget.match.bancoReceptor,
+                cedula: widget.match.cedulaReceptora,
+                telefono: widget.match.telefonoReceptor,
+              );
+              context.push('/upload-receipt', extra: {'payment': payment});
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
               foregroundColor: Colors.black,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+              disabledBackgroundColor: theme.dividerColor,
             ),
-            child: const Text('Realizar Pago', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+            child: _isLoadingPlayers 
+              ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black))
+              : const Text('Realizar Pago', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
           ),
         ),
       ),
     );
   }
 }
+
+

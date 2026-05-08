@@ -25,14 +25,16 @@ class VerifyPaymentModal extends StatelessWidget {
   }
 
   void _handleAprobar(BuildContext context) {
+    final int userId = jugador['id'] ?? 0;
+    if (userId == 0) return;
+
     context.read<PaymentsBloc>().add(
-      VerifyPaymentEvent(partidaId: partidaId, userId: jugador['id']),
+      VerifyPaymentEvent(partidaId: partidaId, userId: userId),
     );
     Navigator.pop(context);
   }
 
   void _handleRechazar(BuildContext context) {
-    // Mostrar diálogo de confirmación
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -46,7 +48,6 @@ class VerifyPaymentModal extends StatelessWidget {
           ),
           TextButton(
             onPressed: () {
-              // Lógica de rechazo...
               Navigator.pop(context); // Cerrar diálogo
               Navigator.pop(context); // Cerrar modal
             },
@@ -57,13 +58,55 @@ class VerifyPaymentModal extends StatelessWidget {
     );
   }
 
+  void _showZoomedImage(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: EdgeInsets.zero,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            GestureDetector(
+              onTap: () => Navigator.pop(context),
+              child: Container(color: Colors.black.withValues(alpha: 0.9)),
+            ),
+            InteractiveViewer(
+              panEnabled: true,
+              minScale: 0.5,
+              maxScale: 4.0,
+              child: (jugador['url_recibo_pago'] != null && jugador['url_recibo_pago'].toString().startsWith('http'))
+                  ? Image.network(
+                      jugador['url_recibo_pago'],
+                      fit: BoxFit.contain,
+                    )
+                  : const Icon(Icons.image, size: 100, color: Colors.white),
+            ),
+            Positioned(
+              top: 40,
+              right: 20,
+              child: IconButton(
+                icon: const Icon(Icons.close, color: Colors.white, size: 30),
+                onPressed: () => Navigator.pop(context),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     
+    final String refText = (jugador['referencia'] != null && jugador['referencia'].toString().isNotEmpty)
+        ? jugador['referencia']
+        : 'SIN REF';
+
     final comprobante = {
       'concepto': jugador['concepto'] ?? 'Pago de Partido',
-      'referencia': jugador['referencia'] ?? 'REF-${jugador['id'] ?? '000'}',
+      'referencia': refText,
       'fecha': jugador['fecha'] ?? 'Recién enviado',
     };
 
@@ -116,15 +159,31 @@ class VerifyPaymentModal extends StatelessWidget {
                           shape: BoxShape.circle,
                         ),
                         alignment: Alignment.center,
-                        child: Text(jugador['avatar'] ?? '👤', style: const TextStyle(fontSize: 32)),
+                        child: ClipOval(
+                          child: (jugador['url_foto_perfil'] != null && jugador['url_foto_perfil'].toString().startsWith('http'))
+                              ? Image.network(
+                                  jugador['url_foto_perfil'],
+                                  fit: BoxFit.cover,
+                                  width: 64,
+                                  height: 64,
+                                  errorBuilder: (context, error, stackTrace) => const Text('👤', style: TextStyle(fontSize: 32)),
+                                )
+                              : Text(jugador['avatar'] ?? '👤', style: const TextStyle(fontSize: 32)),
+                        ),
                       ),
                       const SizedBox(width: 16),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('Pago de', style: theme.textTheme.bodySmall),
-                          Text(jugador['nombre'] ?? 'Jugador', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
-                        ],
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Pago de', style: theme.textTheme.bodySmall),
+                            Text(
+                              jugador['nombre'] ?? 'Jugador', 
+                              style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),
@@ -167,16 +226,32 @@ class VerifyPaymentModal extends StatelessWidget {
                     children: [
                       Text('Comprobante Adjunto', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
                       const SizedBox(height: 12),
-                      Container(
-                        height: 200,
-                        width: double.infinity,
-                        decoration: BoxDecoration(
-                          color: theme.dividerColor,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: theme.dividerColor, width: 2),
+                      GestureDetector(
+                        onTap: () => _showZoomedImage(context),
+                        child: Container(
+                          height: 200,
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                            color: theme.dividerColor,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: theme.dividerColor, width: 2),
+                          ),
+                          alignment: Alignment.center,
+                          child: (jugador['url_recibo_pago'] != null && jugador['url_recibo_pago'].toString().startsWith('http'))
+                              ? Hero(
+                                  tag: 'receipt_${jugador['id']}',
+                                  child: Image.network(
+                                    jugador['url_recibo_pago'],
+                                    fit: BoxFit.contain,
+                                    loadingBuilder: (context, child, loadingProgress) {
+                                      if (loadingProgress == null) return child;
+                                      return const Center(child: CircularProgressIndicator());
+                                    },
+                                    errorBuilder: (context, error, stackTrace) => Icon(Icons.broken_image, size: 64, color: theme.iconTheme.color?.withValues(alpha: 0.5)),
+                                  ),
+                                )
+                              : Icon(Icons.image, size: 64, color: theme.iconTheme.color?.withValues(alpha: 0.5)),
                         ),
-                        alignment: Alignment.center,
-                        child: Icon(Icons.image, size: 64, color: theme.iconTheme.color?.withValues(alpha: 0.5)),
                       ),
                       const Padding(
                         padding: EdgeInsets.only(top: 8),
@@ -263,12 +338,23 @@ class VerifyPaymentModal extends StatelessWidget {
               const SizedBox(height: 4),
               if (isBadge)
                 Container(
+                  constraints: const BoxConstraints(minWidth: 80),
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    color: theme.dividerColor,
+                    color: Colors.black.withValues(alpha: 0.3),
                     borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: theme.colorScheme.primary.withValues(alpha: 0.5)),
                   ),
-                  child: Text(value, style: TextStyle(fontFamily: 'monospace', fontWeight: FontWeight.bold, color: theme.textTheme.bodyLarge?.color)),
+                  child: Text(
+                    value, 
+                    style: TextStyle(
+                      fontFamily: 'monospace', 
+                      fontWeight: FontWeight.bold, 
+                      color: theme.colorScheme.primary,
+                      fontSize: 14,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
                 )
               else
                 Text(value, style: TextStyle(fontSize: valueSize, fontWeight: FontWeight.bold, color: valueColor ?? theme.textTheme.bodyLarge?.color)),
