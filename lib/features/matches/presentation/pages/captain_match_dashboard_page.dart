@@ -642,7 +642,7 @@ class _CaptainMatchDashboardPageState extends State<CaptainMatchDashboardPage>
                     ? (hasRegisteredResult ? '👀 Ver Resultado' : '🏆 Registrar Resultado')
                     : (amIReady 
                         ? '✓ Listo, esperando rival...' 
-                        : (everyonePaid ? '✓ Confirmar Equipo Ready' : '⏳ Esperando Pagos ($paidCount/$totalCount)')),
+                        : (everyonePaid ? '✓ Confirmar Equipo Listo' : '⏳ Esperando Pagos ($paidCount/$totalCount)')),
                 style: TextStyle(
                   fontWeight: FontWeight.bold, 
                   fontSize: 16,
