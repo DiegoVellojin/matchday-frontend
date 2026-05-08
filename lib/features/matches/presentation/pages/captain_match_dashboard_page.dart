@@ -30,24 +30,47 @@ class CaptainMatchDashboardPage extends StatefulWidget {
 class _CaptainMatchDashboardPageState extends State<CaptainMatchDashboardPage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  late MatchEntity _match;
   List<MatchPlayer> _players = [];
   bool _isLoadingPlayers = true;
-
-
 
   @override
   void initState() {
     super.initState();
+    _match = widget.matchEntity;
     _tabController = TabController(length: 2, vsync: this);
     _tabController.addListener(() {
       setState(() {});
     });
-    _fetchPlayers();
+    _refreshAllData();
+  }
+
+  Future<void> _refreshAllData() async {
+    await Future.wait([
+      _fetchPlayers(),
+      _fetchMatchDetails(),
+    ]);
+  }
+
+  Future<void> _fetchMatchDetails() async {
+    final repository = context.read<IMatchesRepository>();
+    final result = await repository.getMatchDetails(_match.id);
+    
+    if (mounted) {
+      result.fold(
+        (failure) => null,
+        (updatedMatch) {
+          setState(() {
+            _match = updatedMatch;
+          });
+        },
+      );
+    }
   }
 
   Future<void> _fetchPlayers() async {
     final repository = context.read<IMatchesRepository>();
-    final result = await repository.getMatchPlayers(widget.matchEntity.id);
+    final result = await repository.getMatchPlayers(_match.id);
 
     if (mounted) {
       result.fold(
@@ -81,12 +104,12 @@ class _CaptainMatchDashboardPageState extends State<CaptainMatchDashboardPage>
         'referencia': player.referenciaPago ?? '',
       },
       monto: cuota,
-      partidaId: widget.matchEntity.id,
+      partidaId: _match.id,
     );
   }
 
   Future<void> _openMap() async {
-    final match = widget.matchEntity;
+    final match = _match;
     // Aquí podrías usar latitud/longitud si estuvieran en el entity, 
     // por ahora usamos el nombre de la cancha
     final query = Uri.encodeComponent(match.nombreCancha ?? 'Cancha #${match.idCancha}');
@@ -98,7 +121,7 @@ class _CaptainMatchDashboardPageState extends State<CaptainMatchDashboardPage>
 
   @override
   Widget build(BuildContext context) {
-    final match = widget.matchEntity;
+    final match = _match;
 
     final profileState = context.read<ProfileBloc>().state;
     int? currentUserId;
@@ -142,6 +165,7 @@ class _CaptainMatchDashboardPageState extends State<CaptainMatchDashboardPage>
                   backgroundColor: Theme.of(context).primaryColor,
                 ),
               );
+              _fetchMatchDetails(); // Refrescar para ver si ya se confirmó
             }
             if (state is MatchResultRegistered) {
               Navigator.pop(context);
@@ -151,11 +175,19 @@ class _CaptainMatchDashboardPageState extends State<CaptainMatchDashboardPage>
         BlocListener<PaymentsBloc, PaymentsState>(
           listener: (context, state) {
             if (state is PaymentVerifiedSuccess) {
-              _fetchPlayers(); // Recargar lista al verificar un pago
+              _refreshAllData(); // Recargar toda la información al verificar un pago
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
                   content: Text('Pago verificado correctamente ✅'),
                   backgroundColor: AppColors.primary,
+                ),
+              );
+            }
+            if (state is PaymentsError) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(state.message),
+                  backgroundColor: Colors.redAccent,
                 ),
               );
             }
@@ -489,7 +521,7 @@ class _CaptainMatchDashboardPageState extends State<CaptainMatchDashboardPage>
       child: Row(
         children: [
           Hero(
-            tag: 'player_avatar_${widget.matchEntity.id}_${player.idUsuario}',
+            tag: 'player_avatar_${_match.id}_${player.idUsuario}',
             child: CircleAvatar(
               backgroundColor: Theme.of(context).scaffoldBackgroundColor,
               backgroundImage: (player.urlFotoPerfil != null && player.urlFotoPerfil!.isNotEmpty && player.urlFotoPerfil != 'null')
@@ -568,7 +600,7 @@ class _CaptainMatchDashboardPageState extends State<CaptainMatchDashboardPage>
                         context,
                         MaterialPageRoute(
                           builder: (context) => ConfirmarResultadoPage(
-                            match: widget.matchEntity,
+                            match: _match,
                             currentUserId: currentUserId!,
                           ),
                         ),
