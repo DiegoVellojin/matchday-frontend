@@ -9,6 +9,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../bloc/matches_bloc.dart';
 import '../../domain/entities/match_entity.dart';
+import '../../domain/entities/match_status.dart';
 import '../../../../core/widgets/matchday_filter_chips.dart';
 import '../../../../core/widgets/matchday_loading_bar.dart';
 import '../../../../core/widgets/matchday_search_bar.dart';
@@ -41,6 +42,7 @@ class _MatchesPageState extends State<MatchesPage> with AutomaticKeepAliveClient
   
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
+  String? selectedStatus;
   List<SportEntity> _sports = [];
   List<RegionEntity> _regions = [];
   List<CanchaEntity> _canchas = [];
@@ -171,6 +173,7 @@ class _MatchesPageState extends State<MatchesPage> with AutomaticKeepAliveClient
                         onRefresh: () async {
                           context.read<MatchesBloc>().add(LoadMatchesEvent(
                             sportId: selectedSportId,
+                            status: selectedStatus,
                             regionId: selectedRegionId,
                             canchaId: selectedCanchaId,
                             date: selectedDate,
@@ -208,6 +211,7 @@ class _MatchesPageState extends State<MatchesPage> with AutomaticKeepAliveClient
                       onRefresh: () async {
                         context.read<MatchesBloc>().add(LoadMatchesEvent(
                           sportId: selectedSportId,
+                          status: selectedStatus,
                           regionId: selectedRegionId,
                           canchaId: selectedCanchaId,
                           date: selectedDate,
@@ -266,6 +270,7 @@ class _MatchesPageState extends State<MatchesPage> with AutomaticKeepAliveClient
               setState(() => _isMyMatchesView = false);
               context.read<MatchesBloc>().add(LoadMatchesEvent(
                 sportId: selectedSportId,
+                status: selectedStatus,
                 regionId: selectedRegionId,
                 canchaId: selectedCanchaId,
                 date: selectedDate,
@@ -276,6 +281,7 @@ class _MatchesPageState extends State<MatchesPage> with AutomaticKeepAliveClient
               setState(() => _isMyMatchesView = true);
               context.read<MatchesBloc>().add(LoadMatchesEvent(
                 sportId: selectedSportId,
+                status: selectedStatus,
                 regionId: selectedRegionId,
                 canchaId: selectedCanchaId,
                 date: selectedDate,
@@ -312,9 +318,11 @@ class _MatchesPageState extends State<MatchesPage> with AutomaticKeepAliveClient
   void _applyFilters() {
     context.read<MatchesBloc>().add(LoadMatchesEvent(
       sportId: selectedSportId,
+      status: selectedStatus,
       regionId: selectedRegionId,
       canchaId: selectedCanchaId,
       date: selectedDate,
+      mine: _isMyMatchesView,
     ));
   }
 
@@ -366,6 +374,7 @@ class _MatchesPageState extends State<MatchesPage> with AutomaticKeepAliveClient
                           onPressed: () {
                             setModalState(() {
                               selectedSportId = null;
+                              selectedStatus = null;
                               selectedRegionId = null;
                               selectedCanchaId = null;
                               selectedDate = null;
@@ -399,6 +408,36 @@ class _MatchesPageState extends State<MatchesPage> with AutomaticKeepAliveClient
                       ],
                     ),
                     
+                    const SizedBox(height: 20),
+                    
+                    // ESTADO (Patrón Estado)
+                    Text('Estado', style: TextStyle(color: colorScheme.onSurface, fontSize: 16, fontWeight: FontWeight.w600)),
+                    const SizedBox(height: 10),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        _buildModalChip(
+                          label: 'Todos',
+                          isSelected: selectedStatus == null,
+                          setModalState: setModalState,
+                          onTap: () => setState(() => selectedStatus = null),
+                        ),
+                        ...[
+                          const PublishedStatus(),
+                          const NegotiatingStatus(),
+                          const PendingPaymentStatus(),
+                          const ConfirmedStatus(),
+                          const CompletedStatus(),
+                        ].map((st) => _buildModalChip(
+                          label: st.label,
+                          isSelected: selectedStatus == st.name,
+                          setModalState: setModalState,
+                          onTap: () => setState(() => selectedStatus = st.name),
+                        )),
+                      ],
+                    ),
+
                     const SizedBox(height: 20),
                     
                     // FECHA

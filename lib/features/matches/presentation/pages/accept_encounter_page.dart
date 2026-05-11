@@ -8,6 +8,8 @@ import '../bloc/matches_bloc.dart';
 import '../../../teams/presentation/bloc/my_teams_bloc.dart';
 import '../../../teams/presentation/bloc/my_teams_state.dart';
 import '../../../teams/domain/entities/team_entity.dart';
+import '../../../profile/presentation/bloc/profile_bloc.dart';
+import '../../../profile/presentation/bloc/profile_state.dart';
 
 class AcceptEncounterPage extends StatefulWidget {
   final MatchEntity match;
@@ -264,10 +266,13 @@ class _AcceptEncounterPageState extends State<AcceptEncounterPage> {
 
         final allTeams = state is MyTeamsLoaded ? state.teams : <TeamEntity>[];
 
+        final profileState = context.read<ProfileBloc>().state;
+        final currentUserId = profileState is ProfileLoaded ? profileState.profile.id : null;
+        
         // Filtrar: solo equipos donde soy capitán y el deporte coincide
         final profileSportId = match.idDeporte;
         final eligibleTeams = allTeams.where((t) {
-          final isCaptain = t.captainId != null;
+          final isCaptain = t.captainId == currentUserId && currentUserId != null;
           final sameSport = t.sportId == profileSportId || match.sportName == null;
           return isCaptain && sameSport;
         }).toList();

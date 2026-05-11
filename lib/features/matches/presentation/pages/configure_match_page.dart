@@ -231,9 +231,12 @@ class _ConfigureMatchPageState extends State<ConfigureMatchPage> {
                       children: [
                         Icon(Icons.group, size: 16, color: textMuted),
                         const SizedBox(width: 4),
-                        Text(
-                          'Capitán: ${widget.partido.nombreCapitanA ?? 'Pendiente'}',
-                          style: TextStyle(color: textMuted, fontSize: 14),
+                        Expanded(
+                          child: Text(
+                            'Capitán: ${widget.partido.nombreCapitanA ?? 'Pendiente'}',
+                            style: TextStyle(color: textMuted, fontSize: 14),
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
                       ],
                     ),

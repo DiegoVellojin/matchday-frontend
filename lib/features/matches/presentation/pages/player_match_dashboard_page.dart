@@ -430,9 +430,9 @@ class _PlayerMatchDashboardPageState extends State<PlayerMatchDashboardPage> {
                 monto: _cuota,
                 isPaid: isVerified,
                 estatusPago: myStatus,
-                banco: _currentMatch.bancoReceptor,
-                cedula: _currentMatch.cedulaReceptora,
-                telefono: _currentMatch.telefonoReceptor,
+                banco: amIInA ? _currentMatch.bancoReceptor : _currentMatch.bancoCapitanB,
+                cedula: amIInA ? _currentMatch.cedulaReceptora : _currentMatch.cedulaCapitanB,
+                telefono: amIInA ? _currentMatch.telefonoReceptor : _currentMatch.telefonoCapitanBPago,
               );
               context.push('/upload-receipt', extra: {'payment': payment});
             },

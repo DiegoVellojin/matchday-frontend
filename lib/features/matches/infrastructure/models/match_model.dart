@@ -39,6 +39,9 @@ class MatchModel extends MatchEntity {
     super.bancoReceptor,
     super.cedulaReceptora,
     super.telefonoReceptor,
+    super.bancoCapitanB,
+    super.cedulaCapitanB,
+    super.telefonoCapitanBPago,
   });
 
   factory MatchModel.fromJson(Map<String, dynamic> json) {
@@ -89,6 +92,9 @@ class MatchModel extends MatchEntity {
       bancoReceptor: json['banco_receptor'],
       cedulaReceptora: json['cedula_receptora'],
       telefonoReceptor: json['telefono_receptor'],
+      bancoCapitanB: json['banco_capitan_b'],
+      cedulaCapitanB: json['cedula_capitan_b'],
+      telefonoCapitanBPago: json['telefono_capitan_b_pago'],
     );
   }
 
@@ -130,6 +136,9 @@ class MatchModel extends MatchEntity {
       'banco_receptor': bancoReceptor,
       'cedula_receptora': cedulaReceptora,
       'telefono_receptor': telefonoReceptor,
+      'banco_capitan_b': bancoCapitanB,
+      'cedula_capitan_b': cedulaCapitanB,
+      'telefono_capitan_b_pago': telefonoCapitanBPago,
     };
   }
 }
