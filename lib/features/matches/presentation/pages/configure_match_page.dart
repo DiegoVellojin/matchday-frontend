@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../bloc/matches_bloc.dart';
 import '../../domain/entities/match_entity.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -28,11 +29,19 @@ class _ConfigureMatchPageState extends State<ConfigureMatchPage> {
   @override
   void initState() {
     super.initState();
+    _costoController.text = widget.partido.costoTotal.toString();
+    _costoActual = widget.partido.costoTotal;
+    
     _costoController.addListener(() {
       setState(() {
         _costoActual = double.tryParse(_costoController.text) ?? 0.0;
       });
     });
+
+    // Precargar datos si ya existen
+    _bancoController.text = widget.partido.bancoReceptor ?? '';
+    _cedulaController.text = widget.partido.cedulaReceptora ?? '';
+    _telefonoController.text = widget.partido.telefonoReceptor ?? '';
   }
 
   @override
@@ -61,9 +70,7 @@ class _ConfigureMatchPageState extends State<ConfigureMatchPage> {
       return;
     }
 
-    // Limpiar el número (quitar +, espacios, etc. para la URL)
     final cleanPhone = rivalPhone.replaceAll(RegExp(r'\D'), '');
-
     final message = "Hola, soy el capitán rival para el partido del ${DateFormat('dd/MM/yyyy').format(widget.partido.fechaInicioEstimada)}. ¿Cómo coordinamos?";
     final url = "https://wa.me/$cleanPhone?text=${Uri.encodeComponent(message)}";
     
@@ -110,35 +117,12 @@ class _ConfigureMatchPageState extends State<ConfigureMatchPage> {
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
-      appBar: AppBar(
-        backgroundColor: colorScheme.surface,
-        elevation: 0,
-        centerTitle: false,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: colorScheme.onSurface),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          'Configurar Encuentro',
-          style: TextStyle(
-            color: colorScheme.onSurface,
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        shape: Border(
-          bottom: BorderSide(
-            color: theme.dividerColor,
-            width: 1,
-          ),
-        ),
-      ),
       body: BlocConsumer<MatchesBloc, MatchesState>(
         listener: (context, state) {
           if (state is MatchConfigured) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
-                content: Text('✅ Encuentro configurado. El estatus ha cambiado a negociación.'),
+                content: Text('✅ Configuración enviada. Esperando acuerdo.'),
                 backgroundColor: AppColors.primary,
               ),
             );
@@ -150,40 +134,76 @@ class _ConfigureMatchPageState extends State<ConfigureMatchPage> {
           }
         },
         builder: (context, state) {
-          if (state is MatchesLoading) {
-            return const Center(child: CircularProgressIndicator(color: AppColors.primary));
-          }
+          return CustomScrollView(
+            slivers: [
+              _buildAppBar(context, colorScheme),
+              SliverPadding(
+                padding: const EdgeInsets.all(16),
+                sliver: SliverList(
+                  delegate: SliverChildListDelegate([
+                    _buildRivalCard(context, isDark)
+                        .animate()
+                        .fadeIn(duration: 500.ms)
+                        .slideY(begin: 0.1, end: 0),
+                    const SizedBox(height: 16),
+                    
+                    _buildProposalStatus(context, isDark)
+                        .animate()
+                        .fadeIn(duration: 500.ms, delay: 100.ms)
+                        .slideY(begin: 0.1, end: 0),
+                    const SizedBox(height: 16),
 
-          return SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Card de Equipo Rival
-                _buildRivalCard(context, isDark),
-                const SizedBox(height: 24),
+                    _buildCostoCard(context, isDark)
+                        .animate()
+                        .fadeIn(duration: 500.ms, delay: 200.ms)
+                        .slideY(begin: 0.1, end: 0),
+                    const SizedBox(height: 16),
 
-                // Estado de la Negociación
-                _buildProposalStatus(context, isDark),
-                const SizedBox(height: 24),
+                    _buildBankingCard(context, isDark)
+                        .animate()
+                        .fadeIn(duration: 500.ms, delay: 300.ms)
+                        .slideY(begin: 0.1, end: 0),
+                    const SizedBox(height: 16),
 
-                // Card de Costo
-                _buildCostoCard(context, isDark),
-                const SizedBox(height: 24),
-
-                // Card de Datos Bancarios
-                _buildBankingCard(context, isDark),
-                const SizedBox(height: 24),
-
-                // Próximos Pasos
-                _buildNextSteps(isDark),
-                const SizedBox(height: 100), // Espacio para el footer fijo
-              ],
-            ),
+                    _buildNextSteps(isDark)
+                        .animate()
+                        .fadeIn(duration: 500.ms, delay: 400.ms)
+                        .slideY(begin: 0.1, end: 0),
+                    const SizedBox(height: 100),
+                  ]),
+                ),
+              ),
+            ],
           );
         },
       ),
-      bottomNavigationBar: _buildFooter(context, isDark),
+      bottomNavigationBar: _buildFooter(context, isDark)
+          .animate()
+          .fadeIn(duration: 400.ms, delay: 500.ms)
+          .slideY(begin: 0.2, end: 0),
+    );
+  }
+
+  Widget _buildAppBar(BuildContext context, ColorScheme colorScheme) {
+    return SliverAppBar(
+      expandedHeight: 120,
+      pinned: true,
+      backgroundColor: colorScheme.surface,
+      flexibleSpace: FlexibleSpaceBar(
+        titlePadding: const EdgeInsets.only(left: 56, bottom: 16),
+        title: Text(
+          'Configurar Encuentro',
+          style: TextStyle(
+            color: colorScheme.onSurface,
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
+          ),
+        ),
+      ),
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back_ios_new, size: 20),
+        onPressed: () => Navigator.pop(context),
+      ),
     );
   }
 
@@ -195,23 +215,40 @@ class _ConfigureMatchPageState extends State<ConfigureMatchPage> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: colorScheme.surface,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: theme.dividerColor),
+        gradient: LinearGradient(
+          colors: [
+            colorScheme.surface,
+            colorScheme.surface.withValues(alpha: 0.8),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: theme.dividerColor.withValues(alpha: 0.5)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.2),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         children: [
           Row(
             children: [
-              Container(
-                width: 64,
-                height: 64,
-                decoration: BoxDecoration(
-                  color: Theme.of(context).scaffoldBackgroundColor,
-                  shape: BoxShape.circle,
+              Hero(
+                tag: 'rival_logo_${widget.partido.id}',
+                child: Container(
+                  width: 60,
+                  height: 60,
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                    border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+                  ),
+                  child: const Center(child: Text('🛡️', style: TextStyle(fontSize: 28))),
                 ),
-                alignment: Alignment.center,
-                child: const Text('⚽', style: TextStyle(fontSize: 32)),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -220,25 +257,11 @@ class _ConfigureMatchPageState extends State<ConfigureMatchPage> {
                   children: [
                     Text(
                       widget.partido.nombreEquipoA ?? 'Rival Desconocido',
-                      style: TextStyle(
-                        color: colorScheme.onSurface,
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
+                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                     ),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        Icon(Icons.group, size: 16, color: textMuted),
-                        const SizedBox(width: 4),
-                        Expanded(
-                          child: Text(
-                            'Capitán: ${widget.partido.nombreCapitanA ?? 'Pendiente'}',
-                            style: TextStyle(color: textMuted, fontSize: 14),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
+                    Text(
+                      'Capitán: ${widget.partido.nombreCapitanA ?? 'Pendiente'}',
+                      style: TextStyle(color: textMuted, fontSize: 14),
                     ),
                   ],
                 ),
@@ -246,22 +269,18 @@ class _ConfigureMatchPageState extends State<ConfigureMatchPage> {
             ],
           ),
           const SizedBox(height: 20),
-          // Botón de WhatsApp (Vibrante Green)
           SizedBox(
             width: double.infinity,
-            height: 52,
+            height: 54,
             child: ElevatedButton.icon(
               onPressed: _handleContactar,
-              icon: const Icon(Icons.message, color: Colors.white),
-              label: const Text(
-                'Contactar Capitán Rival',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-              ),
+              icon: const Icon(Icons.chat_bubble_outline),
+              label: const Text('Coordinar por WhatsApp', style: TextStyle(fontWeight: FontWeight.bold)),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF25D366),
+                backgroundColor: const Color(0xFF25D366).withValues(alpha: 0.9),
                 foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                 elevation: 0,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
               ),
             ),
           ),
@@ -279,84 +298,49 @@ class _ConfigureMatchPageState extends State<ConfigureMatchPage> {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: colorScheme.surface,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(24),
         border: Border.all(color: theme.dividerColor),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          const Row(
             children: [
-              const Icon(Icons.monetization_on, color: AppColors.primary, size: 24),
-              const SizedBox(width: 8),
-              Text(
-                'Costo de la Cancha',
-                style: TextStyle(color: colorScheme.onSurface, fontSize: 18, fontWeight: FontWeight.bold),
-              ),
+              Icon(Icons.payments_outlined, color: AppColors.primary),
+              SizedBox(width: 10),
+              Text('Costo de Cancha', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             ],
-          ),
-          const SizedBox(height: 12),
-          Text(
-            'Ingresa el costo total de la reserva. El sistema calculará la división equitativa.',
-            style: TextStyle(color: textMuted, fontSize: 14),
           ),
           const SizedBox(height: 20),
           TextField(
             controller: _costoController,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: AppColors.primary),
             textAlign: TextAlign.center,
-            style: TextStyle(
-              color: colorScheme.onSurface,
-              fontSize: 36,
-              fontWeight: FontWeight.bold,
-            ),
             decoration: InputDecoration(
-              prefixIcon: const Icon(Icons.attach_money, color: AppColors.primary, size: 32),
+              prefixIcon: const Icon(Icons.attach_money, color: AppColors.primary),
               hintText: '0.00',
-              hintStyle: TextStyle(color: isDark ? const Color(0xFF4A4A4A) : Colors.grey[400]),
               filled: true,
-              fillColor: theme.scaffoldBackgroundColor,
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(16),
-                borderSide: const BorderSide(color: AppColors.primary, width: 2),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(16),
-                borderSide: const BorderSide(color: AppColors.primary, width: 2),
-              ),
+              fillColor: theme.scaffoldBackgroundColor.withValues(alpha: 0.5),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+              contentPadding: const EdgeInsets.symmetric(vertical: 20),
             ),
           ),
           if (_costoActual > 0) ...[
-            const SizedBox(height: 20),
+            const SizedBox(height: 16),
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
+                color: AppColors.primary.withValues(alpha: 0.05),
+                borderRadius: BorderRadius.circular(12),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Cuota por jugador (est.)', style: TextStyle(color: textMuted, fontSize: 12)),
-                      Text(
-                        '\$${widget.partido.cuotaPorJugador.toStringAsFixed(2)}',
-                        style: const TextStyle(color: AppColors.primary, fontSize: 24, fontWeight: FontWeight.bold),
-                      ),
-                    ],
-                  ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text('Costo Total', style: TextStyle(color: textMuted, fontSize: 12)),
-                      Text(
-                        '\$${_costoActual.toStringAsFixed(2)}',
-                        style: TextStyle(color: colorScheme.onSurface, fontSize: 18, fontWeight: FontWeight.bold),
-                      ),
-                    ],
+                  Text('Cuota estimada por jugador:', style: TextStyle(color: textMuted, fontSize: 13)),
+                  Text(
+                    '\$${( _costoActual / (widget.partido.cuposTotales > 0 ? widget.partido.cuposTotales : 1)).toStringAsFixed(2)}',
+                    style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.primary),
                   ),
                 ],
               ),
@@ -369,65 +353,50 @@ class _ConfigureMatchPageState extends State<ConfigureMatchPage> {
 
   Widget _buildBankingCard(BuildContext context, bool isDark) {
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final textMuted = isDark ? const Color(0xFF9CA3AF) : Colors.black54;
-
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: colorScheme.surface,
-        borderRadius: BorderRadius.circular(20),
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(24),
         border: Border.all(color: theme.dividerColor),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          const Row(
             children: [
-              const Icon(Icons.account_balance, color: AppColors.primary, size: 24),
-              const SizedBox(width: 8),
-              Text(
-                'Tus Datos Bancarios',
-                style: TextStyle(color: colorScheme.onSurface, fontSize: 18, fontWeight: FontWeight.bold),
-              ),
+              Icon(Icons.account_balance_outlined, color: AppColors.primary),
+              SizedBox(width: 10),
+              Text('Tus Datos de Pago', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             ],
           ),
-          const SizedBox(height: 8),
-          Text(
-            'Provee tus datos para que los jugadores puedan reportarte sus pagos.',
-            style: TextStyle(color: textMuted, fontSize: 14),
-          ),
           const SizedBox(height: 20),
-          _buildTextField('Banco / Método de Pago', _bancoController, isDark),
+          _buildStyledTextField('Banco / Plataforma', _bancoController, Icons.account_balance, isDark),
           const SizedBox(height: 12),
-          _buildTextField('Cédula / RIF', _cedulaController, isDark),
+          _buildStyledTextField('Documento (Cédula/RIF)', _cedulaController, Icons.badge_outlined, isDark),
           const SizedBox(height: 12),
-          _buildTextField('Teléfono de Contacto', _telefonoController, isDark, keyboardType: TextInputType.phone),
+          _buildStyledTextField('Teléfono Móvil', _telefonoController, Icons.phone_android, isDark, keyboardType: TextInputType.phone),
         ],
       ),
     );
   }
 
-  Widget _buildTextField(String label, TextEditingController controller, bool isDark, {TextInputType? keyboardType}) {
+  Widget _buildStyledTextField(String label, TextEditingController controller, IconData icon, bool isDark, {TextInputType? keyboardType}) {
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
     final textMuted = isDark ? const Color(0xFF9CA3AF) : Colors.black54;
 
     return TextField(
       controller: controller,
       keyboardType: keyboardType,
-      style: TextStyle(color: colorScheme.onSurface),
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: TextStyle(color: textMuted),
+        labelStyle: TextStyle(color: textMuted, fontSize: 14),
+        prefixIcon: Icon(icon, size: 20, color: textMuted),
         filled: true,
-        fillColor: Theme.of(context).scaffoldBackgroundColor,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide.none,
-        ),
+        fillColor: theme.scaffoldBackgroundColor.withValues(alpha: 0.5),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(16),
           borderSide: const BorderSide(color: AppColors.primary, width: 1),
         ),
       ),
@@ -437,81 +406,40 @@ class _ConfigureMatchPageState extends State<ConfigureMatchPage> {
   Widget _buildNextSteps(bool isDark) {
     final textMuted = isDark ? const Color(0xFF9CA3AF) : Colors.black54;
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppColors.primary.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+        color: Colors.blue.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.blue.withValues(alpha: 0.1)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Próximos pasos',
-            style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 14),
+          const Row(
+            children: [
+              Icon(Icons.info_outline, color: Colors.blue, size: 20),
+              SizedBox(width: 8),
+              Text('Recordatorio Importante', style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold)),
+            ],
           ),
-          const SizedBox(height: 8),
-          _buildStep('• Coordina fecha y hora con el capitán rival', textMuted),
-          _buildStep('• Confirma el costo final de la cancha', textMuted),
-          _buildStep('• Los jugadores verán su cuota en la app', textMuted),
-          _buildStep('• Gestiona los cobros desde tu dashboard', textMuted),
+          const SizedBox(height: 12),
+          _buildStepItem('Ambos capitanes deben acordar el mismo costo.', textMuted),
+          _buildStepItem('Los jugadores pagarán su cuota directamente a ti.', textMuted),
+          _buildStepItem('Podrás verificar los pagos desde el Dashboard.', textMuted),
         ],
       ),
     );
   }
 
-  Widget _buildStep(String text, Color textMuted) {
+  Widget _buildStepItem(String text, Color textMuted) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 4),
-      child: Text(
-        text,
-        style: TextStyle(color: textMuted, fontSize: 12),
-      ),
-    );
-  }
-
-  Widget _buildFooter(BuildContext context, bool isDark) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final textMuted = isDark ? const Color(0xFF9CA3AF) : Colors.black54;
-
-    return SafeArea(
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: colorScheme.surface,
-          border: Border(top: BorderSide(color: theme.dividerColor)),
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: OutlinedButton(
-                onPressed: () => Navigator.pop(context),
-                style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  side: BorderSide(color: theme.dividerColor, width: 2),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                ),
-                child: Text('Cancelar', style: TextStyle(color: colorScheme.onSurface, fontWeight: FontWeight.bold)),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: ElevatedButton(
-                onPressed: _costoActual > 0 ? () => _handleConfirmar(context) : null,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.black,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                  disabledBackgroundColor: theme.dividerColor,
-                  disabledForegroundColor: textMuted,
-                ),
-                child: const Text('Confirmar y Retar', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-              ),
-            ),
-          ],
-        ),
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('• ', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold)),
+          Expanded(child: Text(text, style: TextStyle(color: textMuted, fontSize: 13))),
+        ],
       ),
     );
   }
@@ -519,65 +447,99 @@ class _ConfigureMatchPageState extends State<ConfigureMatchPage> {
   Widget _buildProposalStatus(BuildContext context, bool isDark) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-
     final match = widget.partido;
-    final propA = match.propuestaCostoA != null;
-    final propB = match.propuestaCostoB != null;
-    final coincide = propA && propB && 
-                    match.propuestaCostoA == match.propuestaCostoB &&
-                    match.propuestaFechaA == match.propuestaFechaB;
+    final coincide = match.propuestaCostoA != null && 
+                    match.propuestaCostoA == match.propuestaCostoB;
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: colorScheme.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: coincide ? Colors.green.withValues(alpha: 0.5) : theme.dividerColor),
+        color: coincide ? Colors.green.withValues(alpha: 0.05) : colorScheme.surface,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: coincide ? Colors.green.withValues(alpha: 0.2) : theme.dividerColor),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Estado de Negociación', style: TextStyle(color: colorScheme.onSurface, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 12),
-          _proposalRow(context, 'Capitán A (Organizador)', match.propuestaCostoA, match.propuestaFechaA, isDark),
-          Divider(color: theme.dividerColor, height: 20),
-          _proposalRow(context, 'Capitán B (Retador)', match.propuestaCostoB, match.propuestaFechaB, isDark),
-          if (propA && propB && !coincide) ...[
-            const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(color: Colors.orange.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
-              child: const Row(
-                children: [
-                  Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 16),
-                  SizedBox(width: 8),
-                  Expanded(child: Text('Las propuestas no coinciden. Ambos deben acordar el mismo monto y fecha.', style: TextStyle(color: Colors.orange, fontSize: 11))),
-                ],
+          Row(
+            children: [
+              Icon(
+                coincide ? Icons.check_circle_outline : Icons.handshake_outlined,
+                color: coincide ? Colors.green : AppColors.primary,
+              ),
+              const SizedBox(width: 10),
+              const Text('Estado de la Propuesta', style: TextStyle(fontWeight: FontWeight.bold)),
+            ],
+          ),
+          const SizedBox(height: 16),
+          _proposalRow(context, 'Tu Equipo (Org)', match.propuestaCostoA, isDark),
+          const SizedBox(height: 8),
+          _proposalRow(context, 'Rival (Retador)', match.propuestaCostoB, isDark),
+          if (match.propuestaCostoA != null && match.propuestaCostoB != null && !coincide)
+            Padding(
+              padding: const EdgeInsets.only(top: 12),
+              child: Text(
+                '⚠️ Los montos no coinciden. Sigue negociando.',
+                style: TextStyle(color: Colors.orange[400], fontSize: 12, fontWeight: FontWeight.w500),
               ),
             ),
-          ],
         ],
       ),
     );
   }
 
-  Widget _proposalRow(BuildContext context, String label, double? costo, DateTime? fecha, bool isDark) {
-    final colorScheme = Theme.of(context).colorScheme;
+  Widget _proposalRow(BuildContext context, String label, double? costo, bool isDark) {
     final textMuted = isDark ? const Color(0xFF9CA3AF) : Colors.black54;
-
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(label, style: TextStyle(color: textMuted, fontSize: 12)),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Text(costo != null ? '\$${costo.toStringAsFixed(2)}' : 'Sin propuesta', style: TextStyle(color: costo != null ? colorScheme.onSurface : (isDark ? const Color(0xFF4A4A4A) : Colors.grey[400]), fontWeight: FontWeight.bold, fontSize: 13)),
-            if (fecha != null) Text(DateFormat('jm').format(fecha), style: TextStyle(color: textMuted, fontSize: 11)),
-          ],
+        Text(label, style: TextStyle(color: textMuted, fontSize: 13)),
+        Text(
+          costo != null ? '\$${costo.toStringAsFixed(2)}' : 'Sin propuesta',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: costo != null ? Theme.of(context).colorScheme.onSurface : textMuted.withValues(alpha: 0.5),
+          ),
         ),
       ],
     );
   }
 
+  Widget _buildFooter(BuildContext context, bool isDark) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.fromLTRB(20, 10, 20, 30),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        boxShadow: [
+          BoxShadow(color: Colors.black.withValues(alpha: 0.3), blurRadius: 20, offset: const Offset(0, -5)),
+        ],
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('Cerrar', style: TextStyle(color: isDark ? Colors.white70 : Colors.black54)),
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            flex: 2,
+            child: ElevatedButton(
+              onPressed: _costoActual > 0 ? () => _handleConfirmar(context) : null,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.black,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                elevation: 0,
+              ),
+              child: const Text('Enviar Propuesta', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }

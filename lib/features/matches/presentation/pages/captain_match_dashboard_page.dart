@@ -110,8 +110,6 @@ class _CaptainMatchDashboardPageState extends State<CaptainMatchDashboardPage>
 
   Future<void> _openMap() async {
     final match = _match;
-    // Aquí podrías usar latitud/longitud si estuvieran en el entity, 
-    // por ahora usamos el nombre de la cancha
     final query = Uri.encodeComponent(match.nombreCancha ?? 'Cancha #${match.idCancha}');
     final url = Uri.parse("https://www.google.com/maps/search/?api=1&query=$query");
     if (await canLaunchUrl(url)) {
@@ -122,6 +120,9 @@ class _CaptainMatchDashboardPageState extends State<CaptainMatchDashboardPage>
   @override
   Widget build(BuildContext context) {
     final match = _match;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
 
     final profileState = context.read<ProfileBloc>().state;
     int? currentUserId;
@@ -129,10 +130,8 @@ class _CaptainMatchDashboardPageState extends State<CaptainMatchDashboardPage>
       currentUserId = profileState.profile.id;
     }
 
-    final isCaptainA =
-        currentUserId != null && match.idUsuarioOrg == currentUserId;
-    final isCaptainB =
-        currentUserId != null && match.idCapitanB == currentUserId;
+    final isCaptainA = currentUserId != null && match.idUsuarioOrg == currentUserId;
+    final isCaptainB = currentUserId != null && match.idCapitanB == currentUserId;
 
     final myTeamId = isCaptainA ? match.idEquipoA : (isCaptainB ? match.idEquipoB : null);
     final rivalTeamId = isCaptainA ? match.idEquipoB : (isCaptainB ? match.idEquipoA : null);
@@ -143,10 +142,6 @@ class _CaptainMatchDashboardPageState extends State<CaptainMatchDashboardPage>
     final myTeamPaid = myTeamPlayers.where((p) => p.estatusPago == 'verificado').length;
     final rivalTeamPaid = rivalTeamPlayers.where((p) => p.estatusPago == 'verificado').length;
 
-    final cuota = myTeamPlayers.isNotEmpty 
-        ? (match.costoTotal / 2 / myTeamPlayers.length) 
-        : (match.costoTotal / 22);
-
     final everyonePaid = myTeamPaid >= myTeamPlayers.length && myTeamPlayers.isNotEmpty;
     final amIReady = isCaptainA ? match.equipoAListo : (isCaptainB ? match.equipoBListo : false);
     final isConfirmed = match.estatus == 'confirmada';
@@ -154,28 +149,31 @@ class _CaptainMatchDashboardPageState extends State<CaptainMatchDashboardPage>
     final myGolesFavor = isCaptainA ? match.resultadoGolesACapA : match.resultadoGolesBCapB;
     final hasRegisteredResult = myGolesFavor != null;
 
+    final bg = theme.scaffoldBackgroundColor;
+    final surface = colorScheme.surface;
+    final accent = AppColors.primary;
+    final textMuted = isDark ? AppColors.textMuted : Colors.black54;
+    final textMain = colorScheme.onSurface;
+
     return MultiBlocListener(
       listeners: [
         BlocListener<MatchesBloc, MatchesState>(
           listener: (context, state) {
             if (state is TeamMarkedReady) {
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: const Text('¡Equipo marcado como listo! 🎉'),
-                  backgroundColor: Theme.of(context).primaryColor,
+                const SnackBar(
+                  content: Text('¡Equipo marcado como listo! 🎉'),
+                  backgroundColor: AppColors.primary,
                 ),
               );
-              _fetchMatchDetails(); // Refrescar para ver si ya se confirmó
-            }
-            if (state is MatchResultRegistered) {
-              Navigator.pop(context);
+              _fetchMatchDetails();
             }
           },
         ),
         BlocListener<PaymentsBloc, PaymentsState>(
           listener: (context, state) {
             if (state is PaymentVerifiedSuccess) {
-              _refreshAllData(); // Recargar toda la información al verificar un pago
+              _refreshAllData();
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
                   content: Text('Pago verificado correctamente ✅'),
@@ -183,48 +181,26 @@ class _CaptainMatchDashboardPageState extends State<CaptainMatchDashboardPage>
                 ),
               );
             }
-            if (state is PaymentsError) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(state.message),
-                  backgroundColor: Colors.redAccent,
-                ),
-              );
-            }
           },
         ),
       ],
-      child: Builder(
-        builder: (context) {
-          final theme = Theme.of(context);
-          final colorScheme = theme.colorScheme;
-          final isDark = theme.brightness == Brightness.dark;
-
-          final bg = theme.scaffoldBackgroundColor;
-          final surface = colorScheme.surface;
-          final accent = colorScheme.primary;
-          final textMuted = isDark ? const Color(0xFF9CA3AF) : Colors.black54;
-          final textMain = colorScheme.onSurface;
-
-          return Scaffold(
-            backgroundColor: bg,
-            body: Column(
-              children: [
-                _buildHeader(context, match, myTeamPaid, myTeamPlayers.length, rivalTeamPaid, rivalTeamPlayers.length, surface, textMain, textMuted, accent),
-                Expanded(
-                  child: TabBarView(
-                    controller: _tabController,
-                    children: [
-                      _buildPlayersList(myTeamPlayers, cuota, true, accent, surface, textMain, textMuted),
-                      _buildPlayersList(rivalTeamPlayers, cuota, false, accent, surface, textMain, textMuted),
-                    ],
-                  ),
-                ),
-                _buildStickyFooter(everyonePaid, myTeamPaid, myTeamPlayers.length, surface, accent, textMuted, amIReady, isConfirmed, hasRegisteredResult, currentUserId),
-              ],
+      child: Scaffold(
+        backgroundColor: bg,
+        body: Column(
+          children: [
+            _buildHeader(context, match, myTeamPaid, myTeamPlayers.length, rivalTeamPaid, rivalTeamPlayers.length, surface, textMain, textMuted, accent),
+            Expanded(
+              child: TabBarView(
+                controller: _tabController,
+                children: [
+                  _buildPlayersList(myTeamPlayers, match.cuotaPorJugador, true, accent, surface, textMain, textMuted),
+                  _buildPlayersList(rivalTeamPlayers, match.cuotaPorJugador, false, accent, surface, textMain, textMuted),
+                ],
+              ),
             ),
-          );
-        }
+            _buildStickyFooter(everyonePaid, myTeamPaid, myTeamPlayers.length, surface, accent, textMuted, amIReady, isConfirmed, hasRegisteredResult, currentUserId),
+          ],
+        ),
       ),
     );
   }
@@ -241,14 +217,16 @@ class _CaptainMatchDashboardPageState extends State<CaptainMatchDashboardPage>
     Color textMuted,
     Color accent,
   ) {
-    final dateFormat = DateFormat('EEE d/MM');
-    final formattedDate = dateFormat.format(match.fechaInicioEstimada);
+    final formattedDate = DateFormat('EEE d/MM').format(match.fechaInicioEstimada);
 
     return Container(
-      padding: EdgeInsets.fromLTRB(16, MediaQuery.of(context).padding.top + 10, 16, 16),
+      padding: EdgeInsets.fromLTRB(16, MediaQuery.of(context).padding.top + 10, 16, 20),
       decoration: BoxDecoration(
         color: surface,
-        border: Border(bottom: BorderSide(color: Theme.of(context).dividerColor)),
+        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(32)),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 10, offset: const Offset(0, 4)),
+        ],
       ),
       child: Column(
         children: [
@@ -256,156 +234,171 @@ class _CaptainMatchDashboardPageState extends State<CaptainMatchDashboardPage>
             children: [
               IconButton(
                 onPressed: () => Navigator.pop(context),
-                icon: Icon(Icons.arrow_back, color: textMain),
+                icon: const Icon(Icons.arrow_back_ios_new, size: 20),
+                style: IconButton.styleFrom(backgroundColor: AppColors.border.withValues(alpha: 0.5)),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 12),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Dashboard de Capitán',
-                    style: TextStyle(color: textMain, fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
+                    'Gestión de pagos',
+                    style: TextStyle(color: textMain, fontSize: 20, fontWeight: FontWeight.bold),
+                  ).animate().fadeIn(duration: 400.ms).slideX(begin: -0.1, end: 0),
                   Text(
-                    'Seguimiento de pagos',
+                    'Control administrativo del encuentro',
                     style: TextStyle(color: textMuted, fontSize: 12),
-                  ),
+                  ).animate().fadeIn(duration: 400.ms, delay: 100.ms).slideX(begin: -0.1, end: 0),
                 ],
               ),
             ],
           ),
-          const SizedBox(height: 16),
-          // Resumen del Partido
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Theme.of(context).scaffoldBackgroundColor,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Theme.of(context).dividerColor),
-            ),
-            child: Column(
-              children: [
-                Row(
+          const SizedBox(height: 24),
+          _buildMatchSummaryCard(match, formattedDate, textMain, textMuted, accent)
+              .animate()
+              .fadeIn(duration: 500.ms, delay: 200.ms)
+              .scale(begin: const Offset(0.95, 0.95), end: const Offset(1, 1)),
+          const SizedBox(height: 20),
+          _buildTabIndicator(myPaid, myTotal, rivalPaid, rivalTotal, accent, textMuted),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMatchSummaryCard(MatchEntity match, String date, Color textMain, Color textMuted, Color accent) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Theme.of(context).scaffoldBackgroundColor,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              _buildSmallLogo(match.logoEquipoA),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: accent.withValues(alpha: 0.2),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Hero(
-                        tag: 'team_logo_${match.idEquipoA}_match_${match.id}',
-                        child: ClipOval(
-                          child: (match.logoEquipoA != null && match.logoEquipoA!.isNotEmpty && match.logoEquipoA != 'null')
-                              ? Image.network(
-                                  match.logoEquipoA!,
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (ctx, err, st) => const Center(child: Text('⚽', style: TextStyle(fontSize: 20))),
-                                )
-                              : const Center(child: Text('⚽', style: TextStyle(fontSize: 20))),
-                        ),
-                      ),
+                    Text(
+                      '${match.nombreEquipoA} vs ${match.nombreEquipoB}',
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '${match.nombreEquipoA ?? 'Team A'} vs ${match.nombreEquipoB ?? 'Team B'}',
-                            style: TextStyle(color: textMain, fontWeight: FontWeight.bold),
-                          ),
-                          Text(
-                            match.sportName ?? 'Fútbol',
-                            style: TextStyle(color: textMuted, fontSize: 12),
-                          ),
-                        ],
-                      ),
-                    ),
-                    IconButton(
-                      onPressed: _openMap,
-                      icon: Icon(Icons.map_outlined, color: accent),
-                      tooltip: 'Ver en mapa',
-                    ),
+                    Text(match.sportName ?? 'Fútbol', style: TextStyle(color: textMuted, fontSize: 11)),
                   ],
                 ),
-                const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(child: _buildInfoItem('Fecha', Icons.calendar_today, formattedDate, textMuted, textMain, accent)),
-                    Expanded(child: _buildInfoItem('Ubicación', Icons.location_on, match.nombreCancha ?? 'Campo', textMuted, textMain, accent)),
-                    Expanded(child: _buildInfoItem('Costo Total', Icons.attach_money, '\$${match.costoTotal.toStringAsFixed(0)}', textMuted, textMain, accent)),
-                  ],
-                ),
-              ],
-            ),
+              ),
+              IconButton(
+                onPressed: _openMap,
+                icon: const Icon(Icons.location_on_outlined, size: 20),
+                color: accent,
+                style: IconButton.styleFrom(backgroundColor: accent.withValues(alpha: 0.1)),
+              ),
+            ],
           ),
           const SizedBox(height: 16),
-          // Custom Tabs
-          Container(
-            padding: const EdgeInsets.all(4),
-            decoration: BoxDecoration(
-              color: Theme.of(context).scaffoldBackgroundColor,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Theme.of(context).dividerColor),
-            ),
-            child: Row(
-              children: [
-                _buildTabButton(0, 'Mi Equipo ($myPaid/$myTotal)', accent, textMuted),
-                _buildTabButton(1, 'Equipo Rival ($rivalPaid/$rivalTotal)', accent, textMuted),
-              ],
-            ),
+          const Divider(height: 1),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _buildMiniInfo(Icons.calendar_today, date, 'Fecha', accent, textMuted),
+              _buildMiniInfo(Icons.stadium_outlined, match.nombreCancha ?? 'Campo', 'Sede', accent, textMuted),
+              _buildMiniInfo(Icons.payments_outlined, '\$${match.costoTotal.toStringAsFixed(0)}', 'Total', accent, textMuted),
+            ],
           ),
         ],
       ),
     );
   }
 
-  Widget _buildInfoItem(String label, IconData icon, String value, Color textMuted, Color textMain, Color accent) {
+  Widget _buildMiniInfo(IconData icon, String value, String label, Color accent, Color textMuted) {
     return Column(
       children: [
-        Text(label, style: TextStyle(color: textMuted, fontSize: 10)),
+        Icon(icon, size: 16, color: accent),
         const SizedBox(height: 4),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 12, color: accent),
-            const SizedBox(width: 4),
-            Flexible(
-              child: Text(
-                value,
-                style: TextStyle(color: textMain, fontSize: 12, fontWeight: FontWeight.bold),
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ],
-        ),
+        Text(value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+        Text(label, style: TextStyle(color: textMuted, fontSize: 10)),
       ],
     );
   }
 
-  Widget _buildTabButton(int index, String label, Color accent, Color textMuted) {
+  Widget _buildSmallLogo(String? url) {
+    return Container(
+      width: 44,
+      height: 44,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: AppColors.surface,
+        border: Border.all(color: AppColors.border),
+      ),
+      child: ClipOval(
+        child: (url != null && url.isNotEmpty && url != 'null')
+            ? Image.network(url, fit: BoxFit.cover)
+            : const Center(child: Text('⚽')),
+      ),
+    );
+  }
+
+  Widget _buildTabIndicator(int myPaid, int myTotal, int rivalPaid, int rivalTotal, Color accent, Color textMuted) {
+    return Container(
+      height: 50,
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: Theme.of(context).scaffoldBackgroundColor,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        children: [
+          _tabItem(0, 'Mi Equipo', '$myPaid/$myTotal', accent, textMuted),
+          _tabItem(1, 'Rival', '$rivalPaid/$rivalTotal', accent, textMuted),
+        ],
+      ),
+    );
+  }
+
+  Widget _tabItem(int index, String label, String count, Color accent, Color textMuted) {
     final isSelected = _tabController.index == index;
     return Expanded(
       child: GestureDetector(
         onTap: () => _tabController.animateTo(index),
         child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 10),
           decoration: BoxDecoration(
             color: isSelected ? accent : Colors.transparent,
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(12),
           ),
-          child: Center(
-            child: Text(
-              label,
-              style: TextStyle(
-                color: isSelected ? Colors.black : textMuted,
-                fontSize: 13,
-                fontWeight: FontWeight.bold,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  color: isSelected ? Colors.black : textMuted,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                ),
               ),
-            ),
+              const SizedBox(width: 6),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: isSelected ? Colors.black.withValues(alpha: 0.1) : AppColors.border,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  count,
+                  style: TextStyle(
+                    color: isSelected ? Colors.black : Colors.white,
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ),
@@ -413,208 +406,167 @@ class _CaptainMatchDashboardPageState extends State<CaptainMatchDashboardPage>
   }
 
   Widget _buildPlayersList(List<MatchPlayer> players, double cuota, bool isMyTeam, Color accent, Color surface, Color textMain, Color textMuted) {
-    if (_isLoadingPlayers) {
-      return ListView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: 6,
-        itemBuilder: (context, index) => Shimmer.fromColors(
-          baseColor: surface,
-          highlightColor: Theme.of(context).dividerColor,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8.0),
-            child: Row(
-              children: [
-                const CircleAvatar(radius: 20),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Container(
-                    height: 16,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 40),
-                Container(
-                  width: 60,
-                  height: 24,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
-    }
+    if (_isLoadingPlayers) return _buildShimmerList(surface);
 
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: accent.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: accent.withValues(alpha: 0.3)),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Cuota por Jugador', style: TextStyle(color: textMuted, fontSize: 12)),
-                  Text('\$${cuota.toStringAsFixed(2)}', style: TextStyle(color: accent, fontSize: 24, fontWeight: FontWeight.bold)),
-                ],
-              ),
-              Icon(Icons.attach_money, color: accent, size: 32),
-            ],
-          ),
-        ),
+        _buildCuotaHeader(cuota, accent, textMuted),
         const SizedBox(height: 20),
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: surface,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: Theme.of(context).dividerColor),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                isMyTeam ? 'Jugadores de Mi Equipo' : 'Jugadores del Equipo Rival',
-                style: TextStyle(color: textMain, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 16),
-              if (players.isEmpty)
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 20),
-                  child: Center(child: Text('No hay jugadores aún', style: TextStyle(color: textMuted))),
-                )
-              else
-                ...players.asMap().entries.map((entry) {
-                  final index = entry.key;
-                  final p = entry.value;
-                  return _buildPlayerRow(p, cuota, isMyTeam, accent, textMain, textMuted)
-                      .animate()
-                      .fadeIn(duration: 400.ms, delay: (index * 50).ms)
-                      .slideY(begin: 0.1, end: 0, curve: Curves.easeOutQuad);
-                }),
-            ],
-          ),
-        ),
+        Text(
+          isMyTeam ? 'Integrantes de tu equipo' : 'Integrantes del equipo rival',
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+        ).animate().fadeIn(duration: 400.ms),
+        const SizedBox(height: 12),
+        ...players.asMap().entries.map((entry) {
+          return _buildPlayerCard(entry.value, cuota, isMyTeam, accent, textMain, textMuted)
+              .animate()
+              .fadeIn(duration: 400.ms, delay: (entry.key * 50).ms)
+              .slideY(begin: 0.1, end: 0);
+        }),
       ],
     );
   }
 
-  Widget _buildPlayerRow(MatchPlayer player, double cuota, bool isMyTeam, Color accent, Color textMain, Color textMuted) {
-    final isPaid = player.estatusPago == 'verificado';
-    final hasReceipt = player.urlReciboPago != null && player.urlReciboPago!.isNotEmpty;
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
+  Widget _buildCuotaHeader(double cuota, Color accent, Color textMuted) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [accent, accent.withValues(alpha: 0.7)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(color: accent.withValues(alpha: 0.3), blurRadius: 15, offset: const Offset(0, 8)),
+        ],
+      ),
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Hero(
-            tag: 'player_avatar_${_match.id}_${player.idUsuario}',
-            child: CircleAvatar(
-              backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-              backgroundImage: (player.urlFotoPerfil != null && player.urlFotoPerfil!.isNotEmpty && player.urlFotoPerfil != 'null')
-                  ? NetworkImage(player.urlFotoPerfil!)
-                  : null,
-              child: (player.urlFotoPerfil == null || player.urlFotoPerfil!.isEmpty || player.urlFotoPerfil == 'null')
-                  ? const Text('👤', style: TextStyle(fontSize: 18))
-                  : null,
-            ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Recaudación por jugador', style: TextStyle(color: Colors.black54, fontSize: 12, fontWeight: FontWeight.bold)),
+              Text('\$${cuota.toStringAsFixed(2)}', style: const TextStyle(color: Colors.black, fontSize: 28, fontWeight: FontWeight.bold)),
+            ],
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              player.nombreUsuario,
-              style: TextStyle(color: textMain, fontWeight: FontWeight.w500),
-            ),
-          ),
-          if (isPaid)
-            _statusChip(accent, Icons.check_circle, 'Pagado')
-          else if (isMyTeam && hasReceipt)
-            ElevatedButton.icon(
-              onPressed: () => _handleVerifyPayment(player, cuota),
-              icon: const Icon(Icons.visibility, size: 14),
-              label: const Text('Revisar', style: TextStyle(fontSize: 11)),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-                foregroundColor: accent,
-                elevation: 0,
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-              ),
-            )
-          else
-            _statusChip(const Color(0xFFFFA500), Icons.access_time, 'Pendiente'),
+          const Icon(Icons.account_balance_wallet, color: Colors.black26, size: 40),
         ],
       ),
     );
   }
 
-  Widget _statusChip(Color color, IconData icon, String label) {
+  Widget _buildPlayerCard(MatchPlayer player, double cuota, bool isMyTeam, Color accent, Color textMain, Color textMuted) {
+    final isPaid = player.estatusPago == 'verificado';
+    final hasReceipt = player.urlReciboPago != null && player.urlReciboPago!.isNotEmpty;
+
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.15),
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: isPaid ? accent.withValues(alpha: 0.3) : AppColors.border),
       ),
       child: Row(
-        mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 14, color: color),
-          const SizedBox(width: 4),
-          Text(
-            label,
-            style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.bold),
+          CircleAvatar(
+            radius: 22,
+            backgroundImage: (player.urlFotoPerfil != null && player.urlFotoPerfil!.isNotEmpty)
+                ? NetworkImage(player.urlFotoPerfil!)
+                : null,
+            child: (player.urlFotoPerfil == null || player.urlFotoPerfil!.isEmpty)
+                ? const Icon(Icons.person, color: AppColors.textMuted)
+                : null,
           ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(player.nombreUsuario, style: const TextStyle(fontWeight: FontWeight.bold)),
+                Text(isPaid ? 'Pago verificado' : (hasReceipt ? 'Recibo pendiente' : 'Sin reporte'), 
+                     style: TextStyle(color: isPaid ? accent : textMuted, fontSize: 11)),
+              ],
+            ),
+          ),
+          if (isPaid)
+            Icon(Icons.check_circle, color: accent, size: 24)
+          else if (isMyTeam && hasReceipt)
+            AnimatedBouncingButton(
+              onTap: () => _handleVerifyPayment(player, cuota),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                decoration: BoxDecoration(
+                  color: accent,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Text('Revisar', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 12)),
+              ),
+            )
+          else
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.orange.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Text('Pendiente', style: TextStyle(color: Colors.orange, fontSize: 10, fontWeight: FontWeight.bold)),
+            ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildShimmerList(Color surface) {
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: 6,
+      itemBuilder: (context, index) => Shimmer.fromColors(
+        baseColor: AppColors.surface,
+        highlightColor: AppColors.border,
+        child: Container(
+          height: 70,
+          margin: const EdgeInsets.only(bottom: 12),
+          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20)),
+        ),
       ),
     );
   }
 
   Widget _buildStickyFooter(bool everyonePaid, int paidCount, int totalCount, Color surface, Color accent, Color textMuted, bool amIReady, bool isConfirmed, bool hasRegisteredResult, int? currentUserId) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 40),
       decoration: BoxDecoration(
         color: surface,
-        border: Border(top: BorderSide(color: Theme.of(context).dividerColor)),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withValues(alpha: 0.2), blurRadius: 20, offset: const Offset(0, -5)),
+        ],
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
+          if (!isConfirmed && !everyonePaid)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: LinearProgressIndicator(
+                value: totalCount > 0 ? paidCount / totalCount : 0,
+                backgroundColor: AppColors.border,
+                valueColor: AlwaysStoppedAnimation<Color>(accent),
+                borderRadius: BorderRadius.circular(10),
+                minHeight: 6,
+              ),
+            ),
           AnimatedBouncingButton(
             onTap: isConfirmed 
                 ? () {
                     if (hasRegisteredResult) {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => ConfirmarResultadoPage(
-                            match: _match,
-                            currentUserId: currentUserId!,
-                          ),
-                        ),
-                      );
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => ConfirmarResultadoPage(match: _match, currentUserId: currentUserId!)));
                     } else {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => RegisterResultPage(
-                            match: widget.matchEntity,
-                            currentUserId: currentUserId!,
-                          ),
-                        ),
-                      );
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => RegisterResultPage(match: widget.matchEntity, currentUserId: currentUserId!)));
                     }
                   }
                 : (everyonePaid && !amIReady)
@@ -622,18 +574,15 @@ class _CaptainMatchDashboardPageState extends State<CaptainMatchDashboardPage>
                     : null,
             child: Container(
               width: double.infinity,
-              height: 60,
+              height: 64,
               decoration: BoxDecoration(
-                color: isConfirmed 
-                    ? AppColors.primary 
-                    : (amIReady ? Theme.of(context).dividerColor : (everyonePaid ? accent : Theme.of(context).dividerColor)),
-                borderRadius: BorderRadius.circular(16),
+                gradient: (isConfirmed || (everyonePaid && !amIReady))
+                    ? LinearGradient(colors: [accent, accent.withValues(alpha: 0.8)])
+                    : null,
+                color: (isConfirmed || (everyonePaid && !amIReady)) ? null : AppColors.border,
+                borderRadius: BorderRadius.circular(20),
                 boxShadow: (everyonePaid && !amIReady) ? [
-                  BoxShadow(
-                    color: accent.withValues(alpha: 0.3),
-                    blurRadius: 15,
-                    spreadRadius: 2,
-                  )
+                  BoxShadow(color: accent.withValues(alpha: 0.4), blurRadius: 15, offset: const Offset(0, 6))
                 ] : [],
               ),
               alignment: Alignment.center,
@@ -641,24 +590,16 @@ class _CaptainMatchDashboardPageState extends State<CaptainMatchDashboardPage>
                 isConfirmed 
                     ? (hasRegisteredResult ? '👀 Ver Resultado' : '🏆 Registrar Resultado')
                     : (amIReady 
-                        ? '✓ Listo, esperando rival...' 
-                        : (everyonePaid ? '✓ Confirmar Equipo Listo' : '⏳ Esperando Pagos ($paidCount/$totalCount)')),
+                        ? 'Esperando rival...' 
+                        : (everyonePaid ? '¡Confirmar Equipo Listo!' : 'Faltan pagos ($paidCount/$totalCount)')),
                 style: TextStyle(
                   fontWeight: FontWeight.bold, 
-                  fontSize: 16,
+                  fontSize: 17,
                   color: (everyonePaid || isConfirmed) ? Colors.black : textMuted,
                 ),
               ),
             ),
           ).withPulseGlow(color: accent, enabled: everyonePaid && !amIReady),
-          if (everyonePaid)
-            Padding(
-              padding: const EdgeInsets.only(top: 8),
-              child: Text(
-                '¡Todos han pagado! Tu equipo está listo para jugar',
-                style: TextStyle(color: accent, fontSize: 11),
-              ),
-            ),
         ],
       ),
     );

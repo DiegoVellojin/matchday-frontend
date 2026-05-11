@@ -25,9 +25,6 @@ class MatchDetailsPage extends StatefulWidget {
 }
 
 class _MatchDetailsPageState extends State<MatchDetailsPage> {
-  final TextEditingController _costController = TextEditingController();
-  final TextEditingController _dateController = TextEditingController();
-  DateTime selectedDate = DateTime.now();
   List<MatchPlayer> _players = [];
   bool _isLoadingPlayers = true;
 
@@ -177,10 +174,11 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> {
     if (profileState is ProfileLoaded) {
       currentUserId = profileState.profile.id;
     }
-    
+
     final role = MatchRoleResolver.resolve(match, currentUserId ?? 0);
     final isOrganizer = role == MatchRole.captainA;
-    final isAnyCaptain = role == MatchRole.captainA || role == MatchRole.captainB;
+    final isAnyCaptain =
+        role == MatchRole.captainA || role == MatchRole.captainB;
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -230,14 +228,19 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> {
                     ).animate().fadeIn(duration: 800.ms, delay: 600.ms),
 
                   if (match.estatus == 'pendiente_pago')
-                    _buildPaymentsStatusCard(context, match, isDark)
-                        .animate()
-                        .fadeIn(duration: 800.ms, delay: 600.ms),
+                    _buildPaymentsStatusCard(
+                      context,
+                      match,
+                      isDark,
+                    ).animate().fadeIn(duration: 800.ms, delay: 600.ms),
 
                   if (match.estatus == 'confirmada')
-                    _buildConfirmedActionCard(match, isDark, isAnyCaptain, currentUserId)
-                        .animate()
-                        .fadeIn(duration: 800.ms, delay: 600.ms),
+                    _buildConfirmedActionCard(
+                      match,
+                      isDark,
+                      isAnyCaptain,
+                      currentUserId,
+                    ).animate().fadeIn(duration: 800.ms, delay: 600.ms),
 
                   if (match.estatus == 'pendiente_pago')
                     _buildFinancialCard(
@@ -258,7 +261,14 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> {
           ),
         ],
       ),
-      bottomNavigationBar: _buildBottomBar(context, match, isDark, isOrganizer, isAnyCaptain),
+      bottomNavigationBar: _buildBottomBar(
+        context,
+        match,
+        isDark,
+        isOrganizer,
+        isAnyCaptain,
+        role,
+      ),
     );
   }
 
@@ -666,10 +676,7 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> {
           children: [
             const Icon(Icons.timer_outlined, color: Colors.orange, size: 32),
             const SizedBox(height: 12),
-            Text(
-              'En espera de capitanes',
-              style: _titleStyle(isDark, context),
-            ),
+            Text('En espera de capitanes', style: _titleStyle(isDark, context)),
             const SizedBox(height: 8),
             const Text(
               'Los capitanes están acordando el costo y la fecha final del encuentro.',
@@ -681,6 +688,11 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> {
       );
     }
 
+    final propA = match.propuestaCostoA != null;
+    final propB = match.propuestaCostoB != null;
+    final coincide =
+        propA && propB && match.propuestaCostoA == match.propuestaCostoB;
+
     return _buildCard(
       isDark,
       child: Column(
@@ -688,72 +700,101 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> {
         children: [
           Row(
             children: [
-              const Icon(Icons.handshake_outlined, color: Colors.orange),
+              Icon(
+                coincide
+                    ? Icons.check_circle_outline
+                    : Icons.handshake_outlined,
+                color: coincide ? Colors.green : Colors.orange,
+              ),
               const SizedBox(width: 8),
               Text(
-                'Propuesta de Términos',
+                'Estado de la Negociación',
                 style: _titleStyle(isDark, context),
               ),
             ],
           ),
           const SizedBox(height: 16),
-          _buildNegotiationField(
-            'Costo por Jugador / Total',
-            _costController,
-            Icons.attach_money,
+          _buildProposalRow(
+            'Capitán A (Organizador)',
+            match.propuestaCostoA,
+            match.propuestaFechaA,
             isDark,
           ),
           const SizedBox(height: 12),
-          _buildNegotiationField(
-            'Fecha y Hora Sugerida',
-            _dateController,
-            Icons.calendar_today,
+          _buildProposalRow(
+            'Capitán B (Rival)',
+            match.propuestaCostoB,
+            match.propuestaFechaB,
             isDark,
-            onTap: () async {
-              final date = await showDatePicker(
-                context: context,
-                initialDate: DateTime.now(),
-                firstDate: DateTime.now(),
-                lastDate: DateTime.now().add(const Duration(days: 30)),
-              );
-              if (date != null) {
-                setState(() {
-                  selectedDate = date;
-                  _dateController.text = DateFormat('dd/MM/yyyy').format(date);
-                });
-              }
-            },
           ),
-          const SizedBox(height: 20),
-          if (isAnyCaptain)
-            SizedBox(
-              width: double.infinity,
-              height: 50,
-              child: ElevatedButton(
-                onPressed: () {
-                  context.read<MatchesBloc>().add(
-                        ProposeTermsEvent(
-                          matchId: match.id,
-                          fecha: selectedDate,
-                          costo: double.tryParse(_costController.text) ?? 0.0,
-                        ),
-                      );
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.black,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+          if (propA && propB && !coincide)
+            Padding(
+              padding: const EdgeInsets.only(top: 16),
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.orange.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Text(
-                  'Enviar Propuesta',
-                  style: TextStyle(fontWeight: FontWeight.bold),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.info_outline,
+                      color: Colors.orange,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        'Los montos o fechas no coinciden. Usa "Coordinar Encuentro" para ajustar tu propuesta.',
+                        style: TextStyle(
+                          color: Colors.orange[300],
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
         ],
       ),
+    );
+  }
+
+  Widget _buildProposalRow(
+    String label,
+    double? costo,
+    DateTime? fecha,
+    bool isDark,
+  ) {
+    final theme = Theme.of(context);
+    final textMuted = isDark ? const Color(0xFF9CA3AF) : Colors.black54;
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(label, style: TextStyle(color: textMuted, fontSize: 13)),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Text(
+              costo != null ? '\$${costo.toStringAsFixed(2)}' : 'Sin propuesta',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: costo != null
+                    ? theme.colorScheme.onSurface
+                    : textMuted.withValues(alpha: 0.5),
+              ),
+            ),
+            if (fecha != null)
+              Text(
+                DateFormat('dd/MM - HH:mm').format(fecha),
+                style: TextStyle(color: textMuted, fontSize: 11),
+              ),
+          ],
+        ),
+      ],
     );
   }
 
@@ -793,7 +834,12 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> {
     );
   }
 
-  Widget _buildConfirmedActionCard(MatchEntity match, bool isDark, bool isAnyCaptain, int? currentUserId) {
+  Widget _buildConfirmedActionCard(
+    MatchEntity match,
+    bool isDark,
+    bool isAnyCaptain,
+    int? currentUserId,
+  ) {
     if (!isAnyCaptain) {
       return _buildCard(
         isDark,
@@ -819,7 +865,9 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> {
     // Lógica para Capitanes
     final hasMatchPassed = DateTime.now().isAfter(match.fechaInicioEstimada);
     final isCaptainA = currentUserId == match.idUsuarioOrg;
-    final myGoles = isCaptainA ? match.resultadoGolesACapA : match.resultadoGolesBCapB;
+    final myGoles = isCaptainA
+        ? match.resultadoGolesACapA
+        : match.resultadoGolesBCapB;
     final hasRegistered = myGoles != null;
 
     if (!hasMatchPassed) {
@@ -829,10 +877,7 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> {
           children: [
             const Icon(Icons.timer, color: Colors.orange, size: 32),
             const SizedBox(height: 12),
-            Text(
-              'Esperando el Partido',
-              style: _titleStyle(isDark, context),
-            ),
+            Text('Esperando el Partido', style: _titleStyle(isDark, context)),
             const SizedBox(height: 8),
             const Text(
               'Una vez que finalice el partido, podrás registrar el resultado aquí.',
@@ -879,14 +924,18 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> {
                 }
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: hasRegistered ? Colors.grey[800] : AppColors.primary,
+                backgroundColor: hasRegistered
+                    ? Colors.grey[800]
+                    : AppColors.primary,
                 foregroundColor: hasRegistered ? Colors.white : Colors.black,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
               child: Text(
-                hasRegistered ? 'Ver Resultado Registrado' : 'Registrar Resultado',
+                hasRegistered
+                    ? 'Ver Resultado Registrado'
+                    : 'Registrar Resultado',
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),
             ),
@@ -902,6 +951,7 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> {
     bool isDark,
     bool isOrganizer,
     bool isAnyCaptain,
+    MatchRole role,
   ) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
@@ -951,8 +1001,12 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> {
     }
 
     // Si no es capitán y está publicada o negociando, no hay barra de acciones
-    if (!isAnyCaptain && (match.estatus == 'publicada' || match.estatus == 'negociando')) {
-      return const SizedBox.shrink();
+    // EXCEPCIÓN: Si está publicada y soy externo, quiero ver el botón de Aceptar
+    if (!isAnyCaptain &&
+        (match.estatus == 'publicada' || match.estatus == 'negociando')) {
+      if (!(match.estatus == 'publicada' && role == MatchRole.external)) {
+        return const SizedBox.shrink();
+      }
     }
 
     return Container(
@@ -979,89 +1033,16 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> {
                 ),
               ),
             ),
-          if (match.estatus == 'pendiente_pago') ...[
-            if (isAnyCaptain) const SizedBox(width: 12),
-            Expanded(
-              child: ElevatedButton.icon(
-                onPressed: () {
-                  final profileState = context.read<ProfileBloc>().state;
-                  int? currentUserId;
-                  if (profileState is ProfileLoaded) {
-                    currentUserId = profileState.profile.id;
-                  }
-
-                  final amIInA = _players.any((p) => p.idUsuario == currentUserId && p.idEquipo == match.idEquipoA) || match.idUsuarioOrg == currentUserId;
-                  final myName = amIInA ? (match.nombreEquipoA ?? 'Tu Equipo') : (match.nombreEquipoB ?? 'Tu Equipo');
-                  final myLogo = amIInA ? match.logoEquipoA : match.logoEquipoB;
-
-                  // Buscar mi estatus actual
-                  final me = _players.where((p) => p.idUsuario == currentUserId).firstOrNull;
-                  final isVerified = me?.estatusPago == 'verificado';
-
-                  if (isVerified) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Tu pago ya ha sido verificado')),
-                    );
-                    return;
-                  }
-
-                  final payment = PaymentEntity(
-                    idPartida: match.id,
-                    teamName: myName,
-                    teamLogo: myLogo,
-                    concepto: match.sportName ?? 'Partido',
-                    monto: match.cuotaPorJugador,
-                    isPaid: false,
-                    estatusPago: me?.estatusPago ?? 'pendiente',
-                    banco: amIInA ? match.bancoReceptor : match.bancoCapitanB,
-                    cedula: amIInA ? match.cedulaReceptora : match.cedulaCapitanB,
-                    telefono: amIInA ? match.telefonoReceptor : match.telefonoCapitanBPago,
-                  );
-
-                  context.push('/upload-receipt', extra: payment);
-                },
-                icon: const Icon(Icons.account_balance_wallet_outlined),
-                label: const Text('Ir a Pagar'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.black,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-              ),
-            ),
-          ] else if (!isAnyCaptain && (match.estatus == 'confirmada')) ...[
-            // Para jugadores en partidas confirmadas, mostrar solo si no han pagado
+          if (match.estatus == 'publicada' &&
+              role == MatchRole.external &&
+              match.idEquipoB == null) ...[
             const SizedBox(width: 12),
             Expanded(
               child: ElevatedButton.icon(
-                onPressed: () {
-                  // Mismo flujo de pago si es necesario
-                },
-                icon: const Icon(Icons.check_circle_outline),
-                label: const Text('Listo para el Juego'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.black,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-              ),
-            ),
-          ] else if (isAnyCaptain && (match.estatus == 'negociando' || match.estatus == 'confirmada')) ...[
-            const SizedBox(width: 12),
-            Expanded(
-              child: ElevatedButton.icon(
-                onPressed: () => context.push(
-                  '/match-dashboard',
-                  extra: {'matchEntity': match},
-                ),
-                icon: const Icon(Icons.dashboard_outlined),
-                label: const Text('Dashboard'),
+                onPressed: () =>
+                    context.push('/accept-encounter', extra: {'match': match}),
+                icon: const Icon(Icons.handshake_outlined),
+                label: const Text('Aceptar Encuentro'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
                   foregroundColor: Colors.black,
@@ -1073,42 +1054,129 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> {
               ),
             ),
           ],
+
+          if (isAnyCaptain) ...[
+            if (match.estatus == 'negociando') ...[
+              const SizedBox(width: 12),
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: () => context.push(
+                    '/configure-match',
+                    extra: {'matchEntity': match},
+                  ),
+                  icon: const Icon(Icons.handshake_outlined),
+                  label: const Text('Coordinar Encuentro'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.black,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+            ] else if (match.estatus == 'pendiente_pago' ||
+                match.estatus == 'confirmada') ...[
+              const SizedBox(width: 12),
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: () => context.push(
+                    '/match-dashboard',
+                    extra: {'matchEntity': match},
+                  ),
+                  icon: const Icon(Icons.payments_outlined),
+                  label: const Text('Gestionar Pagos'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.black,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ] else ...[
+            if (match.estatus == 'pendiente_pago' ||
+                match.estatus == 'confirmada') ...[
+              const SizedBox(width: 12),
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    final profileState = context.read<ProfileBloc>().state;
+                    int? currentUserId;
+                    if (profileState is ProfileLoaded) {
+                      currentUserId = profileState.profile.id;
+                    }
+
+                    final amIInA =
+                        _players.any(
+                          (p) =>
+                              p.idUsuario == currentUserId &&
+                              p.idEquipo == match.idEquipoA,
+                        ) ||
+                        match.idUsuarioOrg == currentUserId;
+                    final myName = amIInA
+                        ? (match.nombreEquipoA ?? 'Tu Equipo')
+                        : (match.nombreEquipoB ?? 'Tu Equipo');
+                    final myLogo = amIInA
+                        ? match.logoEquipoA
+                        : match.logoEquipoB;
+
+                    final me = _players
+                        .where((p) => p.idUsuario == currentUserId)
+                        .firstOrNull;
+                    final isVerified = me?.estatusPago == 'verificado';
+
+                    if (isVerified) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Tu pago ya ha sido verificado'),
+                        ),
+                      );
+                      return;
+                    }
+
+                    final payment = PaymentEntity(
+                      idPartida: match.id,
+                      teamName: myName,
+                      teamLogo: myLogo,
+                      concepto: match.sportName ?? 'Partido',
+                      monto: match.cuotaPorJugador,
+                      isPaid: false,
+                      estatusPago: me?.estatusPago ?? 'pendiente',
+                      banco: amIInA ? match.bancoReceptor : match.bancoCapitanB,
+                      cedula: amIInA
+                          ? match.cedulaReceptora
+                          : match.cedulaCapitanB,
+                      telefono: amIInA
+                          ? match.telefonoReceptor
+                          : match.telefonoCapitanBPago,
+                    );
+
+                    context.push(
+                      '/upload-receipt',
+                      extra: {'payment': payment},
+                    );
+                  },
+                  icon: const Icon(Icons.account_balance_wallet_outlined),
+                  label: const Text('Ir a Pagar'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.black,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ],
         ],
       ),
-    );
-  }
-
-  Widget _buildNegotiationField(
-    String label,
-    TextEditingController controller,
-    IconData icon,
-    bool isDark, {
-    VoidCallback? onTap,
-  }) {
-    final theme = Theme.of(context);
-    final textMuted = isDark ? const Color(0xFF9CA3AF) : Colors.black54;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label, style: TextStyle(color: textMuted, fontSize: 12)),
-        const SizedBox(height: 4),
-        TextField(
-          controller: controller,
-          readOnly: onTap != null,
-          onTap: onTap,
-          decoration: InputDecoration(
-            prefixIcon: Icon(icon, color: textMuted, size: 20),
-            filled: true,
-            fillColor: isDark ? AppColors.surface : Colors.grey[100],
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide.none,
-            ),
-          ),
-          style: TextStyle(color: theme.colorScheme.onSurface),
-        ),
-      ],
     );
   }
 
@@ -1460,15 +1528,16 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> {
   }
 
   TextStyle _titleStyle(bool isDark, BuildContext context) => TextStyle(
-        color: Theme.of(context).colorScheme.onSurface,
-        fontSize: 16,
-        fontWeight: FontWeight.bold,
-      );
-
-
+    color: Theme.of(context).colorScheme.onSurface,
+    fontSize: 16,
+    fontWeight: FontWeight.bold,
+  );
 
   Widget _buildPaymentsStatusCard(
-      BuildContext context, MatchEntity match, bool isDark) {
+    BuildContext context,
+    MatchEntity match,
+    bool isDark,
+  ) {
     final theme = Theme.of(context);
     final textMuted = isDark ? const Color(0xFF9CA3AF) : Colors.black54;
 
@@ -1477,23 +1546,29 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> {
     int? rivalTeamId;
     if (profileState is ProfileLoaded) {
       final myId = profileState.profile.id;
-      final amIInA = _players.any(
-              (p) => p.idUsuario == myId && p.idEquipo == match.idEquipoA) ||
+      final amIInA =
+          _players.any(
+            (p) => p.idUsuario == myId && p.idEquipo == match.idEquipoA,
+          ) ||
           match.idUsuarioOrg == myId;
       myTeamId = amIInA ? match.idEquipoA : match.idEquipoB;
       rivalTeamId = amIInA ? match.idEquipoB : match.idEquipoA;
     }
 
-    final myTeamPlayers =
-        _players.where((p) => p.idEquipo == myTeamId).toList();
-    final myPaidCount =
-        myTeamPlayers.where((p) => p.estatusPago == 'verificado').length;
+    final myTeamPlayers = _players
+        .where((p) => p.idEquipo == myTeamId)
+        .toList();
+    final myPaidCount = myTeamPlayers
+        .where((p) => p.estatusPago == 'verificado')
+        .length;
     final myTotalCount = myTeamPlayers.length;
 
-    final rivalTeamPlayers =
-        _players.where((p) => p.idEquipo == rivalTeamId).toList();
-    final rivalPaidCount =
-        rivalTeamPlayers.where((p) => p.estatusPago == 'verificado').length;
+    final rivalTeamPlayers = _players
+        .where((p) => p.idEquipo == rivalTeamId)
+        .toList();
+    final rivalPaidCount = rivalTeamPlayers
+        .where((p) => p.estatusPago == 'verificado')
+        .length;
     final rivalTotalCount = rivalTeamPlayers.length;
 
     final quota = match.cuotaPorJugador;
@@ -1511,29 +1586,39 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> {
                 Text(
                   'Cuota: \$${quota.toStringAsFixed(2)}',
                   style: const TextStyle(
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14),
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
                 ),
             ],
           ),
           const SizedBox(height: 20),
           _buildTeamProgress(
-              myTotalCount > 0 && myPaidCount >= myTotalCount
-                  ? '✓ Tu Equipo al día'
-                  : '⏳ Tu Equipo ($myPaidCount/$myTotalCount)',
-              myPaidCount,
-              myTotalCount,
-              AppColors.primary,
-              theme),
+            myTotalCount > 0 && myPaidCount >= myTotalCount
+                ? '✓ Tu Equipo al día'
+                : '⏳ Tu Equipo ($myPaidCount/$myTotalCount)',
+            myPaidCount,
+            myTotalCount,
+            AppColors.primary,
+            theme,
+          ),
           const SizedBox(height: 16),
-          _buildTeamProgress('Equipo Rival', rivalPaidCount, rivalTotalCount,
-              Colors.cyan, theme),
+          _buildTeamProgress(
+            'Equipo Rival',
+            rivalPaidCount,
+            rivalTotalCount,
+            Colors.cyan,
+            theme,
+          ),
           const SizedBox(height: 16),
           Text(
             'El partido se confirmará automáticamente cuando todos los jugadores hayan pagado.',
             style: TextStyle(
-                color: textMuted, fontSize: 11, fontStyle: FontStyle.italic),
+              color: textMuted,
+              fontSize: 11,
+              fontStyle: FontStyle.italic,
+            ),
           ),
         ],
       ),
@@ -1541,7 +1626,12 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> {
   }
 
   Widget _buildTeamProgress(
-      String label, int paid, int total, Color color, ThemeData theme) {
+    String label,
+    int paid,
+    int total,
+    Color color,
+    ThemeData theme,
+  ) {
     final progress = total > 0 ? paid / total : 0.0;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1549,12 +1639,18 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(label,
-                style:
-                    const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
-            Text('$paid de $total',
-                style: TextStyle(
-                    color: color, fontSize: 12, fontWeight: FontWeight.bold)),
+            Text(
+              label,
+              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+            ),
+            Text(
+              '$paid de $total',
+              style: TextStyle(
+                color: color,
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ],
         ),
         const SizedBox(height: 8),
