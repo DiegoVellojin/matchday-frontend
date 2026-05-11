@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/network/network_robot.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -70,7 +69,7 @@ class _MainHubPageState extends State<MainHubPage> {
   }
 
   final List<Widget> _pages = [
-    const TeamsPage(), 
+    const TeamsPage(),
     const MatchesPage(),
     const MyTeamsPage(),
     const LeaderboardPage(),
@@ -100,87 +99,87 @@ class _MainHubPageState extends State<MainHubPage> {
         ),
       ),
       bottomNavigationBar: Container(
-          decoration: BoxDecoration(
-            border: Border(
-              // Usa el color del borde configurado en el AppTheme (claro u oscuro)
-              top: BorderSide(color: Theme.of(context).dividerColor, width: 1),
-            ),
-          ),
-          child: BottomNavigationBar(
-            currentIndex: _currentIndex,
-            onTap: (index) {
-              _pageController.animateToPage(
-                index,
-                duration: const Duration(milliseconds: 400),
-                curve: Curves.easeOutQuart,
-              );
-            },
-            // Usa el color de fondo configurado en el AppTheme
-            backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-            type: BottomNavigationBarType.fixed,
-            selectedItemColor: AppColors.primary,
-            unselectedItemColor: isDark
-                ? const Color(0xFF6B7280)
-                : Colors.grey[600],
-            showSelectedLabels: true,
-            showUnselectedLabels: true,
-            selectedLabelStyle: const TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 12,
-            ),
-            unselectedLabelStyle: const TextStyle(
-              fontWeight: FontWeight.w500,
-              fontSize: 12,
-            ),
-            elevation: 0,
-            items: const [
-              BottomNavigationBarItem(
-                icon: Padding(
-                  padding: EdgeInsets.only(bottom: 4.0),
-                  child: Icon(Icons.people_outline),
-                ),
-                activeIcon: Padding(
-                  padding: EdgeInsets.only(bottom: 4.0),
-                  child: Icon(Icons.people),
-                ),
-                label: 'Equipos',
-              ),
-              BottomNavigationBarItem(
-                icon: Padding(
-                  padding: EdgeInsets.only(bottom: 4.0),
-                  child: Icon(Icons.emoji_events_outlined),
-                ),
-                activeIcon: Padding(
-                  padding: EdgeInsets.only(bottom: 4.0),
-                  child: Icon(Icons.emoji_events),
-                ),
-                label: 'Partidos',
-              ),
-              BottomNavigationBarItem(
-                icon: Padding(
-                  padding: EdgeInsets.only(bottom: 4.0),
-                  child: Icon(Icons.checklist_rtl_outlined),
-                ),
-                activeIcon: Padding(
-                  padding: EdgeInsets.only(bottom: 4.0),
-                  child: Icon(Icons.checklist_rtl),
-                ),
-                label: 'Mis Equipos',
-              ),
-              BottomNavigationBarItem(
-                icon: Padding(
-                  padding: EdgeInsets.only(bottom: 4.0),
-                  child: Icon(Icons.military_tech_outlined),
-                ),
-                activeIcon: Padding(
-                  padding: EdgeInsets.only(bottom: 4.0),
-                  child: Icon(Icons.military_tech),
-                ),
-                label: 'Rankings',
-              ),
-            ],
+        decoration: BoxDecoration(
+          border: Border(
+            // Usa el color del borde configurado en el AppTheme (claro u oscuro)
+            top: BorderSide(color: Theme.of(context).dividerColor, width: 1),
           ),
         ),
+        child: BottomNavigationBar(
+          currentIndex: _currentIndex,
+          onTap: (index) {
+            _pageController.animateToPage(
+              index,
+              duration: const Duration(milliseconds: 400),
+              curve: Curves.easeOutQuart,
+            );
+          },
+          // Usa el color de fondo configurado en el AppTheme
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+          type: BottomNavigationBarType.fixed,
+          selectedItemColor: AppColors.primary,
+          unselectedItemColor: isDark
+              ? const Color(0xFF6B7280)
+              : Colors.grey[600],
+          showSelectedLabels: true,
+          showUnselectedLabels: true,
+          selectedLabelStyle: const TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 12,
+          ),
+          unselectedLabelStyle: const TextStyle(
+            fontWeight: FontWeight.w500,
+            fontSize: 12,
+          ),
+          elevation: 0,
+          items: const [
+            BottomNavigationBarItem(
+              icon: Padding(
+                padding: EdgeInsets.only(bottom: 4.0),
+                child: Icon(Icons.people_outline),
+              ),
+              activeIcon: Padding(
+                padding: EdgeInsets.only(bottom: 4.0),
+                child: Icon(Icons.people),
+              ),
+              label: 'Equipos',
+            ),
+            BottomNavigationBarItem(
+              icon: Padding(
+                padding: EdgeInsets.only(bottom: 4.0),
+                child: Icon(Icons.emoji_events_outlined),
+              ),
+              activeIcon: Padding(
+                padding: EdgeInsets.only(bottom: 4.0),
+                child: Icon(Icons.emoji_events),
+              ),
+              label: 'Partidos',
+            ),
+            BottomNavigationBarItem(
+              icon: Padding(
+                padding: EdgeInsets.only(bottom: 4.0),
+                child: Icon(Icons.checklist_rtl_outlined),
+              ),
+              activeIcon: Padding(
+                padding: EdgeInsets.only(bottom: 4.0),
+                child: Icon(Icons.checklist_rtl),
+              ),
+              label: 'Mis Equipos',
+            ),
+            BottomNavigationBarItem(
+              icon: Padding(
+                padding: EdgeInsets.only(bottom: 4.0),
+                child: Icon(Icons.military_tech_outlined),
+              ),
+              activeIcon: Padding(
+                padding: EdgeInsets.only(bottom: 4.0),
+                child: Icon(Icons.military_tech),
+              ),
+              label: 'Rankings',
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

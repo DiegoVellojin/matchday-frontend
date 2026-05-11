@@ -13,6 +13,9 @@ class MatchEntity extends Equatable {
   final int idCancha;
   final int? idEquipoA;
   final int? idEquipoB;
+  final int cuposTotales;
+  final int jugadoresInscritos;
+  final double cuotaPorJugador;
 
   // Propuestas de negociación
   final DateTime? propuestaFechaA;
@@ -59,6 +62,9 @@ class MatchEntity extends Equatable {
     required this.idCancha,
     this.idEquipoA,
     this.idEquipoB,
+    required this.cuposTotales,
+    required this.jugadoresInscritos,
+    required this.cuotaPorJugador,
     this.propuestaFechaA,
     this.propuestaCostoA,
     this.propuestaFechaB,
@@ -105,6 +111,8 @@ class MatchEntity extends Equatable {
         idCancha,
         idEquipoA,
         idEquipoB,
+        cuposTotales,
+        cuotaPorJugador,
         propuestaFechaA,
         propuestaCostoA,
         propuestaFechaB,

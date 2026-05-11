@@ -51,6 +51,9 @@ class MatchesRepositoryImpl implements IMatchesRepository {
         idCancha: match.idCancha,
         idEquipoA: match.idEquipoA,
         idEquipoB: match.idEquipoB,
+        cuposTotales: match.cuposTotales,
+        jugadoresInscritos: match.jugadoresInscritos,
+        cuotaPorJugador: match.cuotaPorJugador,
       );
       final result = await remoteDataSource.createMatch(model);
       return Right(result);
@@ -164,6 +167,9 @@ class MatchesRepositoryImpl implements IMatchesRepository {
         idCancha: match.idCancha,
         idEquipoA: match.idEquipoA,
         idEquipoB: match.idEquipoB,
+        cuposTotales: match.cuposTotales,
+        jugadoresInscritos: match.jugadoresInscritos,
+        cuotaPorJugador: match.cuotaPorJugador,
       );
       final result = await remoteDataSource.updateMatch(model);
       return Right(result);

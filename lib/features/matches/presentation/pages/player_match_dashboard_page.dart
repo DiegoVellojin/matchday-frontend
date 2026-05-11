@@ -451,5 +451,3 @@ class _PlayerMatchDashboardPageState extends State<PlayerMatchDashboardPage> {
     );
   }
 }
-
-

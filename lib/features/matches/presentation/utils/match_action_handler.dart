@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../domain/entities/match_entity.dart';
-import '../pages/register_result_page.dart';
-import '../pages/confirm_result_page.dart';
 import 'match_action.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -31,11 +29,13 @@ class _MatchActionRequest {
   final BuildContext context;
   final MatchEntity match;
   final int? currentUserId;
+  final bool isMyMatch;
 
   const _MatchActionRequest({
     required this.context,
     required this.match,
     required this.currentUserId,
+    this.isMyMatch = false,
   });
 
   bool get isOrganizer =>
@@ -65,7 +65,7 @@ class _CompletadaLink extends _MatchActionLink {
     if (!req.match.status.isCompleted) return passDown(req);
     return MatchAction(
       label: '🏅 Ver Resumen',
-      onTap: () => req.context.push('/match-history-detail/${req.match.id}'),
+      onTap: () => req.context.push('/match-details/${req.match.id}'),
     );
   }
 }
@@ -77,41 +77,15 @@ class _ConfirmadaLink extends _MatchActionLink {
     if (!req.match.status.isConfirmed) return passDown(req);
 
     if (req.isAnyCaptain) {
-      if (req.hasRegisteredResult) {
-        return MatchAction(
-          label: '👀 Ver Resultado',
-          onTap: () => Navigator.push(
-            req.context,
-            MaterialPageRoute(
-              builder: (_) => ConfirmarResultadoPage(
-                match: req.match,
-                currentUserId: req.currentUserId!,
-              ),
-            ),
-          ),
-        );
-      } else {
-        return MatchAction(
-          label: '🏆 Registrar Resultado',
-          onTap: () => Navigator.push(
-            req.context,
-            MaterialPageRoute(
-              builder: (_) => RegisterResultPage(
-                match: req.match,
-                currentUserId: req.currentUserId!,
-              ),
-            ),
-          ),
-        );
-      }
+      return MatchAction(
+        label: req.hasRegisteredResult ? '👀 Ver Resultado' : '🏆 Registrar Resultado',
+        onTap: () => req.context.push('/match-details/${req.match.id}'),
+      );
     }
 
     return MatchAction(
-      label: '⚽ Ver Encuentro',
-      onTap: () => req.context.push(
-        '/player-match-dashboard',
-        extra: {'match': req.match},
-      ),
+      label: '🏆 Resultado / Alineaciones',
+      onTap: () => req.context.push('/match-details/${req.match.id}'),
     );
   }
 }
@@ -122,22 +96,9 @@ class _PendientePagoLink extends _MatchActionLink {
   MatchAction? handle(_MatchActionRequest req) {
     if (!req.match.status.isPendingPayment) return passDown(req);
 
-    if (req.isAnyCaptain) {
-      return MatchAction(
-        label: '⚙️ Administrar Partido',
-        onTap: () => req.context.push(
-          '/match-dashboard',
-          extra: {'matchEntity': req.match},
-        ),
-      );
-    }
-
     return MatchAction(
-      label: '⚽ Ver Encuentro',
-      onTap: () => req.context.push(
-        '/player-match-dashboard',
-        extra: {'match': req.match},
-      ),
+      label: '💳 Estado de Pagos',
+      onTap: () => req.context.push('/match-details/${req.match.id}'),
     );
   }
 }
@@ -150,20 +111,14 @@ class _NegociandoLink extends _MatchActionLink {
 
     if (req.isAnyCaptain) {
       return MatchAction(
-        label: '🛠️ Configurar Encuentro',
-        onTap: () => req.context.push(
-          '/configure-match',
-          extra: {'matchEntity': req.match},
-        ),
+        label: '🤝 Coordinar Encuentro',
+        onTap: () => req.context.push('/match-details/${req.match.id}'),
       );
     }
 
     return MatchAction(
-      label: '⚽ Ver Encuentro',
-      onTap: () => req.context.push(
-        '/player-match-dashboard',
-        extra: {'match': req.match},
-      ),
+      label: '⚽ Ver Detalles',
+      onTap: () => req.context.push('/match-details/${req.match.id}'),
     );
   }
 }
@@ -174,19 +129,16 @@ class _PublicadaLink extends _MatchActionLink {
   MatchAction? handle(_MatchActionRequest req) {
     if (!req.match.status.isPublished) return passDown(req);
 
-    if (req.isOrganizer) {
+    if (req.isOrganizer || req.isMyMatch) {
       return MatchAction(
-        label: '⚙️ Administrar Partido',
+        label: req.isOrganizer ? '⚙️ Administrar Partido' : '⚽ Ver Detalles',
         onTap: () => req.context.push('/match-details/${req.match.id}'),
       );
     }
 
     return MatchAction(
       label: '🤝 Aceptar Encuentro',
-      onTap: () => req.context.push(
-        '/accept-encounter',
-        extra: {'match': req.match},
-      ),
+      onTap: () => req.context.push('/match-details/${req.match.id}'),
     );
   }
 }
@@ -225,6 +177,7 @@ class MatchActionHandler {
     required BuildContext context,
     required MatchEntity match,
     required int? currentUserId,
+    bool isMyMatch = false,
   }) {
     // Construir la cadena: Completada → Confirmada → PendientePago → Negociando → Publicada → Default
     final chain = _CompletadaLink();
@@ -239,6 +192,7 @@ class MatchActionHandler {
       context: context,
       match: match,
       currentUserId: currentUserId,
+      isMyMatch: isMyMatch,
     );
 
     return chain.handle(req)!; // _DefaultLink siempre devuelve algo.

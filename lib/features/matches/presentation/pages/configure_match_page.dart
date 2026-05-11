@@ -343,7 +343,7 @@ class _ConfigureMatchPageState extends State<ConfigureMatchPage> {
                     children: [
                       Text('Cuota por jugador (est.)', style: TextStyle(color: textMuted, fontSize: 12)),
                       Text(
-                        '\$${(_costoActual / 22).toStringAsFixed(2)}',
+                        '\$${widget.partido.cuotaPorJugador.toStringAsFixed(2)}',
                         style: const TextStyle(color: AppColors.primary, fontSize: 24, fontWeight: FontWeight.bold),
                       ),
                     ],
@@ -579,4 +579,5 @@ class _ConfigureMatchPageState extends State<ConfigureMatchPage> {
       ],
     );
   }
+
 }

@@ -224,7 +224,7 @@ class _MatchesPageState extends State<MatchesPage> with AutomaticKeepAliveClient
                         separatorBuilder: (context, index) => const SizedBox(height: 16),
                         itemBuilder: (context, index) {
                           final match = filteredMatches[index];
-                          return _buildMatchCard(match, isDark, currentUserId)
+                          return _buildMatchCard(match, isDark, currentUserId, isMyMatch: _isMyMatchesView)
                               .animate()
                               .fadeIn(duration: 400.ms, delay: (index * 100).ms)
                               .slideY(begin: 0.1, end: 0, curve: Curves.easeOutQuad);
@@ -609,7 +609,7 @@ class _MatchesPageState extends State<MatchesPage> with AutomaticKeepAliveClient
     );
   }
 
-  Widget _buildMatchCard(MatchEntity match, bool isDark, int? currentUserId) {
+  Widget _buildMatchCard(MatchEntity match, bool isDark, int? currentUserId, {bool isMyMatch = false}) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -714,11 +714,12 @@ class _MatchesPageState extends State<MatchesPage> with AutomaticKeepAliveClient
                 const SizedBox(height: 16),
                 Builder(
                   builder: (ctx) {
-                    final action = MatchActionHandler.resolve(
-                      context: ctx,
-                      match: match,
-                      currentUserId: currentUserId,
-                    );
+                      final action = MatchActionHandler.resolve(
+                        context: ctx,
+                        match: match,
+                        currentUserId: currentUserId,
+                        isMyMatch: isMyMatch,
+                      );
                     return SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(

@@ -712,6 +712,9 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
       costoTotal: widget.editMatch?.costoTotal ?? 50.0,
       status: MatchStatus.fromString(widget.editMatch?.estatus ?? 'publicada'),
       idEquipoA: selectedTeamId,
+      cuposTotales: widget.editMatch?.cuposTotales ?? 22,
+      jugadoresInscritos: widget.editMatch?.jugadoresInscritos ?? 0,
+      cuotaPorJugador: widget.editMatch?.cuotaPorJugador ?? 0.0,
     );
 
     if (widget.editMatch != null) {
