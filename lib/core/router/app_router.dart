@@ -28,6 +28,7 @@ import '../../features/matches/presentation/pages/match_history_page.dart';
 import '../../features/matches/presentation/pages/match_history_detail_page.dart';
 import '../../features/payments/presentation/pages/payment_management_page.dart';
 import '../../features/payments/presentation/pages/upload_receipt_page.dart';
+import '../../features/matches/presentation/pages/confirm_result_page.dart';
 import '../../features/matches/domain/repositories/matches_repository.dart';
 import '../../features/matches/domain/entities/match_entity.dart';
 import '../../features/teams/domain/entities/team_entity.dart';
@@ -42,6 +43,8 @@ import '../../features/payments/presentation/bloc/payments_bloc.dart';
 import '../../features/payments/presentation/bloc/payments_event.dart';
 import '../../features/rankings/presentation/bloc/leaderboard_bloc.dart';
 import '../../features/rankings/presentation/bloc/leaderboard_event.dart';
+import '../../features/profile/presentation/bloc/profile_bloc.dart';
+import '../../features/profile/presentation/bloc/profile_state.dart';
 
 class AppRouter {
   static Page<T> _buildTransitionPage<T>({
@@ -219,6 +222,23 @@ class AppRouter {
             pageBuilder: (context, state) {
               final id = int.parse(state.pathParameters['id']!);
               return _buildTransitionPage(context: context, state: state, child: MatchHistoryDetailPage(matchId: id));
+            },
+          ),
+          GoRoute(
+            path: '/confirm-result',
+            pageBuilder: (context, state) {
+              final extra = state.extra as Map<String, dynamic>?;
+              final matchEntity = extra?['matchEntity'] as MatchEntity;
+              final profileState = context.read<ProfileBloc>().state;
+              final currentUserId = profileState is ProfileLoaded ? profileState.profile.id : 0;
+              return _buildTransitionPage(
+                context: context,
+                state: state,
+                child: ConfirmarResultadoPage(
+                  match: matchEntity,
+                  currentUserId: currentUserId,
+                ),
+              );
             },
           ),
         ],

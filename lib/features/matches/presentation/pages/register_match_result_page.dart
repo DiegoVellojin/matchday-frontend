@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../bloc/matches_bloc.dart';
 import '../../domain/entities/match_entity.dart';
+import '../../../profile/presentation/bloc/profile_bloc.dart';
+import '../../../profile/presentation/bloc/profile_state.dart';
 import '../../../../core/widgets/animated_bouncing_button.dart';
 
 class RegisterMatchResultPage extends StatefulWidget {
@@ -28,11 +30,15 @@ class _RegisterMatchResultPageState extends State<RegisterMatchResultPage> {
   }
 
   void _handleSubmit(BuildContext context) {
+    final profileState = context.read<ProfileBloc>().state;
+    final myId = profileState is ProfileLoaded ? profileState.profile.id : 0;
+    final isTeamA = widget.partido.idUsuarioOrg == myId;
+    
     context.read<MatchesBloc>().add(
       RegisterResultEvent(
         matchId: widget.partido.id,
-        golesA: _golesFavor, // Asumiendo que el usuario es equipo A
-        golesB: _golesContra,
+        golesA: isTeamA ? _golesFavor : _golesContra,
+        golesB: isTeamA ? _golesContra : _golesFavor,
       ),
     );
   }
@@ -203,8 +209,22 @@ class _RegisterMatchResultPageState extends State<RegisterMatchResultPage> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
                         children: [
-                          _buildCounter(context, 'Goles a Favor', _golesFavor, true, (val) => setState(() => _golesFavor = val)),
-                          _buildCounter(context, 'Goles en Contra', _golesContra, false, (val) => setState(() => _golesContra = val)),
+                          Builder(builder: (context) {
+                            final profileState = context.read<ProfileBloc>().state;
+                            final myId = profileState is ProfileLoaded ? profileState.profile.id : 0;
+                            final isTeamA = widget.partido.idUsuarioOrg == myId;
+                            final myTeam = isTeamA ? (widget.partido.nombreEquipoA ?? 'Equipo A') : (widget.partido.nombreEquipoB ?? 'Equipo B');
+                            final rivalTeam = isTeamA ? (widget.partido.nombreEquipoB ?? 'Equipo B') : (widget.partido.nombreEquipoA ?? 'Equipo A');
+                            
+                            return Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceAround,
+                              children: [
+                                _buildCounter(context, myTeam, _golesFavor, true, (val) => setState(() => _golesFavor = val)),
+                                const SizedBox(width: 40),
+                                _buildCounter(context, rivalTeam, _golesContra, false, (val) => setState(() => _golesContra = val)),
+                              ],
+                            );
+                          }),
                         ],
                       ),
                       const SizedBox(height: 24),

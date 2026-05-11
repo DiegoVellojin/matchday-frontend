@@ -918,9 +918,9 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> {
             child: ElevatedButton(
               onPressed: () {
                 if (hasRegistered) {
-                  context.push('/confirm-result', extra: {'match': match});
+                  context.push('/confirm-result', extra: {'matchEntity': match});
                 } else {
-                  context.push('/register-result', extra: {'match': match});
+                  context.push('/register-result', extra: {'matchEntity': match});
                 }
               },
               style: ElevatedButton.styleFrom(
@@ -1076,8 +1076,7 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> {
                   ),
                 ),
               ),
-            ] else if (match.estatus == 'pendiente_pago' ||
-                match.estatus == 'confirmada') ...[
+            ] else if (match.estatus == 'pendiente_pago') ...[
               const SizedBox(width: 12),
               Expanded(
                 child: ElevatedButton.icon(
@@ -1097,9 +1096,98 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> {
                   ),
                 ),
               ),
+            ] else if (match.estatus == 'confirmada') ...[
+              const SizedBox(width: 12),
+              Builder(
+                builder: (context) {
+                  final hasMatchPassed = DateTime.now().isAfter(match.fechaInicioEstimada);
+                  if (!hasMatchPassed) {
+                    return Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () => context.push(
+                          '/match-dashboard',
+                          extra: {'matchEntity': match},
+                        ),
+                        icon: const Icon(Icons.payments_outlined),
+                        label: const Text('Gestionar Pagos'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: Colors.black,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
+                    );
+                  }
+
+                  final profileState = context.read<ProfileBloc>().state;
+                  final currentUserId = profileState is ProfileLoaded ? profileState.profile.id : null;
+                  final isCaptainA = currentUserId == match.idUsuarioOrg;
+                  final myGoles = isCaptainA ? match.resultadoGolesACapA : match.resultadoGolesBCapB;
+                  final hasRegistered = myGoles != null;
+
+                  return Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        if (hasRegistered) {
+                          context.push('/confirm-result', extra: {'matchEntity': match});
+                        } else {
+                          context.push('/register-result', extra: {'matchEntity': match});
+                        }
+                      },
+                      icon: const Icon(Icons.sports_score_outlined),
+                      label: Text(hasRegistered ? 'Ver Resultado' : 'Registrar Resultado'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: Colors.black,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ] else if (match.estatus == 'completada') ...[
+              const SizedBox(width: 12),
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: () => context.push('/match-history'),
+                  icon: const Icon(Icons.history_rounded),
+                  label: const Text('Ver Resultado'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.black,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
             ],
           ] else ...[
-            if (match.estatus == 'pendiente_pago' ||
+            if (match.estatus == 'completada') ...[
+              const SizedBox(width: 12),
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: () => context.push('/match-history'),
+                  icon: const Icon(Icons.history_rounded),
+                  label: const Text('Ver Resultado'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.black,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+            ] else if (match.estatus == 'pendiente_pago' ||
                 match.estatus == 'confirmada') ...[
               const SizedBox(width: 12),
               Builder(
