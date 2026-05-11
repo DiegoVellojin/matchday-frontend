@@ -466,9 +466,9 @@ class _CaptainMatchDashboardPageState extends State<CaptainMatchDashboardPage>
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: isPaid ? accent.withValues(alpha: 0.3) : AppColors.border),
+        border: Border.all(color: isPaid ? accent.withValues(alpha: 0.3) : Theme.of(context).dividerColor),
       ),
       child: Row(
         children: [
@@ -525,8 +525,8 @@ class _CaptainMatchDashboardPageState extends State<CaptainMatchDashboardPage>
       padding: const EdgeInsets.all(16),
       itemCount: 6,
       itemBuilder: (context, index) => Shimmer.fromColors(
-        baseColor: AppColors.surface,
-        highlightColor: AppColors.border,
+        baseColor: Theme.of(context).colorScheme.surface,
+        highlightColor: Theme.of(context).dividerColor,
         child: Container(
           height: 70,
           margin: const EdgeInsets.only(bottom: 12),

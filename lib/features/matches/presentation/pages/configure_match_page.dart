@@ -31,7 +31,7 @@ class _ConfigureMatchPageState extends State<ConfigureMatchPage> {
     super.initState();
     _costoController.text = widget.partido.costoTotal.toString();
     _costoActual = widget.partido.costoTotal;
-    
+
     _costoController.addListener(() {
       setState(() {
         _costoActual = double.tryParse(_costoController.text) ?? 0.0;
@@ -61,19 +61,27 @@ class _ConfigureMatchPageState extends State<ConfigureMatchPage> {
     }
 
     final isCaptainA = currentUserId == widget.partido.idUsuarioOrg;
-    final rivalPhone = isCaptainA ? widget.partido.telefonoCapitanB : widget.partido.telefonoCapitanA;
+    final rivalPhone = isCaptainA
+        ? widget.partido.telefonoCapitanB
+        : widget.partido.telefonoCapitanA;
 
     if (rivalPhone == null || rivalPhone.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No hay número de teléfono disponible para el capitán rival')),
+        const SnackBar(
+          content: Text(
+            'No hay número de teléfono disponible para el capitán rival',
+          ),
+        ),
       );
       return;
     }
 
     final cleanPhone = rivalPhone.replaceAll(RegExp(r'\D'), '');
-    final message = "Hola, soy el capitán rival para el partido del ${DateFormat('dd/MM/yyyy').format(widget.partido.fechaInicioEstimada)}. ¿Cómo coordinamos?";
-    final url = "https://wa.me/$cleanPhone?text=${Uri.encodeComponent(message)}";
-    
+    final message =
+        "Hola, soy el capitán rival para el partido del ${DateFormat('dd/MM/yyyy').format(widget.partido.fechaInicioEstimada)}. ¿Cómo coordinamos?";
+    final url =
+        "https://wa.me/$cleanPhone?text=${Uri.encodeComponent(message)}";
+
     if (await canLaunchUrl(Uri.parse(url))) {
       await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
     } else {
@@ -87,10 +95,16 @@ class _ConfigureMatchPageState extends State<ConfigureMatchPage> {
 
   void _handleConfirmar(BuildContext context) {
     final costo = double.tryParse(_costoController.text);
-    if (costo == null || costo <= 0 || _bancoController.text.isEmpty || _cedulaController.text.isEmpty || _telefonoController.text.isEmpty) {
+    if (costo == null ||
+        costo <= 0 ||
+        _bancoController.text.isEmpty ||
+        _cedulaController.text.isEmpty ||
+        _telefonoController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Por favor completa todos los campos con datos válidos'),
+          content: Text(
+            'Por favor completa todos los campos con datos válidos',
+          ),
           backgroundColor: Colors.redAccent,
         ),
       );
@@ -129,7 +143,10 @@ class _ConfigureMatchPageState extends State<ConfigureMatchPage> {
             Navigator.pop(context);
           } else if (state is MatchesError) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.message), backgroundColor: Colors.redAccent),
+              SnackBar(
+                content: Text(state.message),
+                backgroundColor: Colors.redAccent,
+              ),
             );
           }
         },
@@ -146,7 +163,7 @@ class _ConfigureMatchPageState extends State<ConfigureMatchPage> {
                         .fadeIn(duration: 500.ms)
                         .slideY(begin: 0.1, end: 0),
                     const SizedBox(height: 16),
-                    
+
                     _buildProposalStatus(context, isDark)
                         .animate()
                         .fadeIn(duration: 500.ms, delay: 100.ms)
@@ -208,26 +225,19 @@ class _ConfigureMatchPageState extends State<ConfigureMatchPage> {
   }
 
   Widget _buildRivalCard(BuildContext context, bool isDark) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
     final textMuted = isDark ? const Color(0xFF9CA3AF) : Colors.black54;
 
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            colorScheme.surface,
-            colorScheme.surface.withValues(alpha: 0.8),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: theme.dividerColor.withValues(alpha: 0.5)),
+        border: Border.all(
+          color: Theme.of(context).dividerColor.withValues(alpha: 0.5),
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.2),
+            color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -245,9 +255,13 @@ class _ConfigureMatchPageState extends State<ConfigureMatchPage> {
                   decoration: BoxDecoration(
                     color: AppColors.primary.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
-                    border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+                    border: Border.all(
+                      color: AppColors.primary.withValues(alpha: 0.2),
+                    ),
                   ),
-                  child: const Center(child: Text('🛡️', style: TextStyle(fontSize: 28))),
+                  child: const Center(
+                    child: Text('🛡️', style: TextStyle(fontSize: 28)),
+                  ),
                 ),
               ),
               const SizedBox(width: 16),
@@ -257,7 +271,10 @@ class _ConfigureMatchPageState extends State<ConfigureMatchPage> {
                   children: [
                     Text(
                       widget.partido.nombreEquipoA ?? 'Rival Desconocido',
-                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     Text(
                       'Capitán: ${widget.partido.nombreCapitanA ?? 'Pendiente'}',
@@ -275,11 +292,16 @@ class _ConfigureMatchPageState extends State<ConfigureMatchPage> {
             child: ElevatedButton.icon(
               onPressed: _handleContactar,
               icon: const Icon(Icons.chat_bubble_outline),
-              label: const Text('Coordinar por WhatsApp', style: TextStyle(fontWeight: FontWeight.bold)),
+              label: const Text(
+                'Coordinar por WhatsApp',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF25D366).withValues(alpha: 0.9),
                 foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
                 elevation: 0,
               ),
             ),
@@ -308,21 +330,34 @@ class _ConfigureMatchPageState extends State<ConfigureMatchPage> {
             children: [
               Icon(Icons.payments_outlined, color: AppColors.primary),
               SizedBox(width: 10),
-              Text('Costo de Cancha', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              Text(
+                'Costo de Cancha',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
             ],
           ),
           const SizedBox(height: 20),
           TextField(
             controller: _costoController,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: AppColors.primary),
+            style: const TextStyle(
+              fontSize: 32,
+              fontWeight: FontWeight.bold,
+              color: AppColors.primary,
+            ),
             textAlign: TextAlign.center,
             decoration: InputDecoration(
-              prefixIcon: const Icon(Icons.attach_money, color: AppColors.primary),
+              prefixIcon: const Icon(
+                Icons.attach_money,
+                color: AppColors.primary,
+              ),
               hintText: '0.00',
               filled: true,
               fillColor: theme.scaffoldBackgroundColor.withValues(alpha: 0.5),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: BorderSide.none,
+              ),
               contentPadding: const EdgeInsets.symmetric(vertical: 20),
             ),
           ),
@@ -337,10 +372,16 @@ class _ConfigureMatchPageState extends State<ConfigureMatchPage> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('Cuota estimada por jugador:', style: TextStyle(color: textMuted, fontSize: 13)),
                   Text(
-                    '\$${( _costoActual / (widget.partido.cuposTotales > 0 ? widget.partido.cuposTotales : 1)).toStringAsFixed(2)}',
-                    style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.primary),
+                    'Cuota estimada por jugador:',
+                    style: TextStyle(color: textMuted, fontSize: 13),
+                  ),
+                  Text(
+                    '\$${(_costoActual / (widget.partido.cuposTotales > 0 ? widget.partido.cuposTotales : 1)).toStringAsFixed(2)}',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.primary,
+                    ),
                   ),
                 ],
               ),
@@ -367,21 +408,46 @@ class _ConfigureMatchPageState extends State<ConfigureMatchPage> {
             children: [
               Icon(Icons.account_balance_outlined, color: AppColors.primary),
               SizedBox(width: 10),
-              Text('Tus Datos de Pago', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              Text(
+                'Tus Datos de Pago',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
             ],
           ),
           const SizedBox(height: 20),
-          _buildStyledTextField('Banco / Plataforma', _bancoController, Icons.account_balance, isDark),
+          _buildStyledTextField(
+            'Banco / Plataforma',
+            _bancoController,
+            Icons.account_balance,
+            isDark,
+          ),
           const SizedBox(height: 12),
-          _buildStyledTextField('Documento (Cédula/RIF)', _cedulaController, Icons.badge_outlined, isDark),
+          _buildStyledTextField(
+            'Documento (Cédula/RIF)',
+            _cedulaController,
+            Icons.badge_outlined,
+            isDark,
+          ),
           const SizedBox(height: 12),
-          _buildStyledTextField('Teléfono Móvil', _telefonoController, Icons.phone_android, isDark, keyboardType: TextInputType.phone),
+          _buildStyledTextField(
+            'Teléfono Móvil',
+            _telefonoController,
+            Icons.phone_android,
+            isDark,
+            keyboardType: TextInputType.phone,
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildStyledTextField(String label, TextEditingController controller, IconData icon, bool isDark, {TextInputType? keyboardType}) {
+  Widget _buildStyledTextField(
+    String label,
+    TextEditingController controller,
+    IconData icon,
+    bool isDark, {
+    TextInputType? keyboardType,
+  }) {
     final theme = Theme.of(context);
     final textMuted = isDark ? const Color(0xFF9CA3AF) : Colors.black54;
 
@@ -394,7 +460,10 @@ class _ConfigureMatchPageState extends State<ConfigureMatchPage> {
         prefixIcon: Icon(icon, size: 20, color: textMuted),
         filled: true,
         fillColor: theme.scaffoldBackgroundColor.withValues(alpha: 0.5),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide.none,
+        ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
           borderSide: const BorderSide(color: AppColors.primary, width: 1),
@@ -408,24 +477,39 @@ class _ConfigureMatchPageState extends State<ConfigureMatchPage> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.blue.withValues(alpha: 0.05),
+        color: AppColors.primary.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.blue.withValues(alpha: 0.1)),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             children: [
-              Icon(Icons.info_outline, color: Colors.blue, size: 20),
+              Icon(Icons.info_outline, color: AppColors.primary, size: 20),
               SizedBox(width: 8),
-              Text('Recordatorio Importante', style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold)),
+              Text(
+                'Recordatorio Importante',
+                style: TextStyle(
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 12),
-          _buildStepItem('Ambos capitanes deben acordar el mismo costo.', textMuted),
-          _buildStepItem('Los jugadores pagarán su cuota directamente a ti.', textMuted),
-          _buildStepItem('Podrás verificar los pagos desde el Dashboard.', textMuted),
+          _buildStepItem(
+            'Ambos capitanes deben acordar el mismo costo.',
+            textMuted,
+          ),
+          _buildStepItem(
+            'Los jugadores pagarán su cuota directamente a ti.',
+            textMuted,
+          ),
+          _buildStepItem(
+            'Podrás verificar los pagos desde el Dashboard.',
+            textMuted,
+          ),
         ],
       ),
     );
@@ -437,8 +521,16 @@ class _ConfigureMatchPageState extends State<ConfigureMatchPage> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('• ', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold)),
-          Expanded(child: Text(text, style: TextStyle(color: textMuted, fontSize: 13))),
+          const Text(
+            '• ',
+            style: TextStyle(
+              color: AppColors.primary,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          Expanded(
+            child: Text(text, style: TextStyle(color: textMuted, fontSize: 13)),
+          ),
         ],
       ),
     );
@@ -448,15 +540,22 @@ class _ConfigureMatchPageState extends State<ConfigureMatchPage> {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final match = widget.partido;
-    final coincide = match.propuestaCostoA != null && 
-                    match.propuestaCostoA == match.propuestaCostoB;
+    final coincide =
+        match.propuestaCostoA != null &&
+        match.propuestaCostoA == match.propuestaCostoB;
 
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: coincide ? Colors.green.withValues(alpha: 0.05) : colorScheme.surface,
+        color: coincide
+            ? Colors.green.withValues(alpha: 0.05)
+            : colorScheme.surface,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: coincide ? Colors.green.withValues(alpha: 0.2) : theme.dividerColor),
+        border: Border.all(
+          color: coincide
+              ? Colors.green.withValues(alpha: 0.2)
+              : theme.dividerColor,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -464,23 +563,44 @@ class _ConfigureMatchPageState extends State<ConfigureMatchPage> {
           Row(
             children: [
               Icon(
-                coincide ? Icons.check_circle_outline : Icons.handshake_outlined,
+                coincide
+                    ? Icons.check_circle_outline
+                    : Icons.handshake_outlined,
                 color: coincide ? Colors.green : AppColors.primary,
               ),
               const SizedBox(width: 10),
-              const Text('Estado de la Propuesta', style: TextStyle(fontWeight: FontWeight.bold)),
+              const Text(
+                'Estado de la Propuesta',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
             ],
           ),
           const SizedBox(height: 16),
-          _proposalRow(context, 'Tu Equipo (Org)', match.propuestaCostoA, isDark),
+          _proposalRow(
+            context,
+            'Tu Equipo (Org)',
+            match.propuestaCostoA,
+            isDark,
+          ),
           const SizedBox(height: 8),
-          _proposalRow(context, 'Rival (Retador)', match.propuestaCostoB, isDark),
-          if (match.propuestaCostoA != null && match.propuestaCostoB != null && !coincide)
+          _proposalRow(
+            context,
+            'Rival (Retador)',
+            match.propuestaCostoB,
+            isDark,
+          ),
+          if (match.propuestaCostoA != null &&
+              match.propuestaCostoB != null &&
+              !coincide)
             Padding(
               padding: const EdgeInsets.only(top: 12),
               child: Text(
                 '⚠️ Los montos no coinciden. Sigue negociando.',
-                style: TextStyle(color: Colors.orange[400], fontSize: 12, fontWeight: FontWeight.w500),
+                style: TextStyle(
+                  color: Colors.orange[400],
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ),
         ],
@@ -488,7 +608,12 @@ class _ConfigureMatchPageState extends State<ConfigureMatchPage> {
     );
   }
 
-  Widget _proposalRow(BuildContext context, String label, double? costo, bool isDark) {
+  Widget _proposalRow(
+    BuildContext context,
+    String label,
+    double? costo,
+    bool isDark,
+  ) {
     final textMuted = isDark ? const Color(0xFF9CA3AF) : Colors.black54;
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -498,7 +623,9 @@ class _ConfigureMatchPageState extends State<ConfigureMatchPage> {
           costo != null ? '\$${costo.toStringAsFixed(2)}' : 'Sin propuesta',
           style: TextStyle(
             fontWeight: FontWeight.bold,
-            color: costo != null ? Theme.of(context).colorScheme.onSurface : textMuted.withValues(alpha: 0.5),
+            color: costo != null
+                ? Theme.of(context).colorScheme.onSurface
+                : textMuted.withValues(alpha: 0.5),
           ),
         ),
       ],
@@ -512,7 +639,11 @@ class _ConfigureMatchPageState extends State<ConfigureMatchPage> {
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
         boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.3), blurRadius: 20, offset: const Offset(0, -5)),
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.3),
+            blurRadius: 20,
+            offset: const Offset(0, -5),
+          ),
         ],
       ),
       child: Row(
@@ -520,22 +651,34 @@ class _ConfigureMatchPageState extends State<ConfigureMatchPage> {
           Expanded(
             child: TextButton(
               onPressed: () => Navigator.pop(context),
-              child: Text('Cerrar', style: TextStyle(color: isDark ? Colors.white70 : Colors.black54)),
+              child: Text(
+                'Cerrar',
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
             ),
           ),
           const SizedBox(width: 16),
           Expanded(
             flex: 2,
             child: ElevatedButton(
-              onPressed: _costoActual > 0 ? () => _handleConfirmar(context) : null,
+              onPressed: _costoActual > 0
+                  ? () => _handleConfirmar(context)
+                  : null,
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
                 foregroundColor: Colors.black,
                 padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
                 elevation: 0,
               ),
-              child: const Text('Enviar Propuesta', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              child: const Text(
+                'Enviar Propuesta',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              ),
             ),
           ),
         ],

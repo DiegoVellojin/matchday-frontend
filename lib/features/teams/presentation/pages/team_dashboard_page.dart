@@ -373,8 +373,8 @@ class _TeamDashboardPageState extends State<TeamDashboardPage> {
             const SizedBox(height: 4),
             Text(
               value,
-              style: const TextStyle(
-                color: Colors.white,
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurface,
                 fontSize: 18,
                 fontWeight: FontWeight.w900,
               ),

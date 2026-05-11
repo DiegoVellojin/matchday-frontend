@@ -1102,76 +1102,87 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> {
             if (match.estatus == 'pendiente_pago' ||
                 match.estatus == 'confirmada') ...[
               const SizedBox(width: 12),
-              Expanded(
-                child: ElevatedButton.icon(
-                  onPressed: () {
-                    final profileState = context.read<ProfileBloc>().state;
-                    int? currentUserId;
-                    if (profileState is ProfileLoaded) {
-                      currentUserId = profileState.profile.id;
-                    }
+              Builder(
+                builder: (context) {
+                  final profileState = context.read<ProfileBloc>().state;
+                  int? currentUserId;
+                  if (profileState is ProfileLoaded) {
+                    currentUserId = profileState.profile.id;
+                  }
 
-                    final amIInA =
-                        _players.any(
-                          (p) =>
-                              p.idUsuario == currentUserId &&
-                              p.idEquipo == match.idEquipoA,
-                        ) ||
-                        match.idUsuarioOrg == currentUserId;
-                    final myName = amIInA
-                        ? (match.nombreEquipoA ?? 'Tu Equipo')
-                        : (match.nombreEquipoB ?? 'Tu Equipo');
-                    final myLogo = amIInA
-                        ? match.logoEquipoA
-                        : match.logoEquipoB;
+                  final me = _players
+                      .where((p) => p.idUsuario == currentUserId)
+                      .firstOrNull;
+                  final hasReported =
+                      me?.urlReciboPago != null && me!.urlReciboPago!.isNotEmpty;
 
-                    final me = _players
-                        .where((p) => p.idUsuario == currentUserId)
-                        .firstOrNull;
-                    final isVerified = me?.estatusPago == 'verificado';
+                  return Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        final amIInA =
+                            _players.any(
+                              (p) =>
+                                  p.idUsuario == currentUserId &&
+                                  p.idEquipo == match.idEquipoA,
+                            ) ||
+                            match.idUsuarioOrg == currentUserId;
+                        final myName = amIInA
+                            ? (match.nombreEquipoA ?? 'Tu Equipo')
+                            : (match.nombreEquipoB ?? 'Tu Equipo');
+                        final myLogo = amIInA
+                            ? match.logoEquipoA
+                            : match.logoEquipoB;
 
-                    if (isVerified) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Tu pago ya ha sido verificado'),
+                        final isVerified = me?.estatusPago == 'verificado';
+
+                        if (isVerified) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Tu pago ya ha sido verificado'),
+                            ),
+                          );
+                          return;
+                        }
+
+                        final payment = PaymentEntity(
+                          idPartida: match.id,
+                          teamName: myName,
+                          teamLogo: myLogo,
+                          concepto: match.sportName ?? 'Partido',
+                          monto: match.cuotaPorJugador,
+                          isPaid: false,
+                          estatusPago: me?.estatusPago ?? 'pendiente',
+                          banco: amIInA ? match.bancoReceptor : match.bancoCapitanB,
+                          cedula: amIInA
+                              ? match.cedulaReceptora
+                              : match.cedulaCapitanB,
+                          telefono: amIInA
+                              ? match.telefonoReceptor
+                              : match.telefonoCapitanBPago,
+                        );
+
+                        context.push(
+                          '/upload-receipt',
+                          extra: {'payment': payment},
+                        );
+                      },
+                      icon: Icon(
+                        hasReported
+                            ? Icons.edit_note_outlined
+                            : Icons.account_balance_wallet_outlined,
+                      ),
+                      label: Text(hasReported ? 'Modificar Pago' : 'Ir a Pagar'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: Colors.black,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                      );
-                      return;
-                    }
-
-                    final payment = PaymentEntity(
-                      idPartida: match.id,
-                      teamName: myName,
-                      teamLogo: myLogo,
-                      concepto: match.sportName ?? 'Partido',
-                      monto: match.cuotaPorJugador,
-                      isPaid: false,
-                      estatusPago: me?.estatusPago ?? 'pendiente',
-                      banco: amIInA ? match.bancoReceptor : match.bancoCapitanB,
-                      cedula: amIInA
-                          ? match.cedulaReceptora
-                          : match.cedulaCapitanB,
-                      telefono: amIInA
-                          ? match.telefonoReceptor
-                          : match.telefonoCapitanBPago,
-                    );
-
-                    context.push(
-                      '/upload-receipt',
-                      extra: {'payment': payment},
-                    );
-                  },
-                  icon: const Icon(Icons.account_balance_wallet_outlined),
-                  label: const Text('Ir a Pagar'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: Colors.black,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
-                  ),
-                ),
+                  );
+                },
               ),
             ],
           ],
