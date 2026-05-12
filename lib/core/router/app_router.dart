@@ -17,6 +17,7 @@ import '../../features/teams/presentation/pages/team_settings_page.dart';
 import '../../features/notifications/presentation/pages/notifications_page.dart';
 import '../../features/profile/presentation/pages/profile_page.dart';
 import '../../features/profile/presentation/pages/edit_profile_page.dart';
+import '../../features/profile/presentation/pages/settings_page.dart';
 import '../../features/matches/presentation/pages/create_match_page.dart';
 import '../../features/matches/presentation/pages/match_details_page.dart';
 import '../../features/matches/presentation/pages/captain_match_dashboard_page.dart';
@@ -146,6 +147,10 @@ class AppRouter {
               final profile = extra?['profile'] as UserProfileEntity?;
               return _buildTransitionPage(context: context, state: state, child: EditProfilePage(profile: profile!));
             },
+          ),
+          GoRoute(
+            path: '/configuracion',
+            pageBuilder: (context, state) => _buildTransitionPage(context: context, state: state, child: const SettingsPage()),
           ),
           GoRoute(
             path: '/match-dashboard',

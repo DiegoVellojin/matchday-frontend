@@ -100,7 +100,7 @@ class _RegisterResultPageState extends State<RegisterResultPage> {
                 style: TextStyle(color: colorScheme.onSurface, fontSize: 18, fontWeight: FontWeight.bold),
               ),
               Text(
-                'Como Organizador',
+                'Como Capitán',
                 style: TextStyle(color: AppColors.textMuted, fontSize: 12),
               ),
             ],

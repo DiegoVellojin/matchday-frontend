@@ -61,7 +61,7 @@ class _RegisterMatchResultPageState extends State<RegisterMatchResultPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text('Registrar Resultado', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
-            Text('Como Organizador', style: theme.textTheme.bodySmall),
+            Text('Como Capitán', style: theme.textTheme.bodySmall),
           ],
         ),
         bottom: PreferredSize(

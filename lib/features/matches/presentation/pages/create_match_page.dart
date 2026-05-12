@@ -287,7 +287,7 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
               const SizedBox(height: 20),
               
               // Selector de Mi Equipo
-              _buildLabel('Tu Equipo Organizador'),
+              _buildLabel('Tu Equipo (Eres Capitán)'),
               _isLoadingTeams
                 ? const LinearProgressIndicator(color: AppColors.primary)
                 : () {
@@ -306,8 +306,8 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
                           children: [
                             Text(
                               selectedSport != null 
-                                ? 'No organizas ningún equipo de ${selectedSport.name} todavía.'
-                                : 'No organizas ningún equipo todavía.',
+                                ? 'No eres capitán de ningún equipo de ${selectedSport.name} todavía.'
+                                : 'No eres capitán de ningún equipo todavía.',
                               textAlign: TextAlign.center,
                               style: const TextStyle(color: AppColors.error, fontWeight: FontWeight.bold),
                             ),

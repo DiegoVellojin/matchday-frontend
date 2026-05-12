@@ -144,8 +144,8 @@ class _ProfilePageState extends State<ProfilePage> {
       ),
       actions: [
         IconButton(
-          icon: const Icon(Icons.logout, color: Colors.redAccent),
-          onPressed: () => _showLogoutDialog(context),
+          icon: Icon(Icons.settings_outlined, color: Theme.of(context).colorScheme.onSurface),
+          onPressed: () => context.push('/configuracion'),
         ),
       ],
       bottom: PreferredSize(
@@ -512,11 +512,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
         _buildMenuButton(
           label: 'Configuración',
-          onPressed: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Configuración próximamente')),
-            );
-          },
+          onPressed: () => context.push('/configuracion'),
         ),
       ],
     );
@@ -581,42 +577,6 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  void _showLogoutDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: Theme.of(context).colorScheme.surface,
-        title: Text(
-          'Cerrar Sesión',
-          style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
-        ),
-
-        content: const Text(
-          '¿Estás seguro de que quieres cerrar sesión?',
-          style: TextStyle(color: AppColors.textMuted),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text(
-              'Cancelar',
-              style: TextStyle(color: AppColors.textMuted),
-            ),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              context.read<ProfileBloc>().add(LogoutEvent());
-            },
-            child: const Text(
-              'Cerrar Sesión',
-              style: TextStyle(color: Colors.redAccent),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }
 
 /// Widget personalizado para nombres largos con efecto Marquee (deslizamiento).

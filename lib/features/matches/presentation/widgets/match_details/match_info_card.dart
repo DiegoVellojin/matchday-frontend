@@ -41,7 +41,7 @@ class MatchInfoCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      match.nombreEquipoA ?? 'Equipo Organizador',
+                      match.nombreEquipoA ?? 'Equipo Capitán',
                       style: TextStyle(
                         color: Theme.of(context).colorScheme.onSurface,
                         fontSize: 16,

@@ -58,7 +58,7 @@ class MatchNegotiationCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
-          _buildProposalRow('Capitán A (Organizador)', match.propuestaCostoA, match.propuestaFechaA, context),
+          _buildProposalRow('Capitán A', match.propuestaCostoA, match.propuestaFechaA, context),
           const SizedBox(height: 12),
           _buildProposalRow('Capitán B (Rival)', match.propuestaCostoB, match.propuestaFechaB, context),
           if (propA && propB && !coincide)

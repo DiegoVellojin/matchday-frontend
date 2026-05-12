@@ -1,108 +1,130 @@
 # ⚽ MatchDay App
 
-> **"La élite del fútbol amateur, en la palma de tu mano."**
+> **"La élite del deporte amateur, profesionalizada en la palma de tu mano."**
 
-![Banner Principal](https://raw.githubusercontent.com/MatchDay-UCAB/matchday_app/main/assets/banner_premium.png)
-*(Captura conceptual de la interfaz Premium)*
+Proyecto de ingeniería de software de alto impacto que permite a capitanes y jugadores gestionar, descubrir y organizar encuentros deportivos amateur (Fútbol, Padel, Tenis, Basket) con pagos y resultados en tiempo real. Esta aplicación no es solo una plataforma funcional, sino una demostración avanzada de **Clean Architecture (4 Capas)**, **Inyección de Dependencias**, y **Programación Funcional**.
 
-<div align="center">
+<p align="center">
+   <img src="https://storage.googleapis.com/cms-storage-bucket/0dbfcc7a59cd1cf16282.png" alt="Logo-Flutter" width="300">
+   <br>
+   <img src="https://img.shields.io/badge/Flutter-3.x-02569B?style=for-the-badge&logo=flutter&logoColor=white" alt="Flutter Version" />
+   <img src="https://img.shields.io/badge/Dart-3.x-0175C2?style=for-the-badge&logo=dart&logoColor=white" alt="Dart Version" />
+   <img src="https://img.shields.io/badge/Architecture-Clean%20(4%20Layers)-success?style=for-the-badge" alt="Clean Architecture" />
+   <img src="https://img.shields.io/badge/UI-Premium%20Responsive-black?style=for-the-badge" alt="Premium UI" />
+</p>
 
-![Flutter](https://img.shields.io/badge/Flutter-3.x-02569B?style=for-the-badge&logo=flutter&logoColor=white)
-![Dart](https://img.shields.io/badge/Dart-3.x-0175C2?style=for-the-badge&logo=dart&logoColor=white)
-![Architecture](https://img.shields.io/badge/Architecture-Clean%20(4%20Layers)-success?style=for-the-badge)
-![UI](https://img.shields.io/badge/UI-Premium%20Dark-black?style=for-the-badge)
+## 🏛️ Arquitectura de Software: Clean Architecture Estricta
 
-<br>
+Este proyecto representa una implementación canónica y rigurosa de **Clean Architecture**. Dividir el software en cuatro capas concéntricas obedece a principios S.O.L.I.D. y Separación de Preocupaciones (SoC), garantizando un ciclo de vida saludable, testable y escalable a largo plazo.
 
-[![Disponible en Play Store](https://img.shields.io/badge/Google%20Play-Próximamente-green?style=for-the-badge&logo=google-play&logoColor=white)](https://play.google.com/store)
-
-</div>
-
----
-
-## 📖 Sobre el Proyecto
-
-**MatchDay** es una plataforma integral diseñada para profesionalizar la experiencia del fútbol amateur. Más que una app de partidos, es un ecosistema de competición donde los capitanes pueden gestionar equipos, los jugadores pueden descubrir retos y las ligas pueden escalar su visibilidad.
-
-Este proyecto ha sido desarrollado bajo los más altos estándares de ingeniería de software, implementando una arquitectura desacoplada y un sistema de diseño "Premium High-Fidelity" para garantizar una experiencia de usuario fluida y libre de parpadeos (*flicker-free*).
-
----
-
-## 🏛️ Ingeniería de Software: Arquitectura de Excelencia
-
-El núcleo de MatchDay se basa en **Clean Architecture**, dividiendo la aplicación en cuatro capas concéntricas para asegurar independencia tecnológica, facilidad de prueba y escalabilidad masiva.
+### ¿Por qué esta separación?
+1.  **Aislamiento del Framework:** Flutter es tratado puramente como una herramienta de UI. La lógica de negocio (`Domain`) es agnóstica a Flutter. Esto facilita enormemente el mantenimiento y las pruebas unitarias.
+2.  **Manejo de Errores Tipado:** Gracias a la Programación Funcional, evitamos los bloques `try-catch` dispersos. El compilador nos obliga a manejar explícitamente los casos de éxito y de fallo.
+3.  **Desacoplamiento:** Los cambios en una API o en la base de datos no afectan a la UI ni a la lógica core.
 
 ### Desglose de Capas
 
-#### 1. 🎯 Domain (Dominio)
-El corazón inmutable del negocio. Contiene las reglas que definen MatchDay independientemente de la tecnología.
-*   **Entities:** Modelos puros que utilizan `Equatable` para comparaciones precisas por valor.
-*   **Repositories (Interfaces):** Definición de contratos que la infraestructura debe obedecer (Inversión de Dependencias).
+#### 1. Domain (Dominio) - *El Corazón Inmutable*
+Aquí residen las reglas absolutas del negocio de MatchDay.
+*   **`entities/`**: Modelos puros que utilizan `Equatable` para garantizar integridad por valor (ej. `MatchEntity`).
+*   **`repositories/` (Interfaces)**: Definición de contratos bajo el **Principio de Inversión de Dependencias (DIP)**. El dominio dicta las reglas, y las capas externas deben cumplirlas.
 
-#### 2. 🏗️ Application (Aplicación)
-El cerebro operativo que orquestra los casos de uso.
-*   **Use Cases:** Clases de responsabilidad única (SRP) que ejecutan acciones como `JoinMatch` o `CreateTeam`. Utilizan el patrón funcional `Either<Failure, T>` para un manejo de errores robusto y tipado.
+#### 2. Application (Aplicación) - *El Orquestador*
+La lógica transaccional de la app.
+*   **`usecases/`**: Encapsulan acciones atómicas (Single Responsibility Principle). Ejemplo: `AcceptEncounterUseCase`. Retornan un `Either<Failure, Type>` forzando un manejo de errores determinista.
 
-#### 3. 🔌 Infrastructure (Infraestructura)
-El puente con el mundo exterior.
-*   **Data Sources:** Comunicación cruda mediante `Dio` (HTTP) y `Firebase Admin`.
-*   **Repository Impls:** Traductores que convierten datos externos (JSON) en verdades de dominio, protegiendo a la app de cambios en la API.
+#### 3. Infrastructure (Infraestructura) - *El Mundo Exterior*
+Capa técnica que lidia con HTTP, Firebase y Bases de Datos.
+*   **`datasources/`**: Comunicación cruda (API con Dio, Firebase).
+*   **`repositories/` (Implementación)**: Actúan como traductores. Toman los JSONs de la API y los convierten en Entidades del Dominio, protegiendo a la app de los detalles de implementación del backend.
 
-#### 4. 🎨 Presentation (Presentación)
-La capa visual regida por el patrón **BLoC (Business Logic Component)**.
-*   **State Management:** Separación total de la lógica y la interfaz. La UI es una función pasiva del estado.
-*   **Full Persistencia:** Implementación de cachés locales para evitar parpadeos durante las actualizaciones en segundo plano.
-
----
-
-## 🛠️ Stack Tecnológico de Élite
-
-*   **UI & Motion:** `flutter_animate`, `shimmer`, `lottie` y `google_fonts` para una estética vibrante y moderna.
-*   **Networking:** `Dio` con interceptores personalizados para gestión de Tokens JWT y logs en tiempo real.
-*   **Geolocalización:** Integración avanzada con `google_maps_flutter` para el registro y búsqueda de canchas.
-*   **Cloud Services:** `firebase_core`, `firebase_storage` (para multimedia) y `firebase_messaging` (notificaciones push).
-*   **Local Storage:** `flutter_secure_storage` para la protección de credenciales sensibles.
+#### 4. Presentation (Presentación) - *La Interfaz Visual*
+Gobernada por el patrón **BLoC (Business Logic Component)**.
+*   La UI es **totalmente reactiva y pasiva**. Solo escucha estados del BLoC (`Loading`, `Loaded`, `Error`) y reacciona visualmente. No toma decisiones de negocio.
+*   Uso de `GlobalKey<FormState>` para validaciones robustas de entrada en tiempo real.
 
 ---
 
-## 💎 Características "Premium" Destacadas
+## 🛠️ Stack Tecnológico
 
-### 🏆 Leaderboard Dinámico
-Un sistema de rankings en tiempo real con un podio visualmente impactante, efectos de glassmorphism y transiciones fluidas.
+Selección de herramientas de nivel empresarial (definidas en `pubspec.yaml`):
 
-### ⚡ Skeleton Loading (Shimmer)
-Adiós a los spinners genéricos. MatchDay utiliza esqueletos de alta fidelidad que imitan la estructura final del contenido, eliminando el "layout shift" y mejorando la percepción de velocidad.
+### Arquitectura & Estado
+* **`flutter_bloc`**: Gestión de estado reactiva basada en eventos.
+* **`get_it` & `injectable`**: Inyección de dependencias escalable y centralizada (Service Locator), facilitando los Mocks en tests.
+* **`dartz` / `fpdart`**: Programación Funcional (`Either<Failure, Success>`).
 
-### 🗺️ Registro de Canchas con Maps
-Integración directa con el mapa para localizar y añadir nuevos centros deportivos con precisión de coordenadas.
+### Conectividad & Datos
+*   **`dio`**: Cliente HTTP robusto con **Interceptores** para inyectar tokens JWT en cada petición y manejar deslogueos automáticos ante errores 401.
+*   **`firebase_core` & `firebase_messaging`**: Infraestructura para notificaciones push transaccionales en tiempo real (ej. confirmaciones de pago).
+*   **`google_maps_flutter`**: Integración cartográfica para el catálogo de canchas.
 
-### 💸 Gestión de Pagos (Wallet)
-Módulo dedicado para que los capitanes validen comprobantes de pago y gestionen las finanzas de cada encuentro sin salir de la app.
+### Diseño & Motion (UI Premium)
+*   **`flutter_animate`**: Coreografía de animaciones fluidas (fade, slide, scale) sin boilerplate.
+*   **`shimmer`**: Esqueletos de carga (*Skeleton Loading*) de alta fidelidad que eliminan el "Layout Shift" y mejoran la percepción de velocidad.
 
 ---
 
-## 🚀 Guía de Inicio
+## 🧩 Patrones de Diseño Aplicados
+
+### Chain of Responsibility (Manejador de Partidos)
+Para manejar la compleja máquina de estados de un partido (`publicada`, `negociando`, `pendiente_pago`, `confirmada`, `completada`), implementamos el patrón de **Cadena de Responsabilidad**. El frontend utiliza un `MatchActionHandler` que delega las transiciones y validaciones según el rol (Capitán Organizador, Capitán Rival, Jugador), eliminando por completo los anti-patrones de múltiples `if/else` en los Widgets.
+
+### Formularios Centralizados
+Validaciones asíncronas de campos de texto integradas en el framework nativo. Cada input retroalimenta visualmente su estado, protegiendo a la capa de Aplicación de "Garbage Data".
+
+---
+
+## 📂 Estructura del Proyecto
+
+El proyecto se divide modularmente por características funcionales de negocio bajo el patrón **Feature-First**:
+
+```text
+lib/features/
+├── auth/            # 🔐 Identidad (Login, Register, Validaciones)
+├── catalogs/        # 🏟️ Catálogos y Canchas (Google Maps)
+├── main_hub/        # 🧭 Orquestador de Navegación Principal (BottomBar)
+├── matches/         # ⚽ Núcleo de Partidos (ActionHandlers, Resultados, Retos)
+├── notifications/   # 🔔 Bandeja de Notificaciones y alertas
+├── payments/        # 💸 Finanzas (Cuotas dinámicas, subida de comprobantes)
+├── profile/         # 👤 Perfil y Settings (Tema Claro/Oscuro dinámico)
+├── rankings/        # 📈 Tablas de posiciones
+└── teams/           # 🛡️ Gestión de Equipos (Membresías y Capitanía)
+```
+
+Dentro de cada feature, la estructura Clean Architecture se mantiene impecable:
+```text
+lib/features/matches/
+├── domain/                  # Entidades (MatchEntity) e Interfaces de Repo
+├── application/             # Casos de uso (AcceptMatchUseCase)
+├── infrastructure/          # Datasources y RepositoryImpl (HTTP, JSON)
+└── presentation/            # UI (MatchDetailsPage), Widgets modulares y BLoC
+```
+
+---
+
+## 🚀 Guía de Inicio Rápido
 
 ### Prerrequisitos
-*   Flutter SDK (^3.11.5)
-*   Dart SDK (^3.x)
-*   Key de Google Maps API configurada en Android/iOS.
+* **Flutter SDK** (^3.19.0)
+* **IDE**: VSCode o Android Studio.
+* Archivo `.env` configurado (API Keys de Google Maps).
 
 ### Instalación
 
-1.  **Clonar y configurar:**
+1.  **Clonar el repositorio:**
     ```bash
     git clone https://github.com/MatchDay-UCAB/matchday_app.git
     cd matchday_app
     ```
 
-2.  **Obtener dependencias:**
+2.  **Instalar dependencias:**
     ```bash
     flutter pub get
     ```
 
-3.  **Generación de código:**
-    MatchDay utiliza generadores para DI y serialización:
+3.  **Generación de Código (Fundamental):**
+    Utilizamos generadores para Inyección de Dependencias y Rutas.
     ```bash
     flutter pub run build_runner build --delete-conflicting-outputs
     ```
@@ -112,10 +134,9 @@ Módulo dedicado para que los capitanes validen comprobantes de pago y gestionen
     flutter run
     ```
 
----
-
-<div align="center">
-  <sub>Desarrollado como Pasante de <b>TecnoRed @ UCAB</b> - 2026</sub>
-  <br>
-  <small>Ingeniería de Software de Alto Impacto</small>
-</div>
+<br>
+<hr>
+<p align="center">
+  <sub>Desarrollado como Pasante de <b>TecnoRed @ UCAB</b> - 2026</sub><br>
+  <small>Ingeniería de Software Móvil de Alto Impacto</small>
+</p>

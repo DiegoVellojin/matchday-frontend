@@ -18,6 +18,7 @@ class AddCourtPage extends StatefulWidget {
 }
 
 class _AddCourtPageState extends State<AddCourtPage> {
+  final _formKey = GlobalKey<FormState>();
   final Completer<GoogleMapController> _controller = Completer();
   final TextEditingController _searchController = TextEditingController();
   final TextEditingController _nameController = TextEditingController();
@@ -191,50 +192,60 @@ class _AddCourtPageState extends State<AddCourtPage> {
                     borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
                     boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 10)],
                   ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      TextField(
-                        controller: _nameController,
-                        decoration: InputDecoration(
-                          labelText: 'Nombre de la Cancha',
-                          labelStyle: const TextStyle(color: AppColors.primary),
-                          filled: true,
-                          fillColor: isDark ? const Color(0xFF252525) : Colors.grey[100],
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide.none,
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        TextFormField(
+                          controller: _nameController,
+                          style: TextStyle(color: isDark ? Colors.white : Colors.black),
+                          decoration: InputDecoration(
+                            labelText: 'Nombre de la Cancha',
+                            labelStyle: const TextStyle(color: AppColors.primary),
+                            filled: true,
+                            fillColor: isDark ? const Color(0xFF252525) : Colors.grey[100],
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide.none,
+                            ),
+                            errorStyle: const TextStyle(color: AppColors.error),
                           ),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: () {
-                            if (_nameController.text.trim().isEmpty) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Debes asignarle un nombre a la cancha')),
-                              );
-                              return;
+                          validator: (value) {
+                            if (value == null || value.trim().isEmpty) {
+                              return 'Debes asignarle un nombre a la cancha';
                             }
-                            context.read<AddCourtBloc>().add(ConfirmCourtEvent(
-                              name: _nameController.text.trim(),
-                              address: state.selectedAddress,
-                              position: state.selectedPosition!,
-                              regionId: widget.regionId,
-                            ));
+                            if (value.trim().length < 3) {
+                              return 'El nombre es muy corto';
+                            }
+                            return null;
                           },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primary,
-                            foregroundColor: Colors.black,
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                          ),
-                          child: const Text('Confirmar Cancha', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: 16),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: () {
+                              if (_formKey.currentState?.validate() ?? false) {
+                                context.read<AddCourtBloc>().add(ConfirmCourtEvent(
+                                  name: _nameController.text.trim(),
+                                  address: state.selectedAddress,
+                                  position: state.selectedPosition!,
+                                  regionId: widget.regionId,
+                                ));
+                              }
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.primary,
+                              foregroundColor: Colors.black,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            ),
+                            child: const Text('Confirmar Cancha', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 )
               : const SizedBox.shrink(),

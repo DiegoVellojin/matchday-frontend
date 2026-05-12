@@ -20,7 +20,7 @@ import '../../../payments/presentation/bloc/payments_event.dart';
 import '../../../payments/presentation/bloc/payments_state.dart';
 import '../../../payments/domain/entities/payment_entity.dart';
 
-enum TeamFilter { all, player, organizer }
+enum TeamFilter { all, player, capitan }
 
 /// Pantalla que muestra y administra los equipos asociados al usuario.
 class MyTeamsPage extends StatefulWidget {
@@ -81,7 +81,7 @@ class _MyTeamsPageState extends State<MyTeamsPage> with AutomaticKeepAliveClient
                     options: const [
                       FilterOption(label: 'Todos', value: TeamFilter.all),
                       FilterOption(label: 'Como Jugador', value: TeamFilter.player),
-                      FilterOption(label: 'Como Organizador', value: TeamFilter.organizer),
+                      FilterOption(label: 'Como Capitán', value: TeamFilter.capitan),
                     ],
                     selectedValue: _activeFilter,
                     onSelected: (val) {
@@ -185,7 +185,7 @@ class _MyTeamsPageState extends State<MyTeamsPage> with AutomaticKeepAliveClient
         return teams;
       case TeamFilter.player:
         return teams.where((t) => t.captainId != currentUserId).toList();
-      case TeamFilter.organizer:
+      case TeamFilter.capitan:
         return teams.where((t) => t.captainId == currentUserId).toList();
     }
   }
@@ -288,7 +288,7 @@ class _MyTeamsPageState extends State<MyTeamsPage> with AutomaticKeepAliveClient
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
-                            isCaptain ? 'Organizador' : 'Jugador',
+                            isCaptain ? 'Capitán' : 'Jugador',
                             style: TextStyle(
                               color: isCaptain
                                   ? AppColors.primary

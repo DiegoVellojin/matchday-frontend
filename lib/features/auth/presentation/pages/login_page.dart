@@ -35,6 +35,7 @@ class _LoginView extends StatefulWidget {
 }
 
 class _LoginViewState extends State<_LoginView> {
+  final _formKey = GlobalKey<FormState>();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
@@ -43,6 +44,17 @@ class _LoginViewState extends State<_LoginView> {
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  void _onLoginPressed() {
+    if (_formKey.currentState?.validate() ?? false) {
+      context.read<AuthBloc>().add(
+            SignInWithEmailButtonPressed(
+              email: _emailController.text.trim(),
+              password: _passwordController.text,
+            ),
+          );
+    }
   }
 
   @override
@@ -90,115 +102,129 @@ class _LoginViewState extends State<_LoginView> {
                       horizontal: 24.0,
                       vertical: 8.0,
                     ),
-                    child: Column(
-                      children: [
-                        Container(
-                          width: 80,
-                          height: 80,
-                          decoration: BoxDecoration(
-                            color: AppColors.primary,
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: const Icon(
-                            Icons.emoji_events,
-                            size: 48,
-                            color: Colors.black,
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'MatchDay',
-                          style: TextStyle(
-                            fontSize: 32,
-                            fontWeight: FontWeight.bold,
-                            color: colorScheme.onSurface,
-                          ),
-                        ),
-                        const SizedBox(height: 48),
-
-                        CustomTextField(
-                          label: 'Correo Electrónico',
-                          hint: 'Ingresa tu correo',
-                          icon: Icons.mail_outline,
-                          controller: _emailController,
-                        ),
-                        const SizedBox(height: 20),
-                        CustomTextField(
-                          label: 'Contraseña',
-                          hint: 'Ingresa tu contraseña',
-                          icon: Icons.lock_outline,
-                          isPassword: true,
-                          controller: _passwordController,
-                          onForgotPasswordTap: () =>
-                              context.push('/recuperar-contrasena'),
-                        ),
-                        const SizedBox(height: 24),
-
-                        SizedBox(
-                          width: double.infinity,
-                          height: 56,
-                          child: ElevatedButton(
-                            onPressed: isLoading
-                                ? null
-                                : () {
-                                    context.read<AuthBloc>().add(
-                                      SignInWithEmailButtonPressed(
-                                        email: _emailController.text,
-                                        password: _passwordController.text,
-                                      ),
-                                    );
-                                  },
-                            child: isLoading
-                                ? const SizedBox(
-                                    width: 24,
-                                    height: 24,
-                                    child: CircularProgressIndicator(
-                                      color: Colors.black,
-                                      strokeWidth: 2,
-                                    ),
-                                  )
-                                : const Text(
-                                    'Iniciar Sesión',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                          ),
-                        ),
-
-                        _buildDivider(),
-
-                        GoogleSignInButton(
-                          isLoading: isLoading,
-                          onPressed: () => context.read<AuthBloc>().add(
-                            SignInWithGoogleButtonPressed(),
-                          ),
-                        ),
-
-                        const SizedBox(height: 24),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Text(
-                              '¿No tienes cuenta? ',
-                              style: TextStyle(color: AppColors.textMuted),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        children: [
+                          Container(
+                            width: 80,
+                            height: 80,
+                            decoration: BoxDecoration(
+                              color: AppColors.primary,
+                              borderRadius: BorderRadius.circular(16),
                             ),
-                            GestureDetector(
-                              onTap: isLoading
-                                  ? null
-                                  : () => context.push('/crear-cuenta'),
-                              child: const Text(
-                                'Regístrate',
-                                style: TextStyle(
-                                  color: AppColors.primary,
-                                  fontWeight: FontWeight.bold,
+                            child: const Icon(
+                              Icons.emoji_events,
+                              size: 48,
+                              color: Colors.black,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'MatchDay',
+                            style: TextStyle(
+                              fontSize: 32,
+                              fontWeight: FontWeight.bold,
+                              color: colorScheme.onSurface,
+                            ),
+                          ),
+                          const SizedBox(height: 48),
+
+                          CustomTextField(
+                            label: 'Correo Electrónico',
+                            hint: 'Ingresa tu correo',
+                            icon: Icons.mail_outline,
+                            controller: _emailController,
+                            keyboardType: TextInputType.emailAddress,
+                            textInputAction: TextInputAction.next,
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'El correo es obligatorio';
+                              }
+                              final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+                              if (!emailRegex.hasMatch(value)) {
+                                return 'Ingresa un correo válido';
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 20),
+                          CustomTextField(
+                            label: 'Contraseña',
+                            hint: 'Ingresa tu contraseña',
+                            icon: Icons.lock_outline,
+                            isPassword: true,
+                            controller: _passwordController,
+                            textInputAction: TextInputAction.done,
+                            onFieldSubmitted: (_) => _onLoginPressed(),
+                            onForgotPasswordTap: () =>
+                                context.push('/recuperar-contrasena'),
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'La contraseña es obligatoria';
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 24),
+
+                          SizedBox(
+                            width: double.infinity,
+                            height: 56,
+                            child: ElevatedButton(
+                              onPressed: isLoading ? null : _onLoginPressed,
+                              child: isLoading
+                                  ? const SizedBox(
+                                      width: 24,
+                                      height: 24,
+                                      child: CircularProgressIndicator(
+                                        color: Colors.black,
+                                        strokeWidth: 2,
+                                      ),
+                                    )
+                                  : const Text(
+                                      'Iniciar Sesión',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                            ),
+                          ),
+
+                          _buildDivider(),
+
+                          GoogleSignInButton(
+                            isLoading: isLoading,
+                            onPressed: () => context.read<AuthBloc>().add(
+                              SignInWithGoogleButtonPressed(),
+                            ),
+                          ),
+
+                          const SizedBox(height: 24),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Text(
+                                '¿No tienes cuenta? ',
+                                style: TextStyle(color: AppColors.textMuted),
+                              ),
+                              GestureDetector(
+                                onTap: isLoading
+                                    ? null
+                                    : () => context.push('/crear-cuenta'),
+                                child: const Text(
+                                  'Regístrate',
+                                  style: TextStyle(
+                                    color: AppColors.primary,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                               ),
-                            ),
-                          ],
-                        ),
-                      ],
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),

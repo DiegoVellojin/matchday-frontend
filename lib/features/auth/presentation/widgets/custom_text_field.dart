@@ -8,6 +8,10 @@ class CustomTextField extends StatelessWidget {
   final bool isPassword;
   final TextEditingController? controller;
   final VoidCallback? onForgotPasswordTap;
+  final String? Function(String?)? validator;
+  final TextInputType? keyboardType;
+  final TextInputAction? textInputAction;
+  final ValueChanged<String>? onFieldSubmitted;
 
   const CustomTextField({
     super.key,
@@ -17,6 +21,10 @@ class CustomTextField extends StatelessWidget {
     this.isPassword = false,
     this.controller,
     this.onForgotPasswordTap,
+    this.validator,
+    this.keyboardType,
+    this.textInputAction,
+    this.onFieldSubmitted,
   });
 
   @override
@@ -55,9 +63,13 @@ class CustomTextField extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 8),
-        TextField(
+        TextFormField(
           controller: controller,
           obscureText: isPassword,
+          validator: validator,
+          keyboardType: keyboardType,
+          textInputAction: textInputAction,
+          onFieldSubmitted: onFieldSubmitted,
           // El color del texto que escribe el usuario se adapta al modo
           style: TextStyle(color: colorScheme.onSurface),
           decoration: InputDecoration(
@@ -84,6 +96,15 @@ class CustomTextField extends StatelessWidget {
               // El borde activo siempre es de tu verde de marca
               borderSide: const BorderSide(color: AppColors.primary, width: 2),
             ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: AppColors.error),
+            ),
+            focusedErrorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: AppColors.error, width: 2),
+            ),
+            errorStyle: const TextStyle(color: AppColors.error),
           ),
         ),
       ],

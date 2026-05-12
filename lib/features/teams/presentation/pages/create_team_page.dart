@@ -25,6 +25,7 @@ class CreateTeamPage extends StatefulWidget {
 }
 
 class _CreateTeamPageState extends State<CreateTeamPage> {
+  final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _maxMembersController = TextEditingController(text: '11');
@@ -115,13 +116,7 @@ class _CreateTeamPageState extends State<CreateTeamPage> {
 
 
   Future<void> _createTeam() async {
-    if (_nameController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Por favor, ingresa el nombre del equipo.'),
-          backgroundColor: AppColors.error,
-        ),
-      );
+    if (!(_formKey.currentState?.validate() ?? false)) {
       return;
     }
 
@@ -222,51 +217,70 @@ class _CreateTeamPageState extends State<CreateTeamPage> {
             ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
             : SingleChildScrollView(
               padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  MatchDayImagePicker(
-                    imageFile: _imageFile,
-                    onPickImage: _pickImage,
-                    placeholder: Icons.camera_alt_outlined,
-                    label: 'Subir Logo del Equipo',
-                    size: 120,
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  // Nombre del Equipo
-                  Text(
-                    'Nombre del Equipo',
-                    style: TextStyle(
-                      color: colorScheme.onSurfaceVariant,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    MatchDayImagePicker(
+                      imageFile: _imageFile,
+                      onPickImage: _pickImage,
+                      placeholder: Icons.camera_alt_outlined,
+                      label: 'Subir Logo del Equipo',
+                      size: 120,
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  TextField(
-                    controller: _nameController,
-                    style: TextStyle(color: colorScheme.onSurface),
-                    decoration: InputDecoration(
-                      hintText: 'Ingresa el nombre del equipo',
-                      hintStyle: TextStyle(color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5)),
-                      filled: true,
-                      fillColor: colorScheme.surface,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: colorScheme.outlineVariant),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: colorScheme.outlineVariant),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: AppColors.primary),
+
+                    const SizedBox(height: 24),
+
+                    // Nombre del Equipo
+                    Text(
+                      'Nombre del Equipo',
+                      style: TextStyle(
+                        color: colorScheme.onSurfaceVariant,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
-                  ),
+                    const SizedBox(height: 8),
+                    TextFormField(
+                      controller: _nameController,
+                      style: TextStyle(color: colorScheme.onSurface),
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return 'El nombre es obligatorio';
+                        }
+                        if (value.trim().length < 4) {
+                          return 'Mínimo 4 caracteres';
+                        }
+                        return null;
+                      },
+                      decoration: InputDecoration(
+                        hintText: 'Ingresa el nombre del equipo',
+                        hintStyle: TextStyle(color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5)),
+                        filled: true,
+                        fillColor: colorScheme.surface,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: colorScheme.outlineVariant),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: colorScheme.outlineVariant),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: AppColors.primary),
+                        ),
+                        errorBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: AppColors.error),
+                        ),
+                        focusedErrorBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: AppColors.error, width: 2),
+                        ),
+                      ),
+                    ),
                   const SizedBox(height: 24),
 
                   // Seleccionar Deporte
@@ -479,6 +493,7 @@ class _CreateTeamPageState extends State<CreateTeamPage> {
                 ],
               ),
             ),
+          ),
       bottomSheet: Container(
         color: colorScheme.surface,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),

@@ -710,7 +710,7 @@ class _MatchesPageState extends State<MatchesPage> with AutomaticKeepAliveClient
                 const SizedBox(height: 8),
                 _buildInfoRow(Icons.location_on_outlined, match.nombreCancha ?? 'Ubicación no especificada', isDark),
                 const SizedBox(height: 4),
-                _buildInfoRow(Icons.person_outline, 'Organizador: ${match.nombreCapitanA ?? 'Capi'}', isDark),
+                _buildInfoRow(Icons.person_outline, 'Capitán: ${match.nombreCapitanA ?? 'Capi'}', isDark),
                 const SizedBox(height: 16),
                 Builder(
                   builder: (ctx) {
