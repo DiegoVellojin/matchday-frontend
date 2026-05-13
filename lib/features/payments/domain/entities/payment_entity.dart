@@ -27,4 +27,7 @@ class PaymentEntity {
     this.telefono,
     this.moneda,
   });
+
+  /// Obtiene el símbolo de moneda según el campo moneda.
+  String get currentSymbol => moneda == 'EUR' ? '€' : '\$';
 }
