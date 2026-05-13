@@ -24,7 +24,7 @@ class MatchDayShimmer extends StatelessWidget {
     super.key,
     this.width = double.infinity,
     required this.height,
-    double borderRadius = 12,
+    double borderRadius = 16,
   }) : shapeBorder = RoundedRectangleBorder(
           borderRadius: BorderRadius.all(Radius.circular(borderRadius)),
         );
@@ -34,8 +34,8 @@ class MatchDayShimmer extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     
     return Shimmer.fromColors(
-      baseColor: isDark ? Colors.grey[900]! : Colors.grey[300]!,
-      highlightColor: isDark ? Colors.grey[800]! : Colors.grey[100]!,
+      baseColor: isDark ? const Color(0xFF1F2937) : Colors.grey[300]!,
+      highlightColor: isDark ? const Color(0xFF374151) : Colors.grey[100]!,
       period: const Duration(milliseconds: 1500),
       child: Container(
         width: width,

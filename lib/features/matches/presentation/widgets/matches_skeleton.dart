@@ -6,34 +6,69 @@ class MatchesSkeleton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardColor = isDark ? const Color(0xFF1F2937) : Colors.white;
+
     return ListView.separated(
-      padding: const EdgeInsets.symmetric(vertical: 8),
+      physics: const NeverScrollableScrollPhysics(),
+      padding: const EdgeInsets.only(top: 12, bottom: 24),
       itemCount: 4,
       separatorBuilder: (_, _) => const SizedBox(height: 16),
       itemBuilder: (_, _) => Container(
-        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          border: Border.all(color: Colors.grey.withValues(alpha: 0.1)),
-          borderRadius: BorderRadius.circular(16),
+          color: cardColor,
+          borderRadius: BorderRadius.circular(28),
+          border: Border.all(
+            color: isDark
+                ? Colors.white.withValues(alpha: 0.05)
+                : Colors.black.withValues(alpha: 0.05),
+          ),
         ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Column(
           children: [
-            const MatchDayShimmer.circular(size: 56),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
                 children: [
-                  MatchDayShimmer.rounded(height: 20, width: 180),
-                  const SizedBox(height: 8),
-                  MatchDayShimmer.rounded(height: 14, width: 100),
-                  const SizedBox(height: 16),
-                  MatchDayShimmer.rounded(height: 14, width: 200),
-                  const SizedBox(height: 8),
-                  MatchDayShimmer.rounded(height: 14, width: 150),
-                  const SizedBox(height: 16),
-                  MatchDayShimmer.rounded(height: 40, borderRadius: 12),
+                  const MatchDayShimmer.circular(size: 50),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        MatchDayShimmer.rounded(height: 20, width: 140),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            MatchDayShimmer.rounded(height: 16, width: 60),
+                            const SizedBox(width: 8),
+                            MatchDayShimmer.rounded(height: 14, width: 80),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  MatchDayShimmer.rounded(height: 24, width: 70),
+                ],
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: isDark
+                    ? Colors.black.withValues(alpha: 0.2)
+                    : Colors.grey[50],
+                borderRadius: const BorderRadius.vertical(
+                  bottom: Radius.circular(28),
+                ),
+              ),
+              child: Row(
+                children: [
+                  MatchDayShimmer.rounded(height: 14, width: 80),
+                  const SizedBox(width: 16),
+                  MatchDayShimmer.rounded(height: 14, width: 60),
+                  const Spacer(),
+                  MatchDayShimmer.rounded(height: 36, width: 100),
                 ],
               ),
             ),

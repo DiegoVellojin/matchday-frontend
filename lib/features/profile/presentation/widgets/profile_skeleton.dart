@@ -7,55 +7,66 @@ class ProfileSkeleton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.all(20.0),
       child: Column(
         children: [
           // Header Skeleton
-          MatchDayShimmer.rounded(
-            height: 140,
-            borderRadius: 24,
-          ),
-          const SizedBox(height: 24),
-          
+          MatchDayShimmer.rounded(height: 160, borderRadius: 32),
+          const SizedBox(height: 32),
+
           // Stats Grid Skeleton
-          GridView.count(
-            crossAxisCount: 3,
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            mainAxisSpacing: 12,
-            crossAxisSpacing: 12,
-            childAspectRatio: 0.85,
-            children: List.generate(3, (index) => MatchDayShimmer.rounded(
-              height: 100,
-              borderRadius: 16,
-            )),
+          Row(
+            children: List.generate(
+              3,
+              (index) => Expanded(
+                child: Padding(
+                  padding: EdgeInsets.only(
+                    left: index == 0 ? 0 : 6,
+                    right: index == 2 ? 0 : 6,
+                  ),
+                  child: MatchDayShimmer.rounded(height: 110, borderRadius: 24),
+                ),
+              ),
+            ),
           ),
-          const SizedBox(height: 24),
-          
+          const SizedBox(height: 32),
+
           // Teams Section Skeleton
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              MatchDayShimmer.rounded(height: 24, width: 150),
+              MatchDayShimmer.rounded(height: 12, width: 150),
               const SizedBox(height: 16),
               Row(
-                children: List.generate(3, (index) => Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.only(right: 8.0),
-                    child: MatchDayShimmer.rounded(height: 120, borderRadius: 12),
+                children: List.generate(
+                  2,
+                  (index) => Expanded(
+                    child: Padding(
+                      padding: EdgeInsets.only(
+                        left: index == 0 ? 0 : 6,
+                        right: index == 1 ? 0 : 6,
+                      ),
+                      child: MatchDayShimmer.rounded(
+                        height: 140,
+                        borderRadius: 28,
+                      ),
+                    ),
                   ),
-                )),
+                ),
               ),
             ],
           ),
-          const SizedBox(height: 24),
-          
+          const SizedBox(height: 32),
+
           // Actions Skeleton
           Column(
-            children: List.generate(2, (index) => Padding(
-              padding: const EdgeInsets.only(bottom: 12.0),
-              child: MatchDayShimmer.rounded(height: 55, borderRadius: 12),
-            )),
+            children: List.generate(
+              3,
+              (index) => Padding(
+                padding: const EdgeInsets.only(bottom: 12.0),
+                child: MatchDayShimmer.rounded(height: 60, borderRadius: 20),
+              ),
+            ),
           ),
         ],
       ),

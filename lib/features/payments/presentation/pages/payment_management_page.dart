@@ -8,6 +8,7 @@ import '../../../../core/widgets/matchday_loading_bar.dart';
 import '../../domain/entities/payment_entity.dart';
 import '../bloc/payments_bloc.dart';
 import '../bloc/payments_state.dart';
+import '../bloc/payments_event.dart';
 
 enum PaymentFilter { all, pending, paid }
 
@@ -39,69 +40,86 @@ class _PaymentManagementPageState extends State<PaymentManagementPage> {
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
-      body: CustomScrollView(
-        physics: const BouncingScrollPhysics(),
-        slivers: [
-          _buildSliverAppBar(colorScheme, isDark),
-          SliverToBoxAdapter(
-            child: BlocBuilder<PaymentsBloc, PaymentsState>(
-              builder: (context, state) {
-                return MatchDayLoadingBar(isLoading: state is PaymentsLoading);
-              },
-            ),
+      appBar: AppBar(
+        backgroundColor: colorScheme.surface,
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: colorScheme.onSurface),
+          onPressed: () => context.pop(),
+        ),
+        title: Text(
+          'Gestión de Pagos',
+          style: TextStyle(
+            color: colorScheme.onSurface,
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
           ),
-          SliverPadding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-            sliver: SliverToBoxAdapter(
-              child: BlocConsumer<PaymentsBloc, PaymentsState>(
-                listener: (context, state) {
-                  if (state is PaymentsError) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(state.message), backgroundColor: Colors.redAccent),
-                    );
-                  }
-                  if (state is PaymentsLoaded) {
-                    setState(() => _cachedPayments = state.payments);
-                  }
-                },
-                builder: (context, state) {
-                  final paymentsToShow = state is PaymentsLoaded ? state.payments : _cachedPayments;
-                  final payments = _getFilteredPayments(paymentsToShow);
-                  final totalDebt = _calculateTotalDebt(paymentsToShow);
-                  
-                  final String debtSymbol = paymentsToShow.any((p) => !p.isPaid) 
-                      ? paymentsToShow.firstWhere((p) => !p.isPaid).currentSymbol 
-                      : '\$';
+        ),
+      ),
+      body: Column(
+        children: [
+          BlocBuilder<PaymentsBloc, PaymentsState>(
+            builder: (context, state) {
+              return MatchDayLoadingBar(isLoading: state is PaymentsLoading);
+            },
+          ),
+          Expanded(
+            child: RefreshIndicator(
+              onRefresh: () async {
+                context.read<PaymentsBloc>().add(LoadMyPaymentsEvent());
+              },
+              color: AppColors.primary,
+              child: ListView(
+                physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+                children: [
+                  BlocConsumer<PaymentsBloc, PaymentsState>(
+                    listener: (context, state) {
+                      if (state is PaymentsError) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(state.message), backgroundColor: Colors.redAccent),
+                        );
+                      }
+                      if (state is PaymentsLoaded) {
+                        setState(() => _cachedPayments = state.payments);
+                      }
+                    },
+                    builder: (context, state) {
+                      final paymentsToShow = state is PaymentsLoaded ? state.payments : _cachedPayments;
+                      final payments = _getFilteredPayments(paymentsToShow);
+                      final totals = _calculateTotalsByCurrency(paymentsToShow);
 
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildPremiumSummaryCard(totalDebt, debtSymbol),
-                      const SizedBox(height: 32),
-                      _buildFilters(colorScheme, isDark),
-                      const SizedBox(height: 24),
-                      if (payments.isEmpty && state is! PaymentsLoading)
-                        _buildEmptyState(isDark)
-                      else
-                        ListView.separated(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          itemCount: payments.length,
-                          separatorBuilder: (_, _) => const SizedBox(height: 16),
-                          itemBuilder: (context, index) {
-                            return _buildPremiumPaymentCard(
-                              context,
-                              payments[index],
-                              colorScheme,
-                              isDark,
-                            ).animate()
-                             .fadeIn(duration: 400.ms, delay: (index * 50).ms)
-                             .slideY(begin: 0.1, end: 0, curve: Curves.easeOutQuad);
-                          },
-                        ),
-                    ],
-                  );
-                },
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildPremiumSummaryCard(totals),
+                          const SizedBox(height: 32),
+                          _buildFilters(colorScheme, isDark),
+                          const SizedBox(height: 24),
+                          if (payments.isEmpty && state is! PaymentsLoading)
+                            _buildEmptyState(isDark)
+                          else
+                            ListView.separated(
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              itemCount: payments.length,
+                              separatorBuilder: (_, _) => const SizedBox(height: 16),
+                              itemBuilder: (context, index) {
+                                return _buildPremiumPaymentCard(
+                                  context,
+                                  payments[index],
+                                  colorScheme,
+                                  isDark,
+                                ).animate()
+                                 .fadeIn(duration: 400.ms, delay: (index * 50).ms)
+                                 .slideY(begin: 0.1, end: 0, curve: Curves.easeOutQuad);
+                              },
+                            ),
+                        ],
+                      );
+                    },
+                  ),
+                ],
               ),
             ),
           ),
@@ -110,33 +128,7 @@ class _PaymentManagementPageState extends State<PaymentManagementPage> {
     );
   }
 
-  Widget _buildSliverAppBar(ColorScheme colorScheme, bool isDark) {
-    return SliverAppBar(
-      expandedHeight: 120,
-      pinned: true,
-      backgroundColor: colorScheme.surface,
-      elevation: 0,
-      flexibleSpace: FlexibleSpaceBar(
-        titlePadding: const EdgeInsets.only(left: 56, bottom: 16),
-        centerTitle: false,
-        title: Text(
-          'Gestión de Pagos',
-          style: TextStyle(
-            color: colorScheme.onSurface,
-            fontWeight: FontWeight.w900,
-            fontSize: 20,
-            letterSpacing: -0.5,
-          ),
-        ),
-      ),
-      leading: IconButton(
-        icon: const Icon(Icons.arrow_back_ios_new, size: 20),
-        onPressed: () => context.pop(),
-      ),
-    );
-  }
-
-  Widget _buildPremiumSummaryCard(double totalDebt, String symbol) {
+  Widget _buildPremiumSummaryCard(Map<String, double> totals) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(28),
@@ -185,14 +177,18 @@ class _PaymentManagementPageState extends State<PaymentManagementPage> {
             ],
           ),
           const SizedBox(height: 8),
-          Text(
-            '$symbol${totalDebt.toStringAsFixed(2)}',
-            style: const TextStyle(
-              color: Colors.black,
-              fontSize: 44,
-              fontWeight: FontWeight.w900,
-              letterSpacing: -1,
-            ),
+          Wrap(
+            spacing: 12,
+            runSpacing: 8,
+            children: totals.entries.map((e) => Text(
+              '${e.key}${e.value.toStringAsFixed(2)}',
+              style: const TextStyle(
+                color: Colors.black,
+                fontSize: 44,
+                fontWeight: FontWeight.w900,
+                letterSpacing: -1,
+              ),
+            )).toList(),
           ),
           const SizedBox(height: 20),
           Container(
@@ -207,7 +203,7 @@ class _PaymentManagementPageState extends State<PaymentManagementPage> {
                 Icon(Icons.auto_awesome, size: 12, color: Colors.black87),
                 SizedBox(width: 6),
                 Text(
-                  'Sincronizado con el Banco Central',
+                  'Cálculo basado en montos acordados',
                   style: TextStyle(color: Colors.black87, fontSize: 10, fontWeight: FontWeight.w800),
                 ),
               ],
@@ -425,7 +421,14 @@ class _PaymentManagementPageState extends State<PaymentManagementPage> {
     }
   }
 
-  double _calculateTotalDebt(List<PaymentEntity> list) {
-    return list.where((p) => !p.isPaid).fold(0.0, (sum, item) => sum + item.monto);
+  Map<String, double> _calculateTotalsByCurrency(List<PaymentEntity> list) {
+    final Map<String, double> totals = {};
+    for (final p in list) {
+      if (!p.isPaid) {
+        final symbol = p.currentSymbol;
+        totals[symbol] = (totals[symbol] ?? 0.0) + p.monto;
+      }
+    }
+    return totals;
   }
 }

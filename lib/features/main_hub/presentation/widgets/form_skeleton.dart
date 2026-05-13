@@ -8,23 +8,23 @@ class FormSkeleton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.all(24.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (hasImagePicker) ...[
-            Center(child: MatchDayShimmer.rounded(height: 120, width: 120, borderRadius: 60)),
-            const SizedBox(height: 24),
+            const Center(child: MatchDayShimmer.circular(size: 140)),
+            const SizedBox(height: 32),
           ],
           for (int i = 0; i < 4; i++) ...[
-            MatchDayShimmer.rounded(height: 14, width: 150),
-            const SizedBox(height: 8),
-            MatchDayShimmer.rounded(height: 56, borderRadius: 12),
+            MatchDayShimmer.rounded(height: 12, width: 120),
+            const SizedBox(height: 12),
+            MatchDayShimmer.rounded(height: 56, borderRadius: 16),
             const SizedBox(height: 24),
           ],
-          MatchDayShimmer.rounded(height: 80, borderRadius: 16),
-          const SizedBox(height: 40),
-          MatchDayShimmer.rounded(height: 56, borderRadius: 12),
+          MatchDayShimmer.rounded(height: 100, borderRadius: 24),
+          const SizedBox(height: 48),
+          MatchDayShimmer.rounded(height: 56, borderRadius: 16),
         ],
       ),
     );

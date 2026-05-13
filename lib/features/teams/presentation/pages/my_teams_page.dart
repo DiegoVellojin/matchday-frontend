@@ -12,6 +12,7 @@ import '../bloc/my_teams_bloc.dart';
 import '../bloc/my_teams_event.dart';
 import '../bloc/my_teams_state.dart';
 import '../../../../core/widgets/matchday_loading_bar.dart';
+import '../../../../core/widgets/matchday_search_bar.dart';
 import '../widgets/my_teams_skeleton.dart';
 
 import '../../../payments/presentation/bloc/payments_bloc.dart';
@@ -32,6 +33,8 @@ class _MyTeamsPageState extends State<MyTeamsPage> with AutomaticKeepAliveClient
   @override
   bool get wantKeepAlive => true;
   TeamFilter _activeFilter = TeamFilter.all;
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
   List<TeamEntity> _cachedTeams = [];
   List<PaymentEntity> _cachedPayments = [];
 
@@ -47,6 +50,18 @@ class _MyTeamsPageState extends State<MyTeamsPage> with AutomaticKeepAliveClient
     if (paymentsState is PaymentsLoaded) {
       _cachedPayments = paymentsState.payments;
     }
+
+    _searchController.addListener(() {
+      setState(() {
+        _searchQuery = _searchController.text.trim().toLowerCase();
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   @override
@@ -60,65 +75,91 @@ class _MyTeamsPageState extends State<MyTeamsPage> with AutomaticKeepAliveClient
         final int? currentUserId = profileState is ProfileLoaded ? profileState.profile.id : null;
 
         return Scaffold(
-          body: RefreshIndicator(
-            onRefresh: () async {
-              context.read<MyTeamsBloc>().add(LoadMyTeamsEvent());
-              context.read<PaymentsBloc>().add(LoadMyPaymentsEvent());
-            },
-            displacement: 100,
-            color: AppColors.primary,
-            child: CustomScrollView(
-              physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
-              slivers: [
-                _buildSliverAppBar(isDark),
-                SliverToBoxAdapter(
-                  child: Column(
-                    children: [
-                      _buildFilters(isDark),
-                      BlocBuilder<MyTeamsBloc, MyTeamsState>(
-                        builder: (context, state) {
-                          return MatchDayLoadingBar(isLoading: state is MyTeamsLoading);
-                        },
-                      ),
-                    ],
+          backgroundColor: theme.scaffoldBackgroundColor,
+          body: SafeArea(
+            child: RefreshIndicator(
+              onRefresh: () async {
+                context.read<MyTeamsBloc>().add(LoadMyTeamsEvent());
+                context.read<PaymentsBloc>().add(LoadMyPaymentsEvent());
+              },
+              color: AppColors.primary,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 16),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Mis Equipos',
+                          style: TextStyle(
+                            color: isDark ? Colors.white : Colors.black,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 20,
+                          ),
+                        ),
+                        const Icon(Icons.shield_outlined, color: AppColors.primary, size: 24),
+                      ],
+                    ),
                   ),
-                ),
-                SliverPadding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  sliver: BlocConsumer<MyTeamsBloc, MyTeamsState>(
-                    listener: (context, state) {
-                      if (state is MyTeamsError) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(state.message), backgroundColor: Colors.redAccent),
-                        );
-                      }
-                      if (state is MyTeamsLoaded) {
-                        setState(() => _cachedTeams = state.teams);
-                      }
+                  const SizedBox(height: 20),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: MatchDaySearchBar(
+                      controller: _searchController,
+                      hintText: 'Buscar mis equipos...',
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  BlocBuilder<MyTeamsBloc, MyTeamsState>(
+                    builder: (context, state) {
+                      return MatchDayLoadingBar(
+                        isLoading: state is MyTeamsLoading,
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+                      );
                     },
-                    builder: (context, myTeamsState) {
-                      return BlocConsumer<PaymentsBloc, PaymentsState>(
-                        listener: (context, state) {
-                          if (state is PaymentsLoaded) {
-                            setState(() => _cachedPayments = state.payments);
-                          }
-                        },
-                        builder: (context, paymentsState) {
-                          final teamsToShow = myTeamsState is MyTeamsLoaded ? myTeamsState.teams : _cachedTeams;
-                          final teams = _getFilteredTeams(teamsToShow, currentUserId);
-                          
-                          if (myTeamsState is MyTeamsLoading && teamsToShow.isEmpty) {
-                            return const SliverFillRemaining(child: MyTeamsSkeleton());
-                          }
+                  ),
+                  _buildFilters(isDark),
+                  Expanded(
+                    child: BlocConsumer<MyTeamsBloc, MyTeamsState>(
+                      listener: (context, state) {
+                        if (state is MyTeamsError) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text(state.message), backgroundColor: Colors.redAccent),
+                          );
+                        }
+                        if (state is MyTeamsLoaded) {
+                          setState(() => _cachedTeams = state.teams);
+                        }
+                      },
+                      builder: (context, myTeamsState) {
+                        return BlocConsumer<PaymentsBloc, PaymentsState>(
+                          listener: (context, state) {
+                            if (state is PaymentsLoaded) {
+                              setState(() => _cachedPayments = state.payments);
+                            }
+                          },
+                          builder: (context, paymentsState) {
+                            final teamsToShow = myTeamsState is MyTeamsLoaded ? myTeamsState.teams : _cachedTeams;
+                            final filteredTeams = _getFilteredAndSearchedTeams(teamsToShow, currentUserId);
+                            
+                            if (myTeamsState is MyTeamsLoading && teamsToShow.isEmpty) {
+                              return const MyTeamsSkeleton();
+                            }
 
-                          if (teams.isEmpty && myTeamsState is! MyTeamsLoading) {
-                            return SliverFillRemaining(child: _buildEmptyState(isDark));
-                          }
+                            if (filteredTeams.isEmpty && myTeamsState is! MyTeamsLoading) {
+                              return _buildEmptyState(isDark);
+                            }
 
-                          return SliverList(
-                            delegate: SliverChildBuilderDelegate(
-                              (context, index) {
-                                final team = teams[index];
+                            return ListView.separated(
+                              padding: const EdgeInsets.fromLTRB(20, 12, 20, 100),
+                              physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+                              itemCount: filteredTeams.length,
+                              separatorBuilder: (_, _) => const SizedBox(height: 16),
+                              itemBuilder: (context, index) {
+                                final team = filteredTeams[index];
                                 final isCaptain = currentUserId != null && team.captainId == currentUserId;
 
                                 PaymentEntity? teamDebt;
@@ -129,35 +170,30 @@ class _MyTeamsPageState extends State<MyTeamsPage> with AutomaticKeepAliveClient
                                   }
                                 }
 
-                                return Padding(
-                                  padding: const EdgeInsets.only(bottom: 16.0),
-                                  child: _buildPremiumTeamCard(
-                                    context,
-                                    team,
-                                    isCaptain,
-                                    teamDebt != null,
-                                    teamDebt?.monto ?? 0.0,
-                                    teamDebt?.currentSymbol ?? '\$',
-                                    isDark,
-                                  ).animate()
-                                   .fadeIn(duration: 400.ms, delay: (index * 50).ms)
-                                   .slideY(begin: 0.1, end: 0, curve: Curves.easeOutQuad),
-                                );
+                                return _buildPremiumTeamCard(
+                                  context,
+                                  team,
+                                  isCaptain,
+                                  teamDebt != null,
+                                  teamDebt?.monto ?? 0.0,
+                                  teamDebt?.currentSymbol ?? '\$',
+                                  isDark,
+                                ).animate()
+                                 .fadeIn(duration: 400.ms, delay: (index * 50).ms)
+                                 .slideY(begin: 0.1, end: 0, curve: Curves.easeOutQuad);
                               },
-                              childCount: teams.length,
-                            ),
-                          );
-                        },
-                      );
-                    },
+                            );
+                          },
+                        );
+                      },
+                    ),
                   ),
-                ),
-                const SliverToBoxAdapter(child: SizedBox(height: 100)),
-              ],
+                ],
+              ),
             ),
           ),
           floatingActionButton: FloatingActionButton.extended(
-            onPressed: () => context.push('/create-team'),
+            onPressed: () => context.push('/crear-equipo'),
             backgroundColor: AppColors.primary,
             foregroundColor: Colors.black,
             icon: const Icon(Icons.add, weight: 900),
@@ -168,60 +204,9 @@ class _MyTeamsPageState extends State<MyTeamsPage> with AutomaticKeepAliveClient
     );
   }
 
-  Widget _buildSliverAppBar(bool isDark) {
-    return SliverAppBar(
-      expandedHeight: 140,
-      collapsedHeight: 80,
-      pinned: true,
-      stretch: true,
-      backgroundColor: Colors.transparent,
-      flexibleSpace: FlexibleSpaceBar(
-        stretchModes: const [StretchMode.blurBackground, StretchMode.zoomBackground],
-        titlePadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-        centerTitle: false,
-        title: Text(
-          'Mis Equipos',
-          style: TextStyle(
-            color: isDark ? Colors.white : Colors.black,
-            fontWeight: FontWeight.w900,
-            fontSize: 28,
-            letterSpacing: -0.5,
-          ),
-        ),
-        background: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: isDark 
-                ? [Colors.black, Colors.black.withValues(alpha: 0.8)]
-                : [Colors.grey[100]!, Colors.white],
-            ),
-          ),
-        ),
-      ),
-      actions: [
-        Padding(
-          padding: const EdgeInsets.only(right: 8.0),
-          child: IconButton(
-            icon: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.1),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(Icons.search, color: AppColors.primary, size: 20),
-            ),
-            onPressed: () {},
-          ),
-        ),
-      ],
-    );
-  }
-
   Widget _buildFilters(bool isDark) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
       child: Row(
         children: [
           _buildFilterChip('Todos', TeamFilter.all, isDark),
@@ -297,7 +282,6 @@ class _MyTeamsPageState extends State<MyTeamsPage> with AutomaticKeepAliveClient
         borderRadius: BorderRadius.circular(32),
         child: Stack(
           children: [
-            // Fondo decorativo
             Positioned(
               right: -20,
               top: -20,
@@ -314,7 +298,6 @@ class _MyTeamsPageState extends State<MyTeamsPage> with AutomaticKeepAliveClient
                 children: [
                   Row(
                     children: [
-                      // Logo con diseño mejorado
                       Container(
                         padding: const EdgeInsets.all(3),
                         decoration: BoxDecoration(
@@ -344,7 +327,7 @@ class _MyTeamsPageState extends State<MyTeamsPage> with AutomaticKeepAliveClient
                           children: [
                             Text(
                               team.name,
-                              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900, letterSpacing: -0.5),
+                              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, letterSpacing: -0.5),
                             ),
                             const SizedBox(height: 6),
                             Row(
@@ -536,13 +519,24 @@ class _MyTeamsPageState extends State<MyTeamsPage> with AutomaticKeepAliveClient
     }
   }
 
-  List<TeamEntity> _getFilteredTeams(List<TeamEntity> teams, int? currentUserId) {
-    if (currentUserId == null) return teams;
-    switch (_activeFilter) {
-      case TeamFilter.all: return teams;
-      case TeamFilter.player: return teams.where((t) => t.captainId != currentUserId).toList();
-      case TeamFilter.capitan: return teams.where((t) => t.captainId == currentUserId).toList();
+  List<TeamEntity> _getFilteredAndSearchedTeams(List<TeamEntity> teams, int? currentUserId) {
+    List<TeamEntity> filtered = teams;
+    if (currentUserId != null) {
+      switch (_activeFilter) {
+        case TeamFilter.all: break;
+        case TeamFilter.player: filtered = teams.where((t) => t.captainId != currentUserId).toList(); break;
+        case TeamFilter.capitan: filtered = teams.where((t) => t.captainId == currentUserId).toList(); break;
+      }
     }
+    
+    if (_searchQuery.isNotEmpty) {
+      filtered = filtered.where((t) => 
+        t.name.toLowerCase().contains(_searchQuery) || 
+        t.sportName.toLowerCase().contains(_searchQuery)
+      ).toList();
+    }
+    
+    return filtered;
   }
 
   Widget _buildEmptyState(bool isDark) {
@@ -550,6 +544,7 @@ class _MyTeamsPageState extends State<MyTeamsPage> with AutomaticKeepAliveClient
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
+          const SizedBox(height: 60),
           Container(
             padding: const EdgeInsets.all(40),
             decoration: BoxDecoration(
@@ -559,12 +554,17 @@ class _MyTeamsPageState extends State<MyTeamsPage> with AutomaticKeepAliveClient
             child: const Icon(Icons.sports_soccer_outlined, size: 80, color: AppColors.primary),
           ).animate(onPlay: (c) => c.repeat()).shimmer(duration: 2.seconds).scale(duration: 1.seconds, begin: const Offset(1,1), end: const Offset(1.1,1.1), curve: Curves.easeInOut),
           const SizedBox(height: 32),
-          const Text('¡Aún no tienes equipo!', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900)),
+          Text(
+            _searchQuery.isNotEmpty ? 'No hay resultados' : '¡Aún no tienes equipo!',
+            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w900)
+          ),
           const SizedBox(height: 12),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 48),
             child: Text(
-              'Únete a la liga, crea tu propio equipo y comienza a organizar encuentros épicos.',
+              _searchQuery.isNotEmpty 
+                ? 'Prueba con otra búsqueda o ajusta los filtros.'
+                : 'Únete a la liga, crea tu propio equipo y comienza a organizar encuentros épicos.',
               textAlign: TextAlign.center,
               style: TextStyle(color: isDark ? Colors.grey[400] : Colors.grey[600], fontSize: 15, height: 1.5),
             ),

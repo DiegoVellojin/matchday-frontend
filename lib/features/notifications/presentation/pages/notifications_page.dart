@@ -15,12 +15,12 @@ class NotificationsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => sl<NotificationsBloc>()..add(MarkAllNotificationsAsReadEvent()),
+      create: (_) =>
+          sl<NotificationsBloc>()..add(MarkAllNotificationsAsReadEvent()),
       child: const _NotificationsView(),
     );
   }
 }
-
 
 class _NotificationsView extends StatefulWidget {
   const _NotificationsView();
@@ -34,46 +34,38 @@ class _NotificationsViewState extends State<_NotificationsView> {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: isDark ? AppColors.background : Colors.white,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: isDark ? AppColors.surface : Colors.white,
+        backgroundColor: theme.scaffoldBackgroundColor,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: colorScheme.onSurface),
+          icon: const Icon(Icons.arrow_back),
           onPressed: () => context.pop(),
         ),
-        title: Text(
+        title: const Text(
           'Notificaciones',
-          style: TextStyle(
-            color: colorScheme.onSurface,
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        shape: Border(
-          bottom: BorderSide(
-            color: isDark ? AppColors.border : Colors.grey.shade200,
-            width: 1,
-          ),
+          style: TextStyle(fontWeight: FontWeight.w900),
         ),
       ),
       body: Column(
         children: [
           BlocBuilder<NotificationsBloc, NotificationsState>(
-            builder: (context, state) {
-              return MatchDayLoadingBar(isLoading: state is NotificationsLoading);
-            },
+            builder: (context, state) =>
+                MatchDayLoadingBar(isLoading: state is NotificationsLoading),
           ),
           Expanded(
             child: BlocConsumer<NotificationsBloc, NotificationsState>(
               listener: (context, state) {
                 if (state is NotificationsError) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(state.message), backgroundColor: Colors.red),
+                    SnackBar(
+                      content: Text(state.message),
+                      backgroundColor: Colors.redAccent,
+                    ),
                   );
                 }
                 if (state is NotificationsLoaded) {
@@ -81,121 +73,30 @@ class _NotificationsViewState extends State<_NotificationsView> {
                 }
               },
               builder: (context, state) {
-                if (state is NotificationsLoading && _cachedNotifications.isEmpty) {
-                  return const Center(child: CircularProgressIndicator(color: AppColors.primary));
+                if (state is NotificationsLoading &&
+                    _cachedNotifications.isEmpty) {
+                  return const Center(
+                    child: CircularProgressIndicator(color: AppColors.primary),
+                  );
                 }
 
-                if (_cachedNotifications.isEmpty && state is! NotificationsLoading) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.notifications_none_outlined,
-                          size: 64,
-                          color: isDark ? AppColors.textHint : Colors.grey,
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'No tienes notificaciones todavía.',
-                          style: TextStyle(
-                            color: isDark ? AppColors.textMuted : Colors.grey,
-                            fontSize: 16,
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
+                if (_cachedNotifications.isEmpty &&
+                    state is! NotificationsLoading) {
+                  return _buildEmptyState(isDark);
                 }
 
                 return RefreshIndicator(
                   color: AppColors.primary,
-                  onRefresh: () async {
-                    context.read<NotificationsBloc>().add(LoadNotificationsEvent());
-                  },
+                  onRefresh: () async => context.read<NotificationsBloc>().add(
+                    LoadNotificationsEvent(),
+                  ),
                   child: ListView.separated(
                     itemCount: _cachedNotifications.length,
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    separatorBuilder: (context, index) => Divider(
-                      color: isDark ? AppColors.border : Colors.grey.shade100,
-                      height: 1,
-                    ),
+                    padding: const EdgeInsets.all(20),
+                    separatorBuilder: (_, _) => const SizedBox(height: 12),
                     itemBuilder: (context, index) {
                       final notif = _cachedNotifications[index];
-
-                      return InkWell(
-                        onTap: () {
-                          if (!notif.isRead) {
-                            context
-                                .read<NotificationsBloc>()
-                                .add(MarkNotificationAsReadEvent(notif.id));
-                          }
-                        },
-                        child: Container(
-                          color: !notif.isRead
-                              ? (isDark
-                                  ? AppColors.surface
-                                  : Colors.blue.shade50)
-                              : Colors.transparent,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 16,
-                          ),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              CircleAvatar(
-                                backgroundColor: _getIconBgColor(notif.type),
-                                radius: 20,
-                                child: Icon(
-                                  _getIconData(notif.type),
-                                  color: Colors.black,
-                                  size: 20,
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      notif.message,
-                                      style: TextStyle(
-                                        color: colorScheme.onSurface,
-                                        fontSize: 14,
-                                        fontWeight: !notif.isRead
-                                            ? FontWeight.bold
-                                            : FontWeight.normal,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      _formatDate(notif.createdAt),
-                                      style: TextStyle(
-                                        color: isDark
-                                            ? const Color(0xFF6B7280)
-                                            : Colors.grey,
-                                        fontSize: 12,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              if (!notif.isRead)
-                                Container(
-                                  width: 8,
-                                  height: 8,
-                                  decoration: const BoxDecoration(
-                                    color: AppColors.primary,
-                                    shape: BoxShape.circle,
-                                  ),
-                                ),
-                            ],
-                          ),
-                        ).animate()
-                         .fadeIn(duration: 400.ms, delay: (index * 40).ms)
-                         .slideX(begin: 0.1, end: 0),
-                      );
+                      return _buildNotificationCard(notif, isDark, index);
                     },
                   ),
                 );
@@ -207,42 +108,173 @@ class _NotificationsViewState extends State<_NotificationsView> {
     );
   }
 
-  IconData _getIconData(String? type) {
+  Widget _buildEmptyState(bool isDark) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(32),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withValues(alpha: 0.05),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.notifications_off_rounded,
+              size: 80,
+              color: AppColors.primary.withValues(alpha: 0.2),
+            ),
+          ),
+          const SizedBox(height: 24),
+          const Text(
+            'TODO AL DÍA',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 1,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'No tienes notificaciones pendientes',
+            style: TextStyle(color: Colors.grey[500], fontSize: 14),
+          ),
+        ],
+      ).animate().fadeIn().scale(),
+    );
+  }
+
+  Widget _buildNotificationCard(dynamic notif, bool isDark, int index) {
+    final isRead = notif.isRead ?? false;
+    final type = notif.type ?? 'default';
+
+    return InkWell(
+      onTap: () {
+        if (!isRead) {
+          context.read<NotificationsBloc>().add(
+            MarkNotificationAsReadEvent(notif.id),
+          );
+        }
+      },
+      borderRadius: BorderRadius.circular(24),
+      child: AnimatedContainer(
+        duration: 300.ms,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: isRead
+              ? (isDark ? const Color(0xFF1F2937) : Colors.white)
+              : AppColors.primary.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+            color: isRead
+                ? (isDark
+                      ? Colors.white.withValues(alpha: 0.05)
+                      : Colors.black.withValues(alpha: 0.05))
+                : AppColors.primary.withValues(alpha: 0.3),
+            width: isRead ? 1 : 1.5,
+          ),
+          boxShadow: isRead
+              ? null
+              : [
+                  BoxShadow(
+                    color: AppColors.primary.withValues(alpha: 0.1),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: _getIconColor(type).withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                _getIconData(type),
+                color: _getIconColor(type),
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    notif.message,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: isRead ? FontWeight.w600 : FontWeight.w900,
+                      height: 1.4,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    _formatDate(notif.createdAt),
+                    style: TextStyle(
+                      color: Colors.grey[500],
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (!isRead)
+              Container(
+                margin: const EdgeInsets.only(top: 4, left: 8),
+                width: 8,
+                height: 8,
+                decoration: const BoxDecoration(
+                  color: AppColors.primary,
+                  shape: BoxShape.circle,
+                ),
+              ).animate(onPlay: (c) => c.repeat()).shimmer(duration: 1.seconds),
+          ],
+        ),
+      ),
+    ).animate().fadeIn(delay: (index * 50).ms).slideX(begin: 0.1, end: 0);
+  }
+
+  IconData _getIconData(String type) {
     switch (type) {
       case 'join_request':
-        return Icons.group_add_outlined;
+        return Icons.person_add_alt_1_rounded;
       case 'accepted':
-        return Icons.check_circle_outline;
+        return Icons.verified_user_rounded;
       case 'rejected':
-        return Icons.cancel_outlined;
+        return Icons.error_outline_rounded;
+      case 'match_confirmed':
+        return Icons.sports_soccer_rounded;
       default:
-        return Icons.notifications_none;
+        return Icons.notifications_active_rounded;
     }
   }
 
-  Color _getIconBgColor(String? type) {
+  Color _getIconColor(String type) {
     switch (type) {
       case 'join_request':
         return AppColors.primary;
       case 'accepted':
-        return Colors.green;
+        return Colors.greenAccent;
       case 'rejected':
-        return Colors.red;
+        return Colors.redAccent;
+      case 'match_confirmed':
+        return Colors.blueAccent;
       default:
-        return AppColors.textMuted;
+        return AppColors.primary;
     }
   }
 
   String _formatDate(DateTime date) {
-    final dateUtc = date.isUtc ? date : date.toUtc();
-    final nowUtc = DateTime.now().toUtc();
-    final diff = nowUtc.difference(dateUtc);
-
-    if (diff.isNegative) return 'Hace un momento';
-    if (diff.inMinutes < 1) return 'Hace un momento';
+    final now = DateTime.now();
+    final diff = now.difference(date);
     if (diff.inMinutes < 60) return 'Hace ${diff.inMinutes} min';
     if (diff.inHours < 24) return 'Hace ${diff.inHours} h';
-    final dateLocal = dateUtc.toLocal();
-    return '${dateLocal.day}/${dateLocal.month}/${dateLocal.year}';
+    if (diff.inDays == 1) return 'Ayer';
+    return '${date.day}/${date.month}/${date.year}';
   }
 }

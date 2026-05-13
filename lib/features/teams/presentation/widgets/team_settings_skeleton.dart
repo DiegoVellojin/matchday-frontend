@@ -6,55 +6,68 @@ class TeamSettingsSkeleton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.all(24.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Section Title
-          MatchDayShimmer.rounded(height: 16, width: 120),
+          MatchDayShimmer.rounded(height: 12, width: 150),
           const SizedBox(height: 16),
-          
-          // Image Picker / Header Skeleton
-          Center(
-            child: const MatchDayShimmer.circular(size: 100),
+          const Center(child: MatchDayShimmer.circular(size: 120)),
+          const SizedBox(height: 32),
+          ...List.generate(
+            3,
+            (index) => Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                MatchDayShimmer.rounded(height: 10, width: 100),
+                const SizedBox(height: 12),
+                MatchDayShimmer.rounded(height: 56, borderRadius: 16),
+                const SizedBox(height: 24),
+              ],
+            ),
           ),
-          const SizedBox(height: 24),
-          
-          // Fields
-          ...List.generate(3, (index) => Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              MatchDayShimmer.rounded(height: 14, width: 100),
-              const SizedBox(height: 8),
-              MatchDayShimmer.rounded(height: 55, borderRadius: 12),
-              const SizedBox(height: 16),
-            ],
-          )),
-          
-          // Members Section
-          MatchDayShimmer.rounded(height: 16, width: 150),
-          const SizedBox(height: 12),
+          MatchDayShimmer.rounded(height: 12, width: 180),
+          const SizedBox(height: 16),
           Container(
+            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey.withValues(alpha: 0.1)),
-              borderRadius: BorderRadius.circular(16),
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.02)
+                  : Colors.black.withValues(alpha: 0.02),
+              borderRadius: BorderRadius.circular(28),
             ),
             child: Column(
-              children: List.generate(3, (index) => Padding(
-                padding: const EdgeInsets.all(12.0),
-                child: Row(
-                  children: [
-                    const MatchDayShimmer.circular(size: 40),
-                    const SizedBox(width: 12),
-                    Expanded(child: MatchDayShimmer.rounded(height: 20)),
-                    const SizedBox(width: 12),
-                    MatchDayShimmer.rounded(height: 24, width: 60),
-                  ],
+              children: List.generate(
+                3,
+                (index) => Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                  child: Row(
+                    children: [
+                      const MatchDayShimmer.circular(size: 40),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: MatchDayShimmer.rounded(
+                          height: 18,
+                          borderRadius: 8,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      MatchDayShimmer.rounded(
+                        height: 24,
+                        width: 60,
+                        borderRadius: 12,
+                      ),
+                    ],
+                  ),
                 ),
-              )),
+              ),
             ),
           ),
+          const SizedBox(height: 40),
+          MatchDayShimmer.rounded(height: 56, borderRadius: 20),
         ],
       ),
     );

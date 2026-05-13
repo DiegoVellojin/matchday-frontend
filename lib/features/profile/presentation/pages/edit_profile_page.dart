@@ -35,14 +35,14 @@ class _EditProfilePageState extends State<EditProfilePage> {
   bool _isUploadingImage = false;
   String _completePhoneNumber = '';
 
-
-
   @override
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.profile.name);
     _phoneController = TextEditingController(text: _getInitialNumber());
-    _photoUrlController = TextEditingController(text: widget.profile.photoUrl ?? '');
+    _photoUrlController = TextEditingController(
+      text: widget.profile.photoUrl ?? '',
+    );
     _passwordController = TextEditingController();
     _completePhoneNumber = widget.profile.phone ?? '';
   }
@@ -53,10 +53,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
     if (phone.startsWith('+57')) return phone.substring(3);
     if (phone.startsWith('+1')) return phone.substring(2);
     if (phone.startsWith('+34')) return phone.substring(3);
-    if (phone.startsWith('+')) {
-      return phone;
-    }
-    return phone;
+    return phone.startsWith('+') ? phone : phone;
   }
 
   String _getInitialCountryCode() {
@@ -68,7 +65,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
     return 'VE';
   }
 
-
   @override
   void dispose() {
     _nameController.dispose();
@@ -78,24 +74,19 @@ class _EditProfilePageState extends State<EditProfilePage> {
     super.dispose();
   }
 
-
   Future<void> _pickImage() async {
     final file = await ImagePickerUtils.pickImageFromGallery();
-    if (file != null) {
-      setState(() => _imageFile = file);
-    }
+    if (file != null) setState(() => _imageFile = file);
   }
 
   Future<String?> _uploadImage() async {
     if (_imageFile == null) return null;
-
     setState(() => _isUploadingImage = true);
-
     try {
       final storageService = sl<FirebaseStorageService>();
-      final path = 'user_photos/photo_${widget.profile.id}_${DateTime.now().millisecondsSinceEpoch}.jpg';
-      final url = await storageService.uploadFile(file: _imageFile!, path: path);
-      return url;
+      final path =
+          'user_photos/photo_${widget.profile.id}_${DateTime.now().millisecondsSinceEpoch}.jpg';
+      return await storageService.uploadFile(file: _imageFile!, path: path);
     } catch (e) {
       debugPrint('Error subiendo imagen: $e');
       return null;
@@ -104,71 +95,43 @@ class _EditProfilePageState extends State<EditProfilePage> {
     }
   }
 
-
-
   void _showChangePasswordDialog() {
     final confirmController = TextEditingController();
     final dialogFormKey = GlobalKey<FormState>();
-
     final isDark = Theme.of(context).brightness == Brightness.dark;
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: Theme.of(context).colorScheme.surface,
-        title: Text('Cambiar Contraseña', style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
+        backgroundColor: isDark ? const Color(0xFF1F2937) : Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+        title: const Text(
+          'Cambiar Contraseña',
+          style: TextStyle(fontWeight: FontWeight.w900),
+        ),
         content: Form(
           key: dialogFormKey,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              TextFormField(
+              _buildModernTextField(
                 controller: _passwordController,
+                label: 'Nueva Contraseña',
+                icon: Icons.lock_outline,
+                isDark: isDark,
                 obscureText: true,
-                style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
-                decoration: InputDecoration(
-                  labelText: 'Nueva Contraseña',
-                  labelStyle: const TextStyle(color: AppColors.textMuted),
-                  enabledBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: isDark ? AppColors.border : Colors.grey.shade300),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderSide: const BorderSide(color: AppColors.primary),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-
-                validator: (value) {
-                  if (value == null || value.length < 6) {
-                    return 'Mínimo 6 caracteres';
-                  }
-                  return null;
-                },
+                validator: (v) =>
+                    (v == null || v.length < 6) ? 'Mínimo 6 caracteres' : null,
               ),
               const SizedBox(height: 16),
-              TextFormField(
+              _buildModernTextField(
                 controller: confirmController,
+                label: 'Confirmar Contraseña',
+                icon: Icons.lock_reset_rounded,
+                isDark: isDark,
                 obscureText: true,
-                style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
-                decoration: InputDecoration(
-                  labelText: 'Confirmar Contraseña',
-                  labelStyle: const TextStyle(color: AppColors.textMuted),
-                  enabledBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: isDark ? AppColors.border : Colors.grey.shade300),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderSide: const BorderSide(color: AppColors.primary),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-
-                validator: (value) {
-                  if (value != _passwordController.text) {
-                    return 'Las contraseñas no coinciden';
-                  }
-                  return null;
-                },
+                validator: (v) =>
+                    (v != _passwordController.text) ? 'No coinciden' : null,
               ),
             ],
           ),
@@ -179,27 +142,35 @@ class _EditProfilePageState extends State<EditProfilePage> {
               _passwordController.clear();
               Navigator.pop(context);
             },
-            child: const Text('Cancelar', style: TextStyle(color: AppColors.textMuted)),
+            child: const Text(
+              'CANCELAR',
+              style: TextStyle(
+                color: AppColors.textMuted,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
-          TextButton(
+          ElevatedButton(
             onPressed: () {
-              if (dialogFormKey.currentState!.validate()) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Contraseña lista para guardar'),
-                    backgroundColor: AppColors.primary,
-                  ),
-                );
+              if (dialogFormKey.currentState!.validate())
                 Navigator.pop(context);
-              }
             },
-            child: const Text('Aplicar', style: TextStyle(color: AppColors.primary)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.black,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            child: const Text(
+              'APLICAR',
+              style: TextStyle(fontWeight: FontWeight.w900),
+            ),
           ),
         ],
       ),
     );
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -209,11 +180,11 @@ class _EditProfilePageState extends State<EditProfilePage> {
         if (state is ProfileUpdateSuccess) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Perfil actualizado correctamente'),
+              content: Text('Perfil actualizado'),
               backgroundColor: AppColors.primary,
             ),
           );
-          context.pop(); // Volver al perfil
+          context.pop();
         } else if (state is ProfileError) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -224,206 +195,126 @@ class _EditProfilePageState extends State<EditProfilePage> {
         }
       },
       child: Scaffold(
-
         appBar: AppBar(
-          backgroundColor: Theme.of(context).colorScheme.surface,
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           elevation: 0,
           leading: IconButton(
-            icon: Icon(Icons.arrow_back, color: Theme.of(context).colorScheme.onSurface),
+            icon: const Icon(Icons.arrow_back),
             onPressed: () => context.pop(),
           ),
-          title: Text(
+          title: const Text(
             'Editar Perfil',
-            style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontWeight: FontWeight.bold),
-          ),
-          bottom: PreferredSize(
-            preferredSize: const Size.fromHeight(1),
-            child: Container(
-              color: isDark ? AppColors.border : Colors.grey.shade300,
-              height: 1,
-            ),
+            style: TextStyle(fontWeight: FontWeight.w900),
           ),
         ),
-
         body: BlocBuilder<ProfileBloc, ProfileState>(
           builder: (context, state) {
             final isLoading = state is ProfileUpdating;
-            
-            if (state is ProfileInitial || state is ProfileLoading) {
+            if (state is ProfileInitial || state is ProfileLoading)
               return const EditProfileSkeleton();
-            }
 
             return Form(
               key: _formKey,
               child: SingleChildScrollView(
-                padding: const EdgeInsets.all(20.0),
+                padding: const EdgeInsets.all(24.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Foto de Perfil
-                    MatchDayImagePicker(
-                      imageFile: _imageFile,
-                      imageUrl: _photoUrlController.text,
-                      onPickImage: _pickImage,
-                      placeholder: Icons.camera_alt_outlined,
-                      label: 'Cambiar foto',
-                    ),
-
-
-                    const SizedBox(height: 30),
-
-                    // Nombre Completo
-                    const Text(
-                      'Nombre Completo',
-                      style: TextStyle(color: AppColors.textMuted, fontSize: 14, fontWeight: FontWeight.w500),
-                    ),
-                    const SizedBox(height: 8),
-                    TextFormField(
-                      controller: _nameController,
-                      style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
-                      decoration: InputDecoration(
-                        prefixIcon: const Icon(Icons.person_outline, color: AppColors.textMuted),
-                        hintText: 'Ingresa tu nombre completo',
-                        hintStyle: const TextStyle(color: Colors.grey),
-                        filled: true,
-                        fillColor: Theme.of(context).colorScheme.surface,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide.none,
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: isDark ? AppColors.border : Colors.grey.shade300),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: AppColors.primary),
-                        ),
+                    Center(
+                      child: MatchDayImagePicker(
+                        imageFile: _imageFile,
+                        imageUrl: _photoUrlController.text,
+                        onPickImage: _pickImage,
+                        placeholder: Icons.person_rounded,
+                        label: 'CAMBIAR FOTO',
                       ),
-
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return 'El nombre es obligatorio';
-                        }
-                        return null;
-                      },
                     ),
-                    const SizedBox(height: 20),
-
-                    // Teléfono
+                    const SizedBox(height: 32),
+                    _buildModernTextField(
+                      controller: _nameController,
+                      label: 'NOMBRE COMPLETO',
+                      icon: Icons.person_outline_rounded,
+                      isDark: isDark,
+                      validator: (v) => (v == null || v.trim().isEmpty)
+                          ? 'Campo obligatorio'
+                          : null,
+                    ),
+                    const SizedBox(height: 24),
                     const Text(
-                      'Teléfono',
-                      style: TextStyle(color: AppColors.textMuted, fontSize: 14, fontWeight: FontWeight.w500),
+                      'TELÉFONO',
+                      style: TextStyle(
+                        color: AppColors.primary,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 1,
+                      ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 12),
                     IntlPhoneField(
                       controller: _phoneController,
-                      style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
-                      dropdownTextStyle: TextStyle(color: Theme.of(context).colorScheme.onSurface),
-                      dropdownIcon: Icon(Icons.arrow_drop_down, color: Theme.of(context).colorScheme.onSurface),
                       initialCountryCode: _getInitialCountryCode(),
                       languageCode: "es",
-                      decoration: InputDecoration(
-                        hintText: 'Número de teléfono',
-                        hintStyle: const TextStyle(color: Colors.grey),
-                        filled: true,
-                        fillColor: Theme.of(context).colorScheme.surface,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide.none,
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: isDark ? AppColors.border : Colors.grey.shade300),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: AppColors.primary),
-                        ),
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                      decoration: _modernInputDecoration(
+                        isDark,
+                        Icons.phone_android_rounded,
+                        'Número de teléfono',
                       ),
-                      onChanged: (phone) {
-                        _completePhoneNumber = phone.completeNumber;
-                      },
+                      onChanged: (phone) =>
+                          _completePhoneNumber = phone.completeNumber,
                     ),
-
-                    const SizedBox(height: 20),
-
-                    // Botón Cambiar Contraseña
+                    const SizedBox(height: 32),
                     SizedBox(
                       width: double.infinity,
                       child: OutlinedButton.icon(
                         onPressed: _showChangePasswordDialog,
                         style: OutlinedButton.styleFrom(
-                          foregroundColor: Theme.of(context).colorScheme.onSurface,
-                          side: BorderSide(color: isDark ? AppColors.border : Colors.grey.shade300),
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          side: BorderSide(
+                            color: isDark ? Colors.white10 : Colors.black12,
                           ),
                         ),
-
-                        icon: const Icon(Icons.lock_outline, color: AppColors.primary),
-                        label: const Text('Cambiar Contraseña'),
+                        icon: const Icon(Icons.lock_outline, size: 20),
+                        label: const Text(
+                          'CAMBIAR CONTRASEÑA',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
                       ),
                     ),
-                    const SizedBox(height: 40),
-
-
-                    // Botón Guardar
+                    const SizedBox(height: 48),
                     SizedBox(
                       width: double.infinity,
                       height: 56,
-                      child: ElevatedButton.icon(
+                      child: ElevatedButton(
                         onPressed: (isLoading || _isUploadingImage)
                             ? null
-                            : () async {
-                                if (_formKey.currentState!.validate()) {
-                                  String? finalPhotoUrl = _photoUrlController.text.trim();
-                                  
-                                  final profileBloc = context.read<ProfileBloc>();
-
-                                  if (_imageFile != null) {
-                                    final uploadedUrl = await _uploadImage();
-                                    if (uploadedUrl != null) {
-                                      finalPhotoUrl = uploadedUrl;
-                                    }
-                                  }
-
-                                  profileBloc.add(
-                                    UpdateProfileEvent(
-                                      name: _nameController.text.trim(),
-                                      phone: _completePhoneNumber.isNotEmpty 
-                                          ? _completePhoneNumber 
-                                          : _phoneController.text.trim(),
-                                      photoUrl: finalPhotoUrl.isNotEmpty ? finalPhotoUrl : null,
-                                      password: _passwordController.text.isNotEmpty
-                                          ? _passwordController.text
-                                          : null,
-                                    ),
-                                  );
-
-                                }
-                              },
+                            : _submitForm,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.primary,
                           foregroundColor: Colors.black,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(16),
                           ),
-                          elevation: 0,
+                          elevation: 8,
+                          shadowColor: AppColors.primary.withValues(alpha: 0.4),
                         ),
-                        icon: (isLoading || _isUploadingImage)
-                            ? const SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(color: Colors.black, strokeWidth: 2),
+                        child: (isLoading || _isUploadingImage)
+                            ? const CircularProgressIndicator(
+                                color: Colors.black,
                               )
-                            : const Icon(Icons.save_outlined),
-                        label: Text(
-                          (isLoading || _isUploadingImage) ? 'Guardando...' : 'Guardar Cambios',
-                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                        ),
-
+                            : const Text(
+                                'GUARDAR CAMBIOS',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: 1,
+                                ),
+                              ),
                       ),
                     ),
                   ],
@@ -432,6 +323,89 @@ class _EditProfilePageState extends State<EditProfilePage> {
             );
           },
         ),
+      ),
+    );
+  }
+
+  void _submitForm() async {
+    if (!_formKey.currentState!.validate()) return;
+    String? finalPhotoUrl = _photoUrlController.text.trim();
+    if (_imageFile != null) {
+      final uploadedUrl = await _uploadImage();
+      if (!mounted) return;
+      if (uploadedUrl != null) finalPhotoUrl = uploadedUrl;
+    }
+    context.read<ProfileBloc>().add(
+      UpdateProfileEvent(
+        name: _nameController.text.trim(),
+        phone: _completePhoneNumber.isNotEmpty
+            ? _completePhoneNumber
+            : _phoneController.text.trim(),
+        photoUrl: finalPhotoUrl.isNotEmpty ? finalPhotoUrl : null,
+        password: _passwordController.text.isNotEmpty
+            ? _passwordController.text
+            : null,
+      ),
+    );
+  }
+
+  Widget _buildModernTextField({
+    required TextEditingController controller,
+    required String label,
+    required IconData icon,
+    required bool isDark,
+    bool obscureText = false,
+    String? Function(String?)? validator,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            color: AppColors.primary,
+            fontSize: 11,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 1,
+          ),
+        ),
+        const SizedBox(height: 12),
+        TextFormField(
+          controller: controller,
+          obscureText: obscureText,
+          style: const TextStyle(fontWeight: FontWeight.bold),
+          decoration: _modernInputDecoration(isDark, icon, 'Ingresa tu $label'),
+          validator: validator,
+        ),
+      ],
+    );
+  }
+
+  InputDecoration _modernInputDecoration(
+    bool isDark,
+    IconData icon,
+    String hint,
+  ) {
+    return InputDecoration(
+      prefixIcon: Icon(icon, color: AppColors.primary, size: 20),
+      hintText: hint,
+      filled: true,
+      fillColor: isDark ? const Color(0xFF1F2937) : Colors.grey[100],
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: BorderSide.none,
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: BorderSide(
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.05)
+              : Colors.black.withValues(alpha: 0.05),
+        ),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: const BorderSide(color: AppColors.primary, width: 2),
       ),
     );
   }

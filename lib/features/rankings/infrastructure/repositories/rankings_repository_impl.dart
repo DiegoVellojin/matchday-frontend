@@ -10,9 +10,15 @@ class RankingsRepositoryImpl implements IRankingsRepository {
   RankingsRepositoryImpl(this.remoteDataSource);
 
   @override
-  Future<Either<Failure, List<LeaderboardEntryEntity>>> getTeamLeaderboard() async {
+  Future<Either<Failure, List<LeaderboardEntryEntity>>> getTeamLeaderboard({
+    int? sportId,
+    String period = 'all',
+  }) async {
     try {
-      final leaderboard = await remoteDataSource.getTeamLeaderboard();
+      final leaderboard = await remoteDataSource.getTeamLeaderboard(
+        sportId: sportId,
+        period: period,
+      );
       return Right(leaderboard);
     } catch (e) {
       return Left(ServerFailure(e.toString()));

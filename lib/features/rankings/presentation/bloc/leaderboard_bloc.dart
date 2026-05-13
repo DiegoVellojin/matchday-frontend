@@ -12,7 +12,10 @@ class LeaderboardBloc extends Bloc<LeaderboardEvent, LeaderboardState> {
 
   Future<void> _onLoadLeaderboard(LoadLeaderboardEvent event, Emitter<LeaderboardState> emit) async {
     emit(LeaderboardLoading());
-    final result = await getTeamLeaderboardUseCase();
+    final result = await getTeamLeaderboardUseCase(
+      sportId: event.sportId,
+      period: event.period,
+    );
     result.fold(
       (failure) => emit(LeaderboardError(failure.message)),
       (leaderboard) => emit(LeaderboardLoaded(leaderboard)),

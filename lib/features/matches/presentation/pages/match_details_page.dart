@@ -60,41 +60,28 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return BlocProvider(
-      create: (context) =>
-          sl<MatchesBloc>()..add(LoadMatchDetailsEvent(widget.matchId)),
+      create: (context) => sl<MatchesBloc>()..add(LoadMatchDetailsEvent(widget.matchId)),
       child: BlocListener<MatchesBloc, MatchesState>(
         listener: (context, state) {
           if (state is MatchCancelled) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Partido cancelado con éxito'),
-                backgroundColor: AppColors.error,
-              ),
+              const SnackBar(content: Text('Partido cancelado con éxito'), backgroundColor: Colors.redAccent),
             );
             context.pop();
           } else if (state is MatchesError) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                backgroundColor: AppColors.error,
-              ),
+              SnackBar(content: Text(state.message), backgroundColor: Colors.redAccent),
             );
           }
         },
         child: BlocBuilder<MatchesBloc, MatchesState>(
           builder: (context, state) {
             if (state is MatchesLoading) {
-              return const Scaffold(
-                body: Center(
-                  child: CircularProgressIndicator(color: AppColors.primary),
-                ),
-              );
+              return const Scaffold(body: Center(child: CircularProgressIndicator(color: AppColors.primary)));
             } else if (state is MatchDetailsLoaded) {
               return _buildContent(context, state.match, isDark);
             }
-            return Scaffold(
-              backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-            );
+            return Scaffold(backgroundColor: Theme.of(context).scaffoldBackgroundColor);
           },
         ),
       ),
@@ -104,162 +91,101 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> {
   Widget _buildContent(BuildContext context, MatchEntity match, bool isDark) {
     final theme = Theme.of(context);
     final profileState = context.read<ProfileBloc>().state;
-    int? currentUserId;
-    if (profileState is ProfileLoaded) {
-      currentUserId = profileState.profile.id;
-    }
+    int? currentUserId = profileState is ProfileLoaded ? profileState.profile.id : null;
 
     final me = _players.where((p) => p.idUsuario == currentUserId).firstOrNull;
     final isPlayerInA = me?.idEquipo == match.idEquipoA;
     final isPlayerInB = me?.idEquipo == match.idEquipoB;
 
-    final role = MatchRoleResolver.resolve(
-      match,
-      currentUserId ?? 0,
-      isPlayerInA: isPlayerInA,
-      isPlayerInB: isPlayerInB,
-    );
+    final role = MatchRoleResolver.resolve(match, currentUserId ?? 0, isPlayerInA: isPlayerInA, isPlayerInB: isPlayerInB);
     final isOrganizer = role == MatchRole.captainA;
-    final isAnyCaptain =
-        role == MatchRole.captainA || role == MatchRole.captainB;
+    final isAnyCaptain = role == MatchRole.captainA || role == MatchRole.captainB;
 
     final hasVerifiedPayment = me?.estatusPago == 'verificado';
-    final hasReportedPayment =
-        me?.urlReciboPago != null && me!.urlReciboPago!.isNotEmpty;
-    final amIInA =
-        _players.any(
-          (p) => p.idUsuario == currentUserId && p.idEquipo == match.idEquipoA,
-        ) ||
-        match.idUsuarioOrg == currentUserId;
+    final hasReportedPayment = me?.urlReciboPago != null && me!.urlReciboPago!.isNotEmpty;
+    final amIInA = _players.any((p) => p.idUsuario == currentUserId && p.idEquipo == match.idEquipoA) || match.idUsuarioOrg == currentUserId;
 
-    // Patrón Chain of Responsibility
     final matchActions = MatchDetailsActionHandler.resolve(
-      context: context,
-      match: match,
-      currentUserId: currentUserId,
-      role: role,
-      hasVerifiedPayment: hasVerifiedPayment,
-      hasReportedPayment: hasReportedPayment,
-      amIInA: amIInA,
+      context: context, match: match, currentUserId: currentUserId, role: role,
+      hasVerifiedPayment: hasVerifiedPayment, hasReportedPayment: hasReportedPayment, amIInA: amIInA,
     );
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       body: CustomScrollView(
+        physics: const BouncingScrollPhysics(),
         slivers: [
-          MatchDetailAppBar(
-            match: match,
-            isDark: isDark,
-            isOrganizer: isOrganizer,
-          ),
+          MatchDetailAppBar(match: match, isDark: isDark, isOrganizer: isOrganizer),
           SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                children: [
-                  MatchStatusCard(
-                        match: match,
-                        isDark: isDark,
-                        isOrganizer: isOrganizer,
-                      )
-                      .animate()
-                      .fadeIn(duration: 600.ms)
-                      .slideY(begin: 0.1, end: 0),
-                  const SizedBox(height: 16),
+            child: Container(
+              decoration: BoxDecoration(
+                color: theme.scaffoldBackgroundColor,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 24.0),
+                child: Column(
+                  children: [
+                    MatchStatusCard(match: match, isDark: isDark, isOrganizer: isOrganizer)
+                        .animate().fadeIn(duration: 600.ms).slideY(begin: 0.1, end: 0),
+                    const SizedBox(height: 20),
 
-                  if (match.estatus == 'completada') ...[
-                    MatchResultSection(
-                          match: match,
-                          isDark: isDark,
-                          currentUserId: currentUserId,
-                        )
-                        .animate()
-                        .scale(duration: 500.ms, curve: Curves.easeOutBack)
-                        .shimmer(
-                          duration: 2.seconds,
-                          color: Colors.white.withValues(alpha: 0.1),
-                        ),
-                    const SizedBox(height: 16),
-                  ],
+                    if (match.estatus == 'completada') ...[
+                      MatchResultSection(match: match, isDark: isDark, currentUserId: currentUserId)
+                          .animate().scale(duration: 500.ms, curve: Curves.easeOutBack),
+                      const SizedBox(height: 20),
+                    ],
 
-                  MatchMapPreview(
-                    match: match,
-                    isDark: isDark,
-                  ).animate().fadeIn(duration: 800.ms, delay: 200.ms),
-                  const SizedBox(height: 16),
+                    _buildSectionHeader('UBICACIÓN', isDark),
+                    const SizedBox(height: 12),
+                    MatchMapPreview(match: match, isDark: isDark).animate().fadeIn(delay: 200.ms),
+                    const SizedBox(height: 24),
 
-                  MatchInfoCard(
-                    match: match,
-                    isDark: isDark,
-                  ).animate().fadeIn(duration: 800.ms, delay: 400.ms),
-                  const SizedBox(height: 16),
+                    _buildSectionHeader('INFORMACIÓN', isDark),
+                    const SizedBox(height: 12),
+                    MatchInfoCard(match: match, isDark: isDark).animate().fadeIn(delay: 400.ms),
+                    const SizedBox(height: 24),
 
-                  if (match.estatus == 'negociando')
-                    MatchNegotiationCard(
-                      match: match,
-                      isDark: isDark,
-                      isAnyCaptain: isAnyCaptain,
-                    ).animate().fadeIn(duration: 800.ms, delay: 600.ms),
+                    if (match.estatus == 'negociando') ...[
+                      _buildSectionHeader('NEGOCIACIÓN', isDark),
+                      const SizedBox(height: 12),
+                      MatchNegotiationCard(match: match, isDark: isDark, isAnyCaptain: isAnyCaptain).animate().fadeIn(delay: 600.ms),
+                      const SizedBox(height: 24),
+                    ],
 
-                  if (match.estatus == 'pendiente_pago') ...[
-                    Builder(
-                      builder: (ctx) {
-                        final myTeamId = amIInA
-                            ? match.idEquipoA
-                            : match.idEquipoB;
-                        final rivalTeamId = amIInA
-                            ? match.idEquipoB
-                            : match.idEquipoA;
-                        final myTeamPlayers = _players
-                            .where((p) => p.idEquipo == myTeamId)
-                            .toList();
-                        final myPaidCount = myTeamPlayers
-                            .where((p) => p.estatusPago == 'verificado')
-                            .length;
-                        final rivalTeamPlayers = _players
-                            .where((p) => p.idEquipo == rivalTeamId)
-                            .toList();
-                        final rivalPaidCount = rivalTeamPlayers
-                            .where((p) => p.estatusPago == 'verificado')
-                            .length;
-
+                    if (match.estatus == 'pendiente_pago') ...[
+                      _buildSectionHeader('ESTADO DE PAGOS', isDark),
+                      const SizedBox(height: 12),
+                      Builder(builder: (ctx) {
+                        final myTeamId = amIInA ? match.idEquipoA : match.idEquipoB;
+                        final rivalTeamId = amIInA ? match.idEquipoB : match.idEquipoA;
+                        final myTeamPlayers = _players.where((p) => p.idEquipo == myTeamId).toList();
+                        final rivalTeamPlayers = _players.where((p) => p.idEquipo == rivalTeamId).toList();
                         return MatchPaymentsStatusCard(
-                          match: match,
-                          isDark: isDark,
-                          myTeamId: myTeamId ?? 0,
-                          rivalTeamId: rivalTeamId ?? 0,
-                          myPaidCount: myPaidCount,
-                          myTotalCount: myTeamPlayers.length,
-                          rivalPaidCount: rivalPaidCount,
-                          rivalTotalCount: rivalTeamPlayers.length,
+                          match: match, isDark: isDark, myTeamId: myTeamId ?? 0, rivalTeamId: rivalTeamId ?? 0,
+                          myPaidCount: myTeamPlayers.where((p) => p.estatusPago == 'verificado').length, myTotalCount: myTeamPlayers.length,
+                          rivalPaidCount: rivalTeamPlayers.where((p) => p.estatusPago == 'verificado').length, rivalTotalCount: rivalTeamPlayers.length,
                         );
-                      },
-                    ).animate().fadeIn(duration: 800.ms, delay: 600.ms),
-                    const SizedBox(height: 16),
-                    MatchFinancialCard(
-                      match: match,
-                      isDark: isDark,
-                    ).animate().fadeIn(duration: 800.ms, delay: 600.ms),
+                      }),
+                      const SizedBox(height: 20),
+                      MatchFinancialCard(match: match, isDark: isDark),
+                      const SizedBox(height: 24),
+                    ],
+
+                    if (match.estatus == 'confirmada') ...[
+                      _buildSectionHeader('ACCIÓN REQUERIDA', isDark),
+                      const SizedBox(height: 12),
+                      MatchConfirmedActionCard(match: match, isDark: isDark, isAnyCaptain: isAnyCaptain, currentUserId: currentUserId),
+                      const SizedBox(height: 24),
+                    ],
+
+                    _buildSectionHeader('JUGADORES', isDark),
+                    const SizedBox(height: 12),
+                    MatchPlayersSection(match: match, isDark: isDark, players: _players, isLoading: _isLoadingPlayers),
+                    
+                    const SizedBox(height: 120),
                   ],
-
-                  if (match.estatus == 'confirmada')
-                    MatchConfirmedActionCard(
-                      match: match,
-                      isDark: isDark,
-                      isAnyCaptain: isAnyCaptain,
-                      currentUserId: currentUserId,
-                    ).animate().fadeIn(duration: 800.ms, delay: 600.ms),
-
-                  const SizedBox(height: 16),
-                  MatchPlayersSection(
-                    match: match,
-                    isDark: isDark,
-                    players: _players,
-                    isLoading: _isLoadingPlayers,
-                  ).animate().fadeIn(duration: 800.ms, delay: 700.ms),
-
-                  const SizedBox(height: 100),
-                ],
+                ),
               ),
             ),
           ),
@@ -267,5 +193,15 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> {
       ),
       bottomNavigationBar: MatchBottomBar(actions: matchActions),
     );
+  }
+
+  Widget _buildSectionHeader(String title, bool isDark) {
+    return Row(
+      children: [
+        Text(title, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w900, letterSpacing: 1.5, color: isDark ? Colors.grey[500] : Colors.grey[600])),
+        const SizedBox(width: 12),
+        Expanded(child: Divider(color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.05))),
+      ],
+    ).animate().fadeIn(duration: 400.ms);
   }
 }

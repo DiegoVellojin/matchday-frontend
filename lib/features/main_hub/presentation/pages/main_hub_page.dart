@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/network/network_robot.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -27,7 +28,6 @@ class _MainHubPageState extends State<MainHubPage> {
   void initState() {
     super.initState();
     _pageController = PageController(initialPage: _currentIndex);
-    // Aseguramos que el perfil esté cargado para que los roles (Capitán/Jugador) sean correctos
     context.read<ProfileBloc>().add(LoadProfileEvent());
     _setupPushNotifications();
   }
@@ -41,7 +41,6 @@ class _MainHubPageState extends State<MainHubPage> {
   Future<void> _setupPushNotifications() async {
     try {
       FirebaseMessaging messaging = FirebaseMessaging.instance;
-
       NotificationSettings settings = await messaging.requestPermission(
         alert: true,
         badge: true,
@@ -51,16 +50,12 @@ class _MainHubPageState extends State<MainHubPage> {
       if (settings.authorizationStatus == AuthorizationStatus.authorized ||
           settings.authorizationStatus == AuthorizationStatus.provisional) {
         String? fcmToken = await messaging.getToken();
-
         if (fcmToken != null) {
-          debugPrint('🔑 FCM_TOKEN_DISPOSITIVO: $fcmToken');
-
           final networkRobot = sl<NetworkRobot>();
           await networkRobot.post(
             '/users/fcm-token',
             data: {'fcm_token': fcmToken},
           );
-          debugPrint('Token FCM enviado exitosamente al backend.');
         }
       }
     } catch (e) {
@@ -77,108 +72,180 @@ class _MainHubPageState extends State<MainHubPage> {
 
   @override
   Widget build(BuildContext context) {
-    // Detectamos si el tema actual es oscuro para hacer pequeños ajustes en los íconos inactivos
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
-      body: SafeArea(
-        child: Column(
-          children: [
-            const MatchDayAppBar(),
-            Expanded(
-              child: PageView(
-                controller: _pageController,
-                onPageChanged: (index) {
-                  setState(() => _currentIndex = index);
-                },
-                physics: const BouncingScrollPhysics(),
-                children: _pages,
-              ),
+      backgroundColor: theme.scaffoldBackgroundColor,
+      body: Stack(
+        children: [
+          SafeArea(
+            child: Column(
+              children: [
+                const MatchDayAppBar(),
+                Expanded(
+                  child: PageView(
+                    controller: _pageController,
+                    onPageChanged: (index) {
+                      setState(() => _currentIndex = index);
+                    },
+                    physics: const BouncingScrollPhysics(),
+                    children: _pages,
+                  ),
+                ),
+                // Padding for the custom floating nav bar
+                const SizedBox(height: 85),
+              ],
             ),
-          ],
+          ),
+          Positioned(
+            bottom: 20,
+            left: 20,
+            right: 20,
+            child: _CustomFloatingNavBar(
+              currentIndex: _currentIndex,
+              onTap: (index) {
+                _pageController.animateToPage(
+                  index,
+                  duration: const Duration(milliseconds: 600),
+                  curve: Curves.easeOutQuart,
+                );
+              },
+              isDark: isDark,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CustomFloatingNavBar extends StatelessWidget {
+  final int currentIndex;
+  final ValueChanged<int> onTap;
+  final bool isDark;
+
+  const _CustomFloatingNavBar({
+    required this.currentIndex,
+    required this.onTap,
+    required this.isDark,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final backgroundColor = isDark ? const Color(0xFF1F2937) : Colors.white;
+    
+    return Container(
+      height: 70,
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(35),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.4 : 0.1),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+        border: Border.all(
+          color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.05),
         ),
       ),
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          border: Border(
-            // Usa el color del borde configurado en el AppTheme (claro u oscuro)
-            top: BorderSide(color: Theme.of(context).dividerColor, width: 1),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          _NavBarItem(
+            icon: Icons.people_outline,
+            activeIcon: Icons.people,
+            label: 'Equipos',
+            isSelected: currentIndex == 0,
+            onTap: () => onTap(0),
           ),
-        ),
-        child: BottomNavigationBar(
-          currentIndex: _currentIndex,
-          onTap: (index) {
-            _pageController.animateToPage(
-              index,
-              duration: const Duration(milliseconds: 400),
-              curve: Curves.easeOutQuart,
-            );
-          },
-          // Usa el color de fondo configurado en el AppTheme
-          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-          type: BottomNavigationBarType.fixed,
-          selectedItemColor: AppColors.primary,
-          unselectedItemColor: isDark
-              ? const Color(0xFF6B7280)
-              : Colors.grey[600],
-          showSelectedLabels: true,
-          showUnselectedLabels: true,
-          selectedLabelStyle: const TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 12,
+          _NavBarItem(
+            icon: Icons.emoji_events_outlined,
+            activeIcon: Icons.emoji_events,
+            label: 'Partidos',
+            isSelected: currentIndex == 1,
+            onTap: () => onTap(1),
           ),
-          unselectedLabelStyle: const TextStyle(
-            fontWeight: FontWeight.w500,
-            fontSize: 12,
+          _NavBarItem(
+            icon: Icons.checklist_rtl_outlined,
+            activeIcon: Icons.checklist_rtl,
+            label: 'Mis Equipos',
+            isSelected: currentIndex == 2,
+            onTap: () => onTap(2),
           ),
-          elevation: 0,
-          items: const [
-            BottomNavigationBarItem(
-              icon: Padding(
-                padding: EdgeInsets.only(bottom: 4.0),
-                child: Icon(Icons.people_outline),
-              ),
-              activeIcon: Padding(
-                padding: EdgeInsets.only(bottom: 4.0),
-                child: Icon(Icons.people),
-              ),
-              label: 'Equipos',
+          _NavBarItem(
+            icon: Icons.military_tech_outlined,
+            activeIcon: Icons.military_tech,
+            label: 'Rankings',
+            isSelected: currentIndex == 3,
+            onTap: () => onTap(3),
+          ),
+        ],
+      ),
+    ).animate().slideY(begin: 1, end: 0, duration: 800.ms, curve: Curves.easeOutQuart);
+  }
+}
+
+class _NavBarItem extends StatelessWidget {
+  final IconData icon;
+  final IconData activeIcon;
+  final String label;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _NavBarItem({
+    required this.icon,
+    required this.activeIcon,
+    required this.label,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final color = isSelected ? AppColors.primary : Colors.grey[500];
+
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 300),
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: isSelected ? AppColors.primary.withValues(alpha: 0.1) : Colors.transparent,
+              shape: BoxShape.circle,
             ),
-            BottomNavigationBarItem(
-              icon: Padding(
-                padding: EdgeInsets.only(bottom: 4.0),
-                child: Icon(Icons.emoji_events_outlined),
-              ),
-              activeIcon: Padding(
-                padding: EdgeInsets.only(bottom: 4.0),
-                child: Icon(Icons.emoji_events),
-              ),
-              label: 'Partidos',
+            child: Icon(
+              isSelected ? activeIcon : icon,
+              color: color,
+              size: 24,
             ),
-            BottomNavigationBarItem(
-              icon: Padding(
-                padding: EdgeInsets.only(bottom: 4.0),
-                child: Icon(Icons.checklist_rtl_outlined),
-              ),
-              activeIcon: Padding(
-                padding: EdgeInsets.only(bottom: 4.0),
-                child: Icon(Icons.checklist_rtl),
-              ),
-              label: 'Mis Equipos',
+          ),
+          AnimatedDefaultTextStyle(
+            duration: const Duration(milliseconds: 300),
+            style: TextStyle(
+              color: color,
+              fontSize: 10,
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
             ),
-            BottomNavigationBarItem(
-              icon: Padding(
-                padding: EdgeInsets.only(bottom: 4.0),
-                child: Icon(Icons.military_tech_outlined),
+            child: Text(label),
+          ),
+          if (isSelected)
+            Container(
+              margin: const EdgeInsets.only(top: 4),
+              width: 4,
+              height: 4,
+              decoration: const BoxDecoration(
+                color: AppColors.primary,
+                shape: BoxShape.circle,
               ),
-              activeIcon: Padding(
-                padding: EdgeInsets.only(bottom: 4.0),
-                child: Icon(Icons.military_tech),
-              ),
-              label: 'Rankings',
-            ),
-          ],
-        ),
+            ).animate().scale(duration: 200.ms),
+        ],
       ),
     );
   }

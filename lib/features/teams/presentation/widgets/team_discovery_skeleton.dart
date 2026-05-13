@@ -6,20 +6,29 @@ class TeamDiscoverySkeleton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardColor = isDark ? const Color(0xFF1F2937) : Colors.white;
+
     return GridView.builder(
-      padding: const EdgeInsets.all(20.0),
+      physics: const NeverScrollableScrollPhysics(),
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 100),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
-        childAspectRatio: 0.75,
+        childAspectRatio: 0.72,
         crossAxisSpacing: 16,
         mainAxisSpacing: 16,
       ),
       itemCount: 6,
       itemBuilder: (context, index) => Container(
-        padding: const EdgeInsets.all(12.0),
+        padding: const EdgeInsets.all(16.0),
         decoration: BoxDecoration(
-          border: Border.all(color: Colors.grey.withValues(alpha: 0.1)),
-          borderRadius: BorderRadius.circular(16),
+          color: cardColor,
+          borderRadius: BorderRadius.circular(28),
+          border: Border.all(
+            color: isDark
+                ? Colors.white.withValues(alpha: 0.05)
+                : Colors.black.withValues(alpha: 0.05),
+          ),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -27,16 +36,20 @@ class TeamDiscoverySkeleton extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                MatchDayShimmer.rounded(height: 40, width: 40, borderRadius: 8),
-                MatchDayShimmer.rounded(height: 20, width: 60, borderRadius: 8),
+                const MatchDayShimmer.circular(size: 44),
+                MatchDayShimmer.rounded(height: 20, width: 50, borderRadius: 8),
               ],
             ),
-            const SizedBox(height: 12),
-            MatchDayShimmer.rounded(height: 18, width: 100),
-            const SizedBox(height: 8),
-            MatchDayShimmer.rounded(height: 14, width: 80),
+            const SizedBox(height: 16),
+            MatchDayShimmer.rounded(height: 16, width: 100),
+            const SizedBox(height: 6),
+            MatchDayShimmer.rounded(height: 12, width: 60),
+            const SizedBox(height: 16),
+            MatchDayShimmer.rounded(height: 10, width: 80),
+            const SizedBox(height: 6),
+            MatchDayShimmer.rounded(height: 4, borderRadius: 4),
             const Spacer(),
-            MatchDayShimmer.rounded(height: 36, borderRadius: 8),
+            MatchDayShimmer.rounded(height: 38, borderRadius: 12),
           ],
         ),
       ),

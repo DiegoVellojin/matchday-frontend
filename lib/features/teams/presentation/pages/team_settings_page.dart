@@ -16,11 +16,6 @@ import '../../application/usecases/kick_member_usecase.dart' as discovery_kick;
 import '../../application/usecases/get_team_members_usecase.dart';
 import '../widgets/team_settings_skeleton.dart';
 
-/// Pantalla de configuración y administración del equipo.
-///
-/// Adapta su interfaz dinámicamente según si el usuario actual es el
-/// Capitán (permite editar metadatos, gestionar miembros y eliminar equipo)
-/// o un Jugador (permite ver la lista de miembros y abandonar el equipo).
 class TeamSettingsPage extends StatefulWidget {
   final TeamEntity team;
   final int currentUserId;
@@ -38,7 +33,6 @@ class TeamSettingsPage extends StatefulWidget {
 class _TeamSettingsPageState extends State<TeamSettingsPage> {
   late TextEditingController _nameController;
   late TextEditingController _descriptionController;
-
   late TextEditingController _maxMembersController;
   late TextEditingController _chatUrlController;
   late bool _isRecruiting;
@@ -49,7 +43,6 @@ class _TeamSettingsPageState extends State<TeamSettingsPage> {
   List<Map<String, dynamic>> _members = [];
   List<SportEntity> _sports = [];
   int? _selectedSportId;
-  bool _isLoadingSports = false;
   bool _isInitialLoading = true;
 
   @override
@@ -70,11 +63,10 @@ class _TeamSettingsPageState extends State<TeamSettingsPage> {
     _loadSports();
   }
 
-  /// Recupera el listado de miembros del equipo desde la API.
   Future<void> _loadMembers() async {
     final result = await sl<GetTeamMembersUseCase>().call(widget.team.id);
     result.fold(
-      (failure) => null,
+      (_) => null,
       (members) => setState(() {
         _members = members;
         _isInitialLoading = false;
@@ -83,48 +75,35 @@ class _TeamSettingsPageState extends State<TeamSettingsPage> {
   }
 
   Future<void> _loadSports() async {
-    setState(() => _isLoadingSports = true);
     final result = await sl<GetSportsUseCase>().call();
-    result.fold(
-      (failure) => null,
-      (sports) {
-        setState(() {
-          _sports = sports;
-          _isLoadingSports = false;
-          // Si el ID del deporte no estaba en la entidad, intentamos encontrarlo por nombre como fallback
-          if (_selectedSportId == null) {
-            final currentSport = _sports.where((s) => s.name == widget.team.sportName).firstOrNull;
-            if (currentSport != null) _selectedSportId = currentSport.id;
-          }
-        });
-      },
-    );
+    result.fold((_) => null, (sports) {
+      setState(() {
+        _sports = sports;
+        if (_selectedSportId == null) {
+          final currentSport = _sports
+              .where((s) => s.name == widget.team.sportName)
+              .firstOrNull;
+          if (currentSport != null) _selectedSportId = currentSport.id;
+        }
+      });
+    });
   }
 
-  /// Getter semántico para determinar permisos administrativos.
   bool get isCaptain => widget.team.captainId == widget.currentUserId;
 
   Future<void> _pickImage() async {
     final file = await ImagePickerUtils.pickImageFromGallery();
-    if (file != null) {
-      setState(() => _imageFile = file);
-    }
+    if (file != null) setState(() => _imageFile = file);
   }
 
   Future<String?> _uploadImage() async {
     if (_imageFile == null) return null;
-
     setState(() => _isUploadingImage = true);
-
     try {
       final storageService = sl<FirebaseStorageService>();
       final path =
           'team_logos/logo_${widget.team.id}_${DateTime.now().millisecondsSinceEpoch}.jpg';
-      final url = await storageService.uploadFile(
-        file: _imageFile!,
-        path: path,
-      );
-      return url;
+      return await storageService.uploadFile(file: _imageFile!, path: path);
     } catch (e) {
       debugPrint('Error subiendo imagen: $e');
       return null;
@@ -135,216 +114,289 @@ class _TeamSettingsPageState extends State<TeamSettingsPage> {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
-    if (_isInitialLoading) {
-      return const Scaffold(
-        body: TeamSettingsSkeleton(),
-      );
-    }
+    if (_isInitialLoading) return const Scaffold(body: TeamSettingsSkeleton());
 
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        title: Text(isCaptain ? 'Gestión de Equipo' : 'Detalles del Equipo'),
-        backgroundColor: colorScheme.surface,
-        foregroundColor: colorScheme.onSurface,
+        backgroundColor: theme.scaffoldBackgroundColor,
         elevation: 0,
+        title: Text(
+          isCaptain ? 'Gestión de Equipo' : 'Detalles del Equipo',
+          style: const TextStyle(fontWeight: FontWeight.w900),
+        ),
         actions: [
           if (isCaptain)
-            IconButton(
-              icon: (_isLoading || _isUploadingImage)
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Icon(Icons.save_outlined, color: AppColors.primary),
-              onPressed: (_isLoading || _isUploadingImage)
-                  ? null
-                  : _saveChanges,
+            Padding(
+              padding: const EdgeInsets.only(right: 8.0),
+              child: IconButton(
+                icon: (_isLoading || _isUploadingImage)
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(
+                        Icons.check_circle_rounded,
+                        color: AppColors.primary,
+                        size: 28,
+                      ),
+                onPressed: (_isLoading || _isUploadingImage)
+                    ? null
+                    : _saveChanges,
+              ),
             ),
         ],
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(24.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             if (isCaptain) ...[
-              _buildSectionTitle('Identidad Visual'),
-              _buildManagementCard(
+              _buildSectionTitle('IDENTIDAD VISUAL'),
+              Center(
                 child: MatchDayImagePicker(
                   imageFile: _imageFile,
                   imageUrl: _currentLogoUrl,
                   onPickImage: _pickImage,
                   placeholder: widget.team.logo.length < 4
                       ? widget.team.logo
-                      : Icons.camera_alt_outlined,
-                  label: 'Cambiar logo',
+                      : Icons.shield_rounded,
+                  label: 'CAMBIAR LOGO',
                 ),
               ),
-
-              const SizedBox(height: 24),
-              _buildSectionTitle('Ajustes Principales'),
-              _buildManagementCard(
-                child: Column(
-                  children: [
-                    _buildTextField('Nombre del Equipo', _nameController),
-                    const SizedBox(height: 16),
-                    _buildTextField(
-                      'Descripción',
-                      _descriptionController,
-                      maxLines: 3,
-                    ),
-                  ],
-                ),
-              ),
-              
-              const SizedBox(height: 24),
-              _buildSectionTitle('Deporte & Competición'),
-              _buildManagementCard(
-                child: Column(
-                  children: [
-                    _isLoadingSports 
-                      ? const LinearProgressIndicator(color: AppColors.primary)
-                      : _buildSportDropdown(isDark),
-                    const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _buildTextField(
-                            'Miembros Máximos',
-                            _maxMembersController,
-                            keyboardType: TextInputType.number,
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        _buildRecruitingSwitch(),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              
-              const SizedBox(height: 24),
-              _buildSectionTitle('Comunicación'),
-              _buildManagementCard(
-                child: _buildTextField(
-                  'URL del Grupo (WhatsApp/Telegram)',
-                  _chatUrlController,
-                ),
-              ),
-              
               const SizedBox(height: 32),
-              _buildSectionTitle('Plantilla del Equipo'),
-              _buildMembersList(colorScheme),
+              _buildSectionTitle('AJUSTES PRINCIPALES'),
+              _buildModernTextField(
+                'NOMBRE DEL EQUIPO',
+                _nameController,
+                isDark,
+                icon: Icons.badge_outlined,
+              ),
+              const SizedBox(height: 24),
+              _buildModernTextField(
+                'DESCRIPCIÓN',
+                _descriptionController,
+                isDark,
+                icon: Icons.description_outlined,
+                maxLines: 3,
+              ),
               const SizedBox(height: 32),
-              _buildDangerZone(),
+              _buildSectionTitle('DEPORTE Y CAPACIDAD'),
+              _buildSportDropdown(isDark),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildModernTextField(
+                      'MÁX. MIEMBROS',
+                      _maxMembersController,
+                      isDark,
+                      icon: Icons.groups_outlined,
+                      keyboardType: TextInputType.number,
+                    ),
+                  ),
+                  const SizedBox(width: 20),
+                  _buildRecruitingSwitch(isDark),
+                ],
+              ),
+              const SizedBox(height: 32),
+              _buildSectionTitle('COMUNICACIÓN'),
+              _buildModernTextField(
+                'URL DEL GRUPO (WHATSAPP/TELEGRAM)',
+                _chatUrlController,
+                isDark,
+                icon: Icons.chat_bubble_outline_rounded,
+              ),
+              const SizedBox(height: 32),
             ] else ...[
-              _buildSectionTitle('Información del Equipo'),
-              _buildTeamHeader(),
-              const SizedBox(height: 24),
-              _buildSectionTitle('Miembros de la Plantilla'),
-              _buildMembersList(colorScheme),
+              _buildSectionTitle('INFORMACIÓN'),
+              _buildTeamHeader(isDark),
               const SizedBox(height: 32),
-              _buildPlayerActions(),
             ],
+            _buildSectionTitle('PLANTILLA DEL EQUIPO'),
+            _buildMembersList(isDark),
             const SizedBox(height: 40),
+            if (isCaptain)
+              _buildDangerZone(isDark)
+            else
+              _buildPlayerActions(isDark),
+            const SizedBox(height: 60),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildManagementCard({required Widget child}) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: isDark ? AppColors.border : Colors.grey.shade200,
+  Widget _buildSectionTitle(String title) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12.0),
+      child: Text(
+        title,
+        style: const TextStyle(
+          color: AppColors.primary,
+          fontSize: 11,
+          fontWeight: FontWeight.w900,
+          letterSpacing: 1.5,
         ),
-        boxShadow: [
-          if (!isDark)
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-        ],
       ),
-      child: child,
     );
   }
 
-  Widget _buildRecruitingSwitch() {
+  Widget _buildModernTextField(
+    String label,
+    TextEditingController controller,
+    bool isDark, {
+    IconData? icon,
+    int maxLines = 1,
+    TextInputType keyboardType = TextInputType.text,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Reclutando',
-          style: TextStyle(
+        Text(
+          label,
+          style: const TextStyle(
             color: AppColors.textMuted,
-            fontSize: 12,
+            fontSize: 10,
+            fontWeight: FontWeight.bold,
           ),
         ),
-        const SizedBox(height: 4),
-        Transform.scale(
-          scale: 0.8,
-          child: Switch(
-            value: _isRecruiting,
-            onChanged: (val) => setState(() => _isRecruiting = val),
-            activeThumbColor: AppColors.primary,
+        const SizedBox(height: 8),
+        TextField(
+          controller: controller,
+          maxLines: maxLines,
+          keyboardType: keyboardType,
+          style: const TextStyle(fontWeight: FontWeight.bold),
+          decoration: InputDecoration(
+            prefixIcon: icon != null
+                ? Icon(icon, color: AppColors.primary, size: 20)
+                : null,
+            filled: true,
+            fillColor: isDark ? const Color(0xFF1F2937) : Colors.grey[100],
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide.none,
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide(
+                color: isDark
+                    ? Colors.white.withValues(alpha: 0.05)
+                    : Colors.black.withValues(alpha: 0.05),
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: const BorderSide(color: AppColors.primary, width: 2),
+            ),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildTeamHeader() {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: isDark ? AppColors.border : Colors.grey.shade300),
-      ),
-
-      child: Row(
-        children: [
-          Container(
-            width: 60,
-            height: 60,
-            decoration: BoxDecoration(
-              color: isDark ? AppColors.background : Colors.grey.shade100,
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: AppColors.primary.withValues(alpha: 0.3),
-              ),
+  Widget _buildSportDropdown(bool isDark) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'DEPORTE',
+          style: TextStyle(
+            color: AppColors.textMuted,
+            fontSize: 10,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1F2937) : Colors.grey[100],
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.05)
+                  : Colors.black.withValues(alpha: 0.05),
             ),
-
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(30),
-              child:
-                  _currentLogoUrl != null && _currentLogoUrl!.startsWith('http')
-                  ? Image.network(
-                      _currentLogoUrl!, 
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) => const Center(child: Icon(Icons.sports_soccer, size: 30, color: Colors.grey)),
-                    )
-                  : Center(
+          ),
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<int>(
+              value: _selectedSportId,
+              isExpanded: true,
+              icon: const Icon(
+                Icons.arrow_drop_down_rounded,
+                color: AppColors.primary,
+              ),
+              items: _sports
+                  .map(
+                    (s) => DropdownMenuItem(
+                      value: s.id,
                       child: Text(
-                        widget.team.logo,
-                        style: const TextStyle(fontSize: 24),
+                        s.name,
+                        style: const TextStyle(fontWeight: FontWeight.bold),
                       ),
                     ),
+                  )
+                  .toList(),
+              onChanged: (val) => setState(() => _selectedSportId = val),
             ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildRecruitingSwitch(bool isDark) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'RECLUTANDO',
+          style: TextStyle(
+            color: AppColors.textMuted,
+            fontSize: 10,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Switch(
+          value: _isRecruiting,
+          onChanged: (v) => setState(() => _isRecruiting = v),
+          activeThumbColor: AppColors.primary,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTeamHeader(bool isDark) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1F2937) : Colors.white,
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.05)
+              : Colors.black.withValues(alpha: 0.05),
+        ),
+      ),
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 30,
+            backgroundImage:
+                _currentLogoUrl != null && _currentLogoUrl!.startsWith('http')
+                ? NetworkImage(_currentLogoUrl!)
+                : null,
+            child:
+                _currentLogoUrl == null || !_currentLogoUrl!.startsWith('http')
+                ? Text(widget.team.logo, style: const TextStyle(fontSize: 24))
+                : null,
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -353,20 +405,14 @@ class _TeamSettingsPageState extends State<TeamSettingsPage> {
               children: [
                 Text(
                   widget.team.name,
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.onSurface,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w900,
                     fontSize: 18,
-                    fontWeight: FontWeight.bold,
                   ),
                 ),
-
-                const SizedBox(height: 4),
                 Text(
                   widget.team.description,
-                  style: const TextStyle(
-                    color: AppColors.textMuted,
-                    fontSize: 14,
-                  ),
+                  style: TextStyle(color: Colors.grey[500], fontSize: 13),
                 ),
               ],
             ),
@@ -376,182 +422,64 @@ class _TeamSettingsPageState extends State<TeamSettingsPage> {
     );
   }
 
-  /// Construye un encabezado de sección con estilo estandarizado.
-  Widget _buildSectionTitle(String title) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12.0),
-      child: Text(
-        title.toUpperCase(),
-        style: const TextStyle(
-          color: AppColors.primary,
-          fontSize: 12,
-          fontWeight: FontWeight.bold,
-          letterSpacing: 1.2,
-        ),
-      ),
-    );
-  }
-
-  /// Construye un campo de texto estilizado para el formulario de edición.
-  Widget _buildTextField(
-    String label,
-    TextEditingController controller, {
-    int maxLines = 1,
-    TextInputType keyboardType = TextInputType.text,
-  }) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
-        ),
-        const SizedBox(height: 6),
-        TextField(
-          controller: controller,
-          maxLines: maxLines,
-          keyboardType: keyboardType,
-          style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
-          decoration: InputDecoration(
-            fillColor: Theme.of(context).colorScheme.surface,
-            filled: true,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(
-                color: isDark ? AppColors.border : Colors.grey.shade300,
-              ),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(
-                color: isDark ? AppColors.border : Colors.grey.shade300,
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSportDropdown(bool isDark) {
+  Widget _buildMembersList(bool isDark) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(12),
+        color: isDark ? const Color(0xFF1F2937) : Colors.white,
+        borderRadius: BorderRadius.circular(28),
         border: Border.all(
-          color: isDark ? AppColors.border : Colors.grey.shade300,
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.05)
+              : Colors.black.withValues(alpha: 0.05),
         ),
       ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<int>(
-          value: _selectedSportId,
-          isExpanded: true,
-          dropdownColor: Theme.of(context).colorScheme.surface,
-          items: _sports.map((sport) {
-            return DropdownMenuItem<int>(
-              value: sport.id,
-              child: Text(
-                sport.name,
-                style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
-              ),
-            );
-          }).toList(),
-          onChanged: (val) => setState(() => _selectedSportId = val),
-        ),
-      ),
-    );
-  }
-
-  /// Construye la lista visual de miembros con acciones administrativas condicionales.
-  Widget _buildMembersList(ColorScheme colorScheme) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    if (_members.isEmpty) {
-      return const Center(
-        child: CircularProgressIndicator(color: AppColors.primary),
-      );
-    }
-
-
-    return Container(
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: isDark ? AppColors.border : Colors.grey.shade300),
-      ),
-
       child: ListView.separated(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         itemCount: _members.length,
-        separatorBuilder: (_, _) =>
-            Divider(color: isDark ? AppColors.border : Colors.grey.shade300, height: 1),
-
+        separatorBuilder: (_, _) => Divider(
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.03)
+              : Colors.black.withValues(alpha: 0.03),
+          height: 1,
+        ),
         itemBuilder: (context, index) {
-          final member = _members[index];
-          final mId = member['fk_id_usuario'] ?? member['id_usuario'];
+          final m = _members[index];
+          final mId = m['fk_id_usuario'] ?? m['id_usuario'];
           final isMe = mId == widget.currentUserId;
-          final role = member['rol_equipo'] ?? 'Jugador';
+          final role = m['rol_equipo'] ?? 'Jugador';
+          final isCap = role == 'Capitán';
 
           return ListTile(
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 20,
+              vertical: 8,
+            ),
             leading: CircleAvatar(
-              backgroundColor: isDark ? AppColors.background : Colors.grey.shade100,
               backgroundImage:
-                  member['url_foto_perfil'] != null &&
-                      member['url_foto_perfil'].toString().startsWith('http')
-                  ? NetworkImage(member['url_foto_perfil'])
+                  (m['url_foto_perfil']?.toString().startsWith('http') ?? false)
+                  ? NetworkImage(m['url_foto_perfil'])
                   : null,
-              child: (member['url_foto_perfil'] == null || !member['url_foto_perfil'].toString().startsWith('http'))
-                  ? const Icon(Icons.person, color: AppColors.textMuted)
+              child:
+                  !(m['url_foto_perfil']?.toString().startsWith('http') ??
+                      false)
+                  ? const Icon(Icons.person)
                   : null,
             ),
-
             title: Text(
-              member['nombre_usuario'] ?? 'Usuario',
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.onSurface,
-                fontWeight: FontWeight.bold,
-              ),
+              m['nombre_usuario'] ?? 'Usuario',
+              style: const TextStyle(fontWeight: FontWeight.bold),
             ),
-
             subtitle: Text(
               role,
               style: TextStyle(
-                color: role == 'Capitán'
-                    ? AppColors.primary
-                    : AppColors.textMuted,
+                color: isCap ? AppColors.primary : Colors.grey[500],
                 fontSize: 12,
+                fontWeight: FontWeight.bold,
               ),
             ),
             trailing: isCaptain && !isMe
-                ? Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        icon: const Icon(
-                          Icons.star_outline,
-                          color: AppColors.warning,
-                          size: 20,
-                        ),
-                        tooltip: 'Hacer Capitán',
-                        onPressed: () => _confirmTransferCaptain(
-                          mId,
-                          member['nombre_usuario'],
-                        ),
-                      ),
-                      IconButton(
-                        icon: const Icon(
-                          Icons.person_remove_outlined,
-                          color: AppColors.error,
-                          size: 20,
-                        ),
-                        tooltip: 'Expulsar',
-                        onPressed: () =>
-                            _confirmKickMember(mId, member['nombre_usuario']),
-                      ),
-                    ],
-                  )
+                ? _buildMemberActions(mId, m['nombre_usuario'])
                 : null,
           );
         },
@@ -559,15 +487,36 @@ class _TeamSettingsPageState extends State<TeamSettingsPage> {
     );
   }
 
-  /// Construye la sección de acciones destructivas para el Capitán.
-  Widget _buildDangerZone() {
+  Widget _buildMemberActions(int mId, String name) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        IconButton(
+          icon: const Icon(
+            Icons.star_outline_rounded,
+            color: AppColors.warning,
+          ),
+          onPressed: () => _confirmTransferCaptain(mId, name),
+        ),
+        IconButton(
+          icon: const Icon(
+            Icons.person_remove_rounded,
+            color: Colors.redAccent,
+          ),
+          onPressed: () => _confirmKickMember(mId, name),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDangerZone(bool isDark) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppColors.error.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
+        color: Colors.redAccent.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.redAccent.withValues(alpha: 0.2)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -575,24 +524,28 @@ class _TeamSettingsPageState extends State<TeamSettingsPage> {
           const Text(
             'ZONA DE PELIGRO',
             style: TextStyle(
-              color: AppColors.error,
-              fontWeight: FontWeight.bold,
-              fontSize: 14,
+              color: Colors.redAccent,
+              fontWeight: FontWeight.w900,
+              fontSize: 12,
+              letterSpacing: 1,
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
           SizedBox(
             width: double.infinity,
             child: OutlinedButton(
               onPressed: _confirmDeleteTeam,
               style: OutlinedButton.styleFrom(
-                foregroundColor: AppColors.error,
-                side: const BorderSide(color: AppColors.error),
+                foregroundColor: Colors.redAccent,
+                side: const BorderSide(color: Colors.redAccent),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
-              child: const Text('ELIMINAR EQUIPO'),
+              child: const Text(
+                'ELIMINAR EQUIPO DEFINITIVAMENTE',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11),
+              ),
             ),
           ),
         ],
@@ -600,42 +553,34 @@ class _TeamSettingsPageState extends State<TeamSettingsPage> {
     );
   }
 
-  /// Construye el botón de abandono para jugadores que no son capitanes.
-  Widget _buildPlayerActions() {
+  Widget _buildPlayerActions(bool isDark) {
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton(
         onPressed: _confirmLeaveTeam,
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.error,
+          backgroundColor: Colors.redAccent,
           foregroundColor: Colors.white,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(16),
           ),
-          padding: const EdgeInsets.symmetric(vertical: 14),
+          padding: const EdgeInsets.symmetric(vertical: 16),
         ),
         child: const Text(
           'SALIR DEL EQUIPO',
-          style: TextStyle(fontWeight: FontWeight.bold),
+          style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 1),
         ),
       ),
     );
   }
 
-  // --- ACCIONES Y LÓGICA DE NEGOCIO ---
-
-  /// Persiste los cambios realizados en el formulario de información general.
   Future<void> _saveChanges() async {
     setState(() => _isLoading = true);
-
     String? logoUrl = _currentLogoUrl;
     if (_imageFile != null) {
       final uploadedUrl = await _uploadImage();
-      if (uploadedUrl != null) {
-        logoUrl = uploadedUrl;
-      }
+      if (uploadedUrl != null) logoUrl = uploadedUrl;
     }
-
     final result = await sl<UpdateTeamUseCase>().call(
       teamId: widget.team.id,
       name: _nameController.text,
@@ -643,25 +588,21 @@ class _TeamSettingsPageState extends State<TeamSettingsPage> {
       logoUrl: logoUrl,
       maxMembers: int.tryParse(_maxMembersController.text),
       isRecruiting: _isRecruiting,
-      chatUrl: _chatUrlController.text.trim().isEmpty ? null : _chatUrlController.text.trim(),
+      chatUrl: _chatUrlController.text.trim().isEmpty
+          ? null
+          : _chatUrlController.text.trim(),
       sportId: _selectedSportId,
     );
-
     setState(() => _isLoading = false);
-    
     if (!mounted) return;
-
     result.fold(
-      (failure) => ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error: ${failure.message}'),
-          backgroundColor: AppColors.error,
-        ),
+      (f) => ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(f.message), backgroundColor: Colors.redAccent),
       ),
       (_) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Cambios guardados con éxito'),
+            content: Text('Cambios guardados'),
             backgroundColor: AppColors.primary,
           ),
         );
@@ -670,52 +611,41 @@ class _TeamSettingsPageState extends State<TeamSettingsPage> {
     );
   }
 
-  /// Muestra un diálogo de confirmación para ceder la capitanía.
   void _confirmTransferCaptain(int userId, String name) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: Theme.of(context).colorScheme.surface,
-        title: Text('Transferir Capitanía', style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
-        content: Text(
-          '¿Estás seguro de que quieres transferir la capitanía a $name? Perderás el control administrativo del equipo.',
-          style: TextStyle(color: isDark ? Colors.white70 : Colors.black87),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+        title: const Text(
+          'Transferir Capitanía',
+          style: TextStyle(fontWeight: FontWeight.w900),
         ),
-
-
+        content: Text(
+          '¿Transferir capitanía a $name? Perderás el control administrativo.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancelar'),
+            child: const Text('CANCELAR'),
           ),
           TextButton(
             onPressed: () async {
               Navigator.pop(context);
               setState(() => _isLoading = true);
-              final result = await sl<TransferCaptainUseCase>().call(
+              final res = await sl<TransferCaptainUseCase>().call(
                 teamId: widget.team.id,
                 newCaptainId: userId,
               );
               setState(() => _isLoading = false);
-              
               if (!mounted) return;
-
-              result.fold(
-                (f) => ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(f.message)),
-                ),
-                (_) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Capitanía transferida')),
-                  );
-                  Navigator.pop(context, true);
-                },
-              );
+              res.fold((f) => null, (_) => Navigator.pop(context, true));
             },
             child: const Text(
-              'Transferir',
-              style: TextStyle(color: AppColors.warning),
+              'TRANSFERIR',
+              style: TextStyle(
+                color: AppColors.warning,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
         ],
@@ -723,47 +653,39 @@ class _TeamSettingsPageState extends State<TeamSettingsPage> {
     );
   }
 
-  /// Muestra un diálogo para confirmar la expulsión de un miembro.
   void _confirmKickMember(int userId, String name) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: Theme.of(context).colorScheme.surface,
-        title: Text('Expulsar Miembro', style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
-        content: Text(
-          '¿Quieres expulsar a $name del equipo?',
-          style: TextStyle(color: isDark ? Colors.white70 : Colors.black87),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+        title: const Text(
+          'Expulsar Miembro',
+          style: TextStyle(fontWeight: FontWeight.w900),
         ),
-
-
+        content: Text('¿Expulsar a $name del equipo?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancelar'),
+            child: const Text('CANCELAR'),
           ),
           TextButton(
             onPressed: () async {
               Navigator.pop(context);
               setState(() => _isLoading = true);
-              final result = await sl<discovery_kick.KickMemberUseCase>().call(
+              final res = await sl<discovery_kick.KickMemberUseCase>().call(
                 teamId: widget.team.id,
                 userId: userId,
               );
               setState(() => _isLoading = false);
-              
               if (!mounted) return;
-
-              result.fold(
-                (f) => ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(f.message)),
-                ),
-                (_) => _loadMembers(),
-              );
+              res.fold((f) => null, (_) => _loadMembers());
             },
             child: const Text(
-              'Expulsar',
-              style: TextStyle(color: AppColors.error),
+              'EXPULSAR',
+              style: TextStyle(
+                color: Colors.redAccent,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
         ],
@@ -771,51 +693,37 @@ class _TeamSettingsPageState extends State<TeamSettingsPage> {
     );
   }
 
-  /// Diálogo crítico para la eliminación total del equipo.
   void _confirmDeleteTeam() {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: Theme.of(context).colorScheme.surface,
-        title: Text('Eliminar Equipo', style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
-        content: Text(
-          'Esta acción es irreversible. Se eliminarán todos los miembros y datos del equipo. ¿Continuar?',
-          style: TextStyle(color: isDark ? Colors.white70 : Colors.black87),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+        title: const Text(
+          'Eliminar Equipo',
+          style: TextStyle(fontWeight: FontWeight.w900),
         ),
-
-
+        content: const Text(
+          'Esta acción es permanente e irreversible. ¿Continuar?',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancelar'),
+            child: const Text('CANCELAR'),
           ),
           TextButton(
             onPressed: () async {
               Navigator.pop(context);
               setState(() => _isLoading = true);
-              final result = await sl<DeleteTeamUseCase>().call(widget.team.id);
-              
-              // Verificación de seguridad: si el usuario se salió de la pantalla mientras borraba, no hacemos nada más
+              final res = await sl<DeleteTeamUseCase>().call(widget.team.id);
               if (!mounted) return;
-              
-              setState(() => _isLoading = false);
-              
-              result.fold(
-                (f) => ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(f.message)),
-                ),
-                (_) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Equipo eliminado')),
-                  );
-                  Navigator.of(context).popUntil((route) => route.isFirst);
-                },
-              );
+              res.fold((f) => null, (_) => Navigator.pop(context, true));
             },
             child: const Text(
               'ELIMINAR',
-              style: TextStyle(color: AppColors.error),
+              style: TextStyle(
+                color: Colors.redAccent,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
         ],
@@ -823,62 +731,41 @@ class _TeamSettingsPageState extends State<TeamSettingsPage> {
     );
   }
 
-  /// Diálogo para confirmar el abandono voluntario de un jugador.
   void _confirmLeaveTeam() {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: Theme.of(context).colorScheme.surface,
-        title: Text('Salir del Equipo', style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
-        content: Text(
-          '¿Estás seguro de que quieres salir de este equipo?',
-          style: TextStyle(color: isDark ? Colors.white70 : Colors.black87),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+        title: const Text(
+          'Salir del Equipo',
+          style: TextStyle(fontWeight: FontWeight.w900),
         ),
-
-
+        content: const Text(
+          '¿Estás seguro de que quieres abandonar este equipo?',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancelar'),
+            child: const Text('CANCELAR'),
           ),
           TextButton(
             onPressed: () async {
               Navigator.pop(context);
               setState(() => _isLoading = true);
-              final result = await sl<LeaveTeamUseCase>().call(widget.team.id);
-              setState(() => _isLoading = false);
-              
+              final res = await sl<LeaveTeamUseCase>().call(widget.team.id);
               if (!mounted) return;
-
-              result.fold(
-                (f) => ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(f.message)),
-                ),
-                (_) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Has salido del equipo')),
-                  );
-                  Navigator.of(context).popUntil((route) => route.isFirst);
-                },
-              );
+              res.fold((f) => null, (_) => Navigator.pop(context, true));
             },
             child: const Text(
-              'Salir',
-              style: TextStyle(color: AppColors.error),
+              'SALIR',
+              style: TextStyle(
+                color: Colors.redAccent,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
         ],
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    _nameController.dispose();
-    _descriptionController.dispose();
-    _maxMembersController.dispose();
-    _chatUrlController.dispose();
-    super.dispose();
   }
 }

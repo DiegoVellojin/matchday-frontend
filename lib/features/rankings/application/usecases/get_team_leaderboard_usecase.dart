@@ -8,7 +8,10 @@ class GetTeamLeaderboardUseCase {
 
   GetTeamLeaderboardUseCase(this.repository);
 
-  Future<Either<Failure, List<LeaderboardEntryEntity>>> call() {
-    return repository.getTeamLeaderboard();
+  Future<Either<Failure, List<LeaderboardEntryEntity>>> call({
+    int? sportId,
+    String period = 'all',
+  }) {
+    return repository.getTeamLeaderboard(sportId: sportId, period: period);
   }
 }

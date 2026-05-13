@@ -10,9 +10,12 @@ class AuthRobot {
 
   Future<void> ingresarEmail(String email) async {
     print('🚀 [AuthRobot] Intentando ingresar email: $email');
-    final fieldFinder = find.widgetWithText(TextFormField, 'Correo Electrónico');
+    final fieldFinder = find.widgetWithText(
+      TextFormField,
+      'Correo Electrónico',
+    );
     final allFields = find.byType(TextFormField);
-    
+
     Finder target;
     if (fieldFinder.evaluate().isNotEmpty) {
       target = fieldFinder;
@@ -35,7 +38,7 @@ class AuthRobot {
     print('🚀 [AuthRobot] Intentando ingresar contraseña...');
     final fieldFinder = find.widgetWithText(TextFormField, 'Contraseña');
     final allFields = find.byType(TextFormField);
-    
+
     Finder target;
     if (fieldFinder.evaluate().isNotEmpty) {
       target = fieldFinder;
@@ -132,7 +135,9 @@ class AuthRobot {
     }
 
     if (!appLista) {
-      print('⚠️ La app parece no haber cargado tras 30 segundos. Intentando forzar un pumpAndSettle...');
+      print(
+        '⚠️ La app parece no haber cargado tras 30 segundos. Intentando forzar un pumpAndSettle...',
+      );
       await tester.pumpAndSettle(const Duration(seconds: 5));
     }
     await tester.pumpAndSettle(const Duration(seconds: 3));
@@ -148,12 +153,17 @@ class AuthRobot {
     print('🔐 Iniciando flujo centralizado de login para: $email');
 
     // 2. Navegar desde la Pantalla de Bienvenida si es necesario
-    final hayCamposLogin = find.text('Correo Electrónico').evaluate().isNotEmpty;
+    final hayCamposLogin = find
+        .text('Correo Electrónico')
+        .evaluate()
+        .isNotEmpty;
     if (!hayCamposLogin) {
-      print('👋 Parece que estamos en la Bienvenida. Buscando botón para entrar...');
+      print(
+        '👋 Parece que estamos en la Bienvenida. Buscando botón para entrar...',
+      );
       final welcomeBtn = find.text('¡Comenzar!');
       final loginWelcomeBtn = find.text('Iniciar Sesión');
-      
+
       if (welcomeBtn.evaluate().isNotEmpty) {
         print('🖱️ Pulsando ¡Comenzar!...');
         await tester.tap(welcomeBtn);

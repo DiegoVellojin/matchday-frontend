@@ -6,9 +6,18 @@ class RankingsRemoteDataSource {
 
   const RankingsRemoteDataSource(this.networkRobot);
 
-  Future<List<LeaderboardEntryEntity>> getTeamLeaderboard() async {
+  Future<List<LeaderboardEntryEntity>> getTeamLeaderboard({
+    int? sportId,
+    String period = 'all',
+  }) async {
     try {
-      final response = await networkRobot.get('/rankings/team-leaderboard');
+      final response = await networkRobot.get(
+        '/rankings/team-leaderboard',
+        queryParameters: {
+          if (sportId != null) 'sport_id': sportId,
+          'period': period,
+        },
+      );
       final List<dynamic> data = response.data;
       return data.map((json) => LeaderboardEntryEntity.fromJson(json)).toList();
     } catch (e) {
