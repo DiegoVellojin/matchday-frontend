@@ -109,12 +109,20 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> {
       currentUserId = profileState.profile.id;
     }
 
-    final role = MatchRoleResolver.resolve(match, currentUserId ?? 0);
+    final me = _players.where((p) => p.idUsuario == currentUserId).firstOrNull;
+    final isPlayerInA = me?.idEquipo == match.idEquipoA;
+    final isPlayerInB = me?.idEquipo == match.idEquipoB;
+
+    final role = MatchRoleResolver.resolve(
+      match,
+      currentUserId ?? 0,
+      isPlayerInA: isPlayerInA,
+      isPlayerInB: isPlayerInB,
+    );
     final isOrganizer = role == MatchRole.captainA;
     final isAnyCaptain =
         role == MatchRole.captainA || role == MatchRole.captainB;
 
-    final me = _players.where((p) => p.idUsuario == currentUserId).firstOrNull;
     final hasVerifiedPayment = me?.estatusPago == 'verificado';
     final hasReportedPayment =
         me?.urlReciboPago != null && me!.urlReciboPago!.isNotEmpty;

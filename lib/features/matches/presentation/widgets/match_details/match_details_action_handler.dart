@@ -93,6 +93,26 @@ class _PublicadaDetailsLink extends _MatchDetailsActionLink {
       );
     }
 
+    // 2. Si el usuario es el Capitán B asignado o parte del Equipo B invitado
+    if (req.role == MatchRole.captainB || (req.role == MatchRole.playerTeamB && req.match.idCapitanB == null)) {
+      return MatchDetailActions(
+        primaryActions: [
+          MatchAction(
+            label: 'Aceptar Encuentro',
+            onTap: () =>
+                req.context.push('/accept-encounter', extra: {'match': req.match}),
+          ),
+        ],
+        secondaryActions: [
+          MatchAction(
+            label: '🛡️ Ver Equipo Rival',
+            onTap: () => req.context.push('/team-dashboard/${req.match.idEquipoA}'),
+          ),
+        ],
+      );
+    }
+
+    // 3. Si el usuario es externo y no hay equipo B (Oferta abierta)
     if (req.isExternal && req.match.idEquipoB == null) {
       return MatchDetailActions(
         primaryActions: [
@@ -100,6 +120,24 @@ class _PublicadaDetailsLink extends _MatchDetailsActionLink {
             label: 'Aceptar Encuentro',
             onTap: () =>
                 req.context.push('/accept-encounter', extra: {'match': req.match}),
+          ),
+        ],
+        secondaryActions: [
+          MatchAction(
+            label: '🛡️ Ver Equipo Rival',
+            onTap: () => req.context.push('/team-dashboard/${req.match.idEquipoA}'),
+          ),
+        ],
+      );
+    }
+
+    // 4. Para jugadores que ya están dentro (Team A)
+    if (req.role == MatchRole.playerTeamA || req.role == MatchRole.captainA) {
+      return MatchDetailActions(
+        secondaryActions: [
+          MatchAction(
+            label: '⚽ Ver Mi Equipo',
+            onTap: () => req.context.push('/team-dashboard/${req.match.idEquipoA}'),
           ),
         ],
       );
@@ -126,6 +164,18 @@ class _NegociandoDetailsLink extends _MatchDetailsActionLink {
           MatchAction(
             label: 'Contactar Rival',
             onTap: () => MatchDetailsActionHandler.handleContactar(req.context, req.match, req.currentUserId),
+          ),
+        ],
+      );
+    }
+
+    // Jugadores en negociación
+    if (!req.isExternal) {
+      return MatchDetailActions(
+        secondaryActions: [
+          MatchAction(
+            label: '⚽ Ver Detalles',
+            onTap: () => {}, 
           ),
         ],
       );

@@ -129,7 +129,7 @@ class _PublicadaLink extends _MatchActionLink {
   MatchAction? handle(_MatchActionRequest req) {
     if (!req.match.status.isPublished) return passDown(req);
 
-    if (req.isOrganizer || req.isMyMatch) {
+    if (req.isOrganizer || req.isCaptainB || req.isMyMatch) {
       return MatchAction(
         label: req.isOrganizer ? '⚙️ Administrar Partido' : '⚽ Ver Detalles',
         onTap: () => req.context.push('/match-details/${req.match.id}'),
