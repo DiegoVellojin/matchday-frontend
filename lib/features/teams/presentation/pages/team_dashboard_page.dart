@@ -61,7 +61,7 @@ class _TeamDashboardPageState extends State<TeamDashboardPage> {
     final isDark = theme.brightness == Brightness.dark;
 
     return BlocProvider(
-      create: (context) => sl<MatchesBloc>()..add(LoadMatchesEvent(teamId: widget.teamId, status: 'completada')),
+      create: (context) => sl<MatchesBloc>()..add(LoadMatchesEvent(teamId: widget.teamId)),
       child: FutureBuilder<TeamEntity>(
         future: _teamFuture,
         builder: (context, snapshot) {
@@ -470,7 +470,10 @@ class _TeamDashboardPageState extends State<TeamDashboardPage> {
     return BlocBuilder<MatchesBloc, MatchesState>(
       builder: (context, state) {
         if (state is MatchesLoading) return const Center(child: Padding(padding: EdgeInsets.all(40), child: CircularProgressIndicator(color: AppColors.primary)));
-        if (state is MatchesLoaded) return MatchHistoryList(matches: state.matches, perspectiveTeamId: widget.teamId);
+        if (state is MatchesLoaded) {
+          final completedMatches = state.matches.where((m) => m.status.name == 'completada').toList();
+          return MatchHistoryList(matches: completedMatches, perspectiveTeamId: widget.teamId);
+        }
         return const Center(child: Text('Sin historial de partidos.'));
       },
     );
