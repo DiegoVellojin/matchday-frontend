@@ -110,6 +110,12 @@ class MatchEntity extends Equatable {
     return displayMoneda == 'EUR' ? '€' : '\$';
   }
 
+  /// Símbolo de la propuesta del Capitán A
+  String get symbolA => propuestaMonedaA == 'EUR' ? '€' : '\$';
+  
+  /// Símbolo de la propuesta del Capitán B
+  String get symbolB => propuestaMonedaB == 'EUR' ? '€' : '\$';
+
   @override
   List<Object?> get props => [
         id,

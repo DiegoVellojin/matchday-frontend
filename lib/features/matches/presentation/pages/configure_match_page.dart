@@ -657,7 +657,6 @@ class _ConfigureMatchPageState extends State<ConfigureMatchPage> {
     final match = widget.partido;
     final coincide = match.propuestaCostoA != null && 
                     match.propuestaCostoA == match.propuestaCostoB;
-    final currentSymbol = _monedaSeleccionada == 'EUR' ? '€' : '\$';
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -690,7 +689,7 @@ class _ConfigureMatchPageState extends State<ConfigureMatchPage> {
             'Tu Equipo (Org)',
             match.propuestaCostoA,
             isDark,
-            currentSymbol,
+            match.symbolA,
           ),
           const SizedBox(height: 8),
           _proposalRow(
@@ -698,7 +697,7 @@ class _ConfigureMatchPageState extends State<ConfigureMatchPage> {
             'Rival (Retador)',
             match.propuestaCostoB,
             isDark,
-            currentSymbol,
+            match.symbolB,
           ),
           if (match.propuestaCostoA != null && 
               match.propuestaCostoB != null && 

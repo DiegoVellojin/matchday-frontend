@@ -58,9 +58,9 @@ class MatchNegotiationCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
-          _buildProposalRow('Capitán A', match.propuestaCostoA, match.propuestaFechaA, context),
+          _buildProposalRow('Capitán A', match.propuestaCostoA, match.propuestaFechaA, match.symbolA, context),
           const SizedBox(height: 12),
-          _buildProposalRow('Capitán B (Rival)', match.propuestaCostoB, match.propuestaFechaB, context),
+          _buildProposalRow('Capitán B (Rival)', match.propuestaCostoB, match.propuestaFechaB, match.symbolB, context),
           if (propA && propB && !coincide)
             Padding(
               padding: const EdgeInsets.only(top: 16),
@@ -116,7 +116,7 @@ class MatchNegotiationCard extends StatelessWidget {
         fontWeight: FontWeight.bold,
       );
 
-  Widget _buildProposalRow(String label, double? costo, DateTime? fecha, BuildContext context) {
+  Widget _buildProposalRow(String label, double? costo, DateTime? fecha, String symbol, BuildContext context) {
     final theme = Theme.of(context);
     final textMuted = isDark ? const Color(0xFF9CA3AF) : Colors.black54;
 
@@ -128,7 +128,7 @@ class MatchNegotiationCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             Text(
-              costo != null ? '${match.currentSymbol}${costo.toStringAsFixed(2)}' : 'Sin propuesta',
+              costo != null ? '$symbol${costo.toStringAsFixed(2)}' : 'Sin propuesta',
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 color: costo != null ? theme.colorScheme.onSurface : textMuted.withValues(alpha: 0.5),
