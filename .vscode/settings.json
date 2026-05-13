@@ -1,0 +1,9 @@
+{
+    "cucumber.features": [
+        "integration_test/features/*.feature"
+    ],
+    "cucumber.glue": [
+        "integration_test/step_definitions/*.dart",
+        "integration_test/features/step/*.dart"
+    ]
+}
