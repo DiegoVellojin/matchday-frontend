@@ -104,6 +104,12 @@ class MatchEntity extends Equatable {
   /// Getter de compatibilidad para evitar romper código existente que use '.estatus'
   String get estatus => status.name;
 
+  /// Obtiene el símbolo de moneda actual basado en la negociación o acuerdo.
+  String get currentSymbol {
+    final displayMoneda = status.name == 'negociando' ? propuestaMonedaA : moneda;
+    return displayMoneda == 'EUR' ? '€' : '\$';
+  }
+
   @override
   List<Object?> get props => [
         id,

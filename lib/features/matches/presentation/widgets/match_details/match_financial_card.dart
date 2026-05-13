@@ -20,8 +20,7 @@ class MatchFinancialCard extends StatelessWidget {
     final colorScheme = theme.colorScheme;
     final totalPlayers = match.cuposTotales;
     final quota = match.cuotaPorJugador;
-    final displayMoneda = match.status.name == 'negociando' ? match.propuestaMonedaA : match.moneda;
-    final symbol = displayMoneda == 'EUR' ? '€' : '\$';
+    final symbol = match.currentSymbol;
 
     return Container(
       width: double.infinity,

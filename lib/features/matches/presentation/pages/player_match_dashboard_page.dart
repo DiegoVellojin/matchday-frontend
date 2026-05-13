@@ -324,7 +324,7 @@ class _PlayerMatchDashboardPageState extends State<PlayerMatchDashboardPage> {
               Text('Estado de Pagos', style: TextStyle(color: theme.colorScheme.onSurface, fontWeight: FontWeight.bold, fontSize: 16)),
               if (!_isLoadingPlayers)
                 Text(
-                  'Cuota: \$${_cuota.toStringAsFixed(2)}',
+                  'Cuota: ${_currentMatch.currentSymbol}${_cuota.toStringAsFixed(2)}',
                   style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 14),
                 ),
             ],

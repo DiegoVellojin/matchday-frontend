@@ -128,7 +128,7 @@ class MatchNegotiationCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             Text(
-              costo != null ? '${match.moneda == 'EUR' ? '€' : '\$'}${costo.toStringAsFixed(2)}' : 'Sin propuesta',
+              costo != null ? '${match.currentSymbol}${costo.toStringAsFixed(2)}' : 'Sin propuesta',
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 color: costo != null ? theme.colorScheme.onSurface : textMuted.withValues(alpha: 0.5),

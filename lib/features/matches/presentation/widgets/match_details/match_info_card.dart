@@ -91,7 +91,7 @@ class MatchInfoCard extends StatelessWidget {
           const SizedBox(height: 12),
           _buildDetailRow(
             match.moneda == 'EUR' ? Icons.euro_rounded : Icons.attach_money_rounded,
-            'Costo estimado: ${match.moneda == 'EUR' ? '€' : '\$'}${match.costoTotal}',
+            'Costo estimado: ${match.currentSymbol}${match.costoTotal}',
             context,
           ),
         ],

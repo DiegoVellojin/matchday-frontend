@@ -40,7 +40,7 @@ class MatchPaymentsStatusCard extends StatelessWidget {
             children: [
               Text('Estado de Pagos', style: _titleStyle(context)),
               Text(
-                'Cuota: \$${quota.toStringAsFixed(2)}',
+                'Cuota: ${match.currentSymbol}${quota.toStringAsFixed(2)}',
                 style: const TextStyle(
                   color: AppColors.primary,
                   fontWeight: FontWeight.bold,

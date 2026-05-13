@@ -308,7 +308,7 @@ class _CaptainMatchDashboardPageState extends State<CaptainMatchDashboardPage>
             children: [
               _buildMiniInfo(Icons.calendar_today, date, 'Fecha', accent, textMuted),
               _buildMiniInfo(Icons.stadium_outlined, match.nombreCancha ?? 'Campo', 'Sede', accent, textMuted),
-              _buildMiniInfo(Icons.payments_outlined, '\$${match.costoTotal.toStringAsFixed(0)}', 'Total', accent, textMuted),
+              _buildMiniInfo(Icons.payments_outlined, '${match.currentSymbol}${match.costoTotal.toStringAsFixed(0)}', 'Total', accent, textMuted),
             ],
           ),
         ],
@@ -449,7 +449,7 @@ class _CaptainMatchDashboardPageState extends State<CaptainMatchDashboardPage>
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text('Recaudación por jugador', style: TextStyle(color: Colors.black54, fontSize: 12, fontWeight: FontWeight.bold)),
-              Text('\$${cuota.toStringAsFixed(2)}', style: const TextStyle(color: Colors.black, fontSize: 28, fontWeight: FontWeight.bold)),
+              Text('${_match.currentSymbol}${cuota.toStringAsFixed(2)}', style: const TextStyle(color: Colors.black, fontSize: 28, fontWeight: FontWeight.bold)),
             ],
           ),
           const Icon(Icons.account_balance_wallet, color: Colors.black26, size: 40),
