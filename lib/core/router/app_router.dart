@@ -23,7 +23,7 @@ import '../../features/matches/presentation/pages/match_details_page.dart';
 import '../../features/matches/presentation/pages/captain_match_dashboard_page.dart';
 import '../../features/matches/presentation/pages/configure_match_page.dart';
 import '../../features/matches/presentation/pages/player_match_dashboard_page.dart';
-import '../../features/matches/presentation/pages/register_match_result_page.dart';
+import '../../features/matches/presentation/pages/register_result_page.dart';
 import '../../features/matches/presentation/pages/accept_encounter_page.dart';
 import '../../features/matches/presentation/pages/match_history_page.dart';
 import '../../features/matches/presentation/pages/match_history_detail_page.dart';
@@ -199,8 +199,10 @@ class AppRouter {
             path: '/register-result',
             pageBuilder: (context, state) {
               final extra = state.extra as Map<String, dynamic>?;
-              final matchEntity = extra?['matchEntity'];
-              return _buildTransitionPage(context: context, state: state, child: RegisterMatchResultPage(partido: matchEntity));
+              final matchEntity = extra?['matchEntity'] as MatchEntity;
+              final profileState = context.read<ProfileBloc>().state;
+              final currentUserId = profileState is ProfileLoaded ? profileState.profile.id : 0;
+              return _buildTransitionPage(context: context, state: state, child: RegisterResultPage(match: matchEntity, currentUserId: currentUserId));
             },
           ),
           GoRoute(

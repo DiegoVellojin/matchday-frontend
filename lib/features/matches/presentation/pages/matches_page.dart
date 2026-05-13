@@ -24,6 +24,7 @@ import '../../../profile/presentation/bloc/profile_bloc.dart';
 import '../../../profile/presentation/bloc/profile_state.dart';
 import '../utils/match_action_handler.dart';
 import '../widgets/matches_skeleton.dart';
+import '../../../../core/widgets/matchday_marquee.dart';
 
 class MatchesPage extends StatefulWidget {
   const MatchesPage({super.key});
@@ -102,19 +103,40 @@ class _MatchesPageState extends State<MatchesPage>
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  'Próximos Partidos',
-                  style: TextStyle(
-                    color: isDark ? Colors.white : Colors.black,
-                    fontWeight: FontWeight.w900,
-                    fontSize: 22,
-                    letterSpacing: -0.5,
-                  ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'PRÓXIMOS',
+                      style: TextStyle(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w900,
+                        fontSize: 10,
+                        letterSpacing: 2.0,
+                      ),
+                    ),
+                    Text(
+                      'Encuentros',
+                      style: TextStyle(
+                        color: isDark ? Colors.white : Colors.black,
+                        fontWeight: FontWeight.w900,
+                        fontSize: 26,
+                        letterSpacing: -0.5,
+                      ),
+                    ),
+                  ],
                 ),
-                const Icon(
-                  Icons.sports_soccer_outlined,
-                  color: AppColors.primary,
-                  size: 26,
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.sports_soccer_rounded,
+                    color: AppColors.primary,
+                    size: 24,
+                  ),
                 ),
               ],
             ),
@@ -239,6 +261,7 @@ class _MatchesPageState extends State<MatchesPage>
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
+        heroTag: 'matches_fab',
         onPressed: () => context.push('/crear-partido'),
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.black,
@@ -255,18 +278,22 @@ class _MatchesPageState extends State<MatchesPage>
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Container(
-        height: 50,
-        padding: const EdgeInsets.all(4),
+        height: 56,
+        padding: const EdgeInsets.all(6),
         decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF1F2937) : Colors.grey[100],
-          borderRadius: BorderRadius.circular(16),
+          color: isDark ? const Color(0xFF1E293B) : Colors.grey[100],
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.05),
+          ),
         ),
         child: Row(
           children: [
-            _buildSelectorTab('OFERTAS', !_isMyMatchesView, isDark, () {
+            _buildSelectorTab('DESCUBRIR', !_isMyMatchesView, isDark, () {
               setState(() => _isMyMatchesView = false);
               _applyFilters();
             }),
+            const SizedBox(width: 6),
             _buildSelectorTab('MIS PARTIDOS', _isMyMatchesView, isDark, () {
               setState(() => _isMyMatchesView = true);
               _applyFilters();
@@ -291,15 +318,15 @@ class _MatchesPageState extends State<MatchesPage>
           alignment: Alignment.center,
           decoration: BoxDecoration(
             color: isActive
-                ? (isDark ? Colors.black26 : Colors.white)
+                ? (isDark ? AppColors.primary : Colors.black)
                 : Colors.transparent,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(14),
             boxShadow: isActive
                 ? [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.05),
-                      blurRadius: 4,
-                      offset: const Offset(0, 2),
+                      color: (isDark ? AppColors.primary : Colors.black).withValues(alpha: 0.3),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
                     ),
                   ]
                 : null,
@@ -308,25 +335,24 @@ class _MatchesPageState extends State<MatchesPage>
             label,
             style: TextStyle(
               color: isActive
-                  ? (isDark ? Colors.white : Colors.black)
-                  : Colors.grey[500],
-              fontWeight: isActive ? FontWeight.w900 : FontWeight.w600,
-              fontSize: 12,
-              letterSpacing: 1,
+                  ? (isDark ? Colors.black : Colors.white)
+                  : (isDark ? Colors.grey[500] : Colors.grey[600]),
+              fontWeight: FontWeight.w900,
+              fontSize: 11,
+              letterSpacing: 1.2,
             ),
           ),
         ),
       ),
     );
   }
-
   Widget _buildPremiumMatchCard(
     MatchEntity match,
     bool isDark,
     int? currentUserId,
     bool isMyMatch,
   ) {
-    final cardColor = isDark ? const Color(0xFF1F2937) : Colors.white;
+    final cardColor = isDark ? const Color(0xFF1E293B) : Colors.white;
     final dateStr = _formatFullDate(match.fechaInicioEstimada);
     final timeStr = _formatTimeRange(
       match.fechaInicioEstimada,
@@ -336,24 +362,25 @@ class _MatchesPageState extends State<MatchesPage>
     return Container(
       decoration: BoxDecoration(
         color: cardColor,
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(32),
         border: Border.all(
           color: isDark
               ? Colors.white.withValues(alpha: 0.05)
               : Colors.black.withValues(alpha: 0.05),
+          width: 1.5,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: isDark ? 0.4 : 0.08),
-            blurRadius: 16,
-            offset: const Offset(0, 8),
+            color: Colors.black.withValues(alpha: isDark ? 0.4 : 0.1),
+            blurRadius: 25,
+            offset: const Offset(0, 12),
           ),
         ],
       ),
       child: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(20),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
@@ -364,41 +391,55 @@ class _MatchesPageState extends State<MatchesPage>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        match.nombreEquipoA ?? 'Partido #${match.id}',
+                        match.nombreEquipoA?.toUpperCase() ?? 'PARTIDO #${match.id}',
                         style: const TextStyle(
                           fontWeight: FontWeight.w900,
-                          fontSize: 17,
-                          letterSpacing: -0.5,
+                          fontSize: 15,
+                          letterSpacing: 0.5,
                         ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 4),
                       Row(
                         children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color: AppColors.primary.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Text(
-                              match.sportName?.toUpperCase() ?? 'DEPORTE',
-                              style: const TextStyle(
-                                color: AppColors.primary,
-                                fontSize: 9,
-                                fontWeight: FontWeight.w900,
+                          Flexible(
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: AppColors.primary.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                match.sportName?.toUpperCase() ?? 'DEPORTE',
+                                style: const TextStyle(
+                                  color: AppColors.primary,
+                                  fontSize: 8,
+                                  fontWeight: FontWeight.w900,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 1,
                               ),
                             ),
                           ),
                           const SizedBox(width: 8),
-                          Text(
-                            match.nombreCancha ?? 'Sin cancha',
-                            style: TextStyle(
-                              color: Colors.grey[500],
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
+                          _buildStatusBadge(match.estatus),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      // Cancha con Marquee y más visibilidad
+                      Row(
+                        children: [
+                          Icon(Icons.stadium_rounded, size: 14, color: isDark ? Colors.grey[600] : Colors.grey[400]),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: MatchDayMarquee(
+                              text: match.nombreCancha ?? 'Sin sede definida',
+                              style: TextStyle(
+                                color: isDark ? Colors.grey[400] : Colors.grey[600],
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                              ),
                             ),
                           ),
                         ],
@@ -406,26 +447,31 @@ class _MatchesPageState extends State<MatchesPage>
                     ],
                   ),
                 ),
-                _buildStatusBadge(match.estatus),
               ],
             ),
           ),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: isDark
                   ? Colors.black.withValues(alpha: 0.2)
                   : Colors.grey[50],
               borderRadius: const BorderRadius.vertical(
-                bottom: Radius.circular(28),
+                bottom: Radius.circular(32),
               ),
             ),
             child: Row(
               children: [
-                _buildIconInfo(Icons.calendar_today_rounded, dateStr, isDark),
-                const SizedBox(width: 16),
-                _buildIconInfo(Icons.access_time_rounded, timeStr, isDark),
-                const Spacer(),
+                Expanded(
+                  child: Row(
+                    children: [
+                      Flexible(child: _buildIconInfo(Icons.calendar_today_rounded, dateStr, isDark)),
+                      const SizedBox(width: 8),
+                      Flexible(child: _buildIconInfo(Icons.access_time_rounded, timeStr, isDark)),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
                 _buildActionButton(match, currentUserId, isMyMatch),
               ],
             ),
@@ -463,10 +509,10 @@ class _MatchesPageState extends State<MatchesPage>
   Widget _buildStatusBadge(String status) {
     final st = MatchStatus.fromString(status);
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
         color: st.color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(4),
       ),
       child: Text(
         st.label.toUpperCase(),
@@ -475,21 +521,28 @@ class _MatchesPageState extends State<MatchesPage>
           fontSize: 8,
           fontWeight: FontWeight.w900,
         ),
+        overflow: TextOverflow.ellipsis,
+        maxLines: 1,
       ),
     );
   }
 
   Widget _buildIconInfo(IconData icon, String label, bool isDark) {
     return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
         Icon(icon, size: 14, color: AppColors.primary.withValues(alpha: 0.7)),
         const SizedBox(width: 6),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.w700,
-            color: isDark ? Colors.grey[400] : Colors.grey[700],
+        Flexible(
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              color: isDark ? Colors.grey[400] : Colors.grey[700],
+            ),
+            overflow: TextOverflow.ellipsis,
+            maxLines: 1,
           ),
         ),
       ],
@@ -561,9 +614,9 @@ class _MatchesPageState extends State<MatchesPage>
   }
 
   String _formatFullDate(DateTime date) =>
-      DateFormat("d 'de' MMM", 'es_VE').format(date);
+      DateFormat("d 'de' MMM", 'es_VE').format(date.toLocal());
   String _formatTimeRange(DateTime start, DateTime end) =>
-      DateFormat('jm', 'es_VE').format(start).toLowerCase();
+      DateFormat('jm', 'es_VE').format(start.toLocal()).toLowerCase();
 
   void _applyFilters() {
     context.read<MatchesBloc>().add(

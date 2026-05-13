@@ -11,6 +11,7 @@ class TeamEntity {
   final int? sportId;
   final String description;
   final String? chatUrl;
+  final int matchesPlayed;
 
   const TeamEntity({
     required this.id,
@@ -25,7 +26,6 @@ class TeamEntity {
     this.captainId,
     this.description = '',
     this.chatUrl,
+    this.matchesPlayed = 0,
   });
-
 }
-

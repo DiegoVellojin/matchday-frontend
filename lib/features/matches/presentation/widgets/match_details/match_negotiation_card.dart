@@ -49,35 +49,51 @@ class MatchNegotiationCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(
-                coincide ? Icons.check_circle_outline : Icons.handshake_outlined,
-                color: coincide ? Colors.green : Colors.orange,
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: (coincide ? Colors.green : Colors.orange).withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  coincide ? Icons.check_circle_rounded : Icons.handshake_rounded,
+                  color: coincide ? Colors.green : Colors.orange,
+                  size: 20,
+                ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 12),
               Text('Estado de la Negociación', style: _titleStyle(context)),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
           _buildProposalRow('Capitán A', match.propuestaCostoA, match.propuestaFechaA, match.symbolA, context),
-          const SizedBox(height: 12),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            child: Divider(color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.05)),
+          ),
           _buildProposalRow('Capitán B (Rival)', match.propuestaCostoB, match.propuestaFechaB, match.symbolB, context),
           if (propA && propB && !coincide)
             Padding(
-              padding: const EdgeInsets.only(top: 16),
+              padding: const EdgeInsets.only(top: 20),
               child: Container(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: Colors.orange.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: Colors.orange.withValues(alpha: 0.2)),
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.info_outline, color: Colors.orange, size: 20),
-                    const SizedBox(width: 10),
+                    const Icon(Icons.info_outline_rounded, color: Colors.orange, size: 20),
+                    const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        'Los montos o fechas no coinciden. Usa "Coordinar Encuentro" para ajustar tu propuesta.',
-                        style: TextStyle(color: Colors.orange[300], fontSize: 12),
+                        'Los montos o fechas no coinciden. Se requiere coordinar propuesta.',
+                        style: TextStyle(
+                          color: Colors.orange[300], 
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                   ],
@@ -90,19 +106,23 @@ class MatchNegotiationCard extends StatelessWidget {
   }
 
   Widget _buildCard(BuildContext context, {required Widget child}) {
-    final theme = Theme.of(context);
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: theme.dividerColor),
+        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(
+          color: isDark 
+              ? Colors.white.withValues(alpha: 0.05) 
+              : Colors.black.withValues(alpha: 0.05),
+          width: 1.5,
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
           ),
         ],
       ),
@@ -111,35 +131,45 @@ class MatchNegotiationCard extends StatelessWidget {
   }
 
   TextStyle _titleStyle(BuildContext context) => TextStyle(
-        color: Theme.of(context).colorScheme.onSurface,
+        color: isDark ? Colors.white : Colors.black,
         fontSize: 16,
-        fontWeight: FontWeight.bold,
+        fontWeight: FontWeight.w900,
+        letterSpacing: -0.5,
       );
 
   Widget _buildProposalRow(String label, double? costo, DateTime? fecha, String symbol, BuildContext context) {
-    final theme = Theme.of(context);
-    final textMuted = isDark ? const Color(0xFF9CA3AF) : Colors.black54;
+    final textMuted = isDark ? Colors.grey[400] : Colors.black54;
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(label, style: TextStyle(color: textMuted, fontSize: 13)),
         Column(
-          crossAxisAlignment: CrossAxisAlignment.end,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              costo != null ? '$symbol${costo.toStringAsFixed(2)}' : 'Sin propuesta',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: costo != null ? theme.colorScheme.onSurface : textMuted.withValues(alpha: 0.5),
-              ),
-            ),
+            Text(label, style: TextStyle(color: textMuted, fontSize: 12, fontWeight: FontWeight.w600)),
+            const SizedBox(height: 4),
             if (fecha != null)
-              Text(
-                DateFormat('dd/MM - HH:mm').format(fecha),
-                style: TextStyle(color: textMuted, fontSize: 11),
+              Row(
+                children: [
+                  Icon(Icons.calendar_today_rounded, size: 10, color: textMuted),
+                  const SizedBox(width: 4),
+                  Text(
+                    DateFormat('dd/MM - HH:mm', 'es_VE').format(fecha.toLocal()),
+                    style: TextStyle(color: textMuted, fontSize: 11, fontWeight: FontWeight.bold),
+                  ),
+                ],
               ),
           ],
+        ),
+        Text(
+          costo != null ? '$symbol${costo.toStringAsFixed(2)}' : 'Sin propuesta',
+          style: TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w900,
+            color: costo != null 
+                ? (isDark ? Colors.white : Colors.black) 
+                : textMuted?.withValues(alpha: 0.5),
+          ),
         ),
       ],
     );

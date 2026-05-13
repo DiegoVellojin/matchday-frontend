@@ -26,7 +26,7 @@ class _MatchHistoryView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    final cs = theme.colorScheme;
     final profileState = context.read<ProfileBloc>().state;
     int? currentUserId;
     if (profileState is ProfileLoaded) {
@@ -36,30 +36,59 @@ class _MatchHistoryView extends StatelessWidget {
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: colorScheme.surface,
+        backgroundColor: theme.scaffoldBackgroundColor,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: colorScheme.onSurface),
+          icon: Icon(Icons.arrow_back_ios_new_rounded, color: cs.onSurface, size: 20),
           onPressed: () => context.pop(),
         ),
         title: Text(
-          'Historial de Partidos',
+          'HISTORIAL DE PARTIDOS',
           style: TextStyle(
-            color: colorScheme.onSurface,
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w900,
             fontSize: 18,
+            letterSpacing: -0.5,
+            color: cs.onSurface,
           ),
         ),
+        centerTitle: true,
       ),
       body: BlocBuilder<MatchesBloc, MatchesState>(
         builder: (context, state) {
           if (state is MatchesLoading) {
             return const MatchHistorySkeleton();
           } else if (state is MatchesError) {
-            return Center(child: Text(state.message));
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.error_outline_rounded, size: 48, color: cs.error.withValues(alpha: 0.5)),
+                    const SizedBox(height: 16),
+                    Text(state.message, textAlign: TextAlign.center, style: TextStyle(color: cs.onSurfaceVariant)),
+                  ],
+                ),
+              ),
+            );
           } else if (state is MatchesLoaded) {
+            if (state.matches.isEmpty) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.history_rounded, size: 64, color: cs.onSurfaceVariant.withValues(alpha: 0.2)),
+                    const SizedBox(height: 16),
+                    Text(
+                      'No tienes partidos finalizados aún.',
+                      style: TextStyle(color: cs.onSurfaceVariant, fontWeight: FontWeight.w600),
+                    ),
+                  ],
+                ),
+              );
+            }
             return SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
               child: MatchHistoryList(
                 matches: state.matches,
                 perspectiveUserId: currentUserId,

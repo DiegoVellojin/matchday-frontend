@@ -193,6 +193,7 @@ class _MyTeamsPageState extends State<MyTeamsPage> with AutomaticKeepAliveClient
             ),
           ),
           floatingActionButton: FloatingActionButton.extended(
+            heroTag: 'my_teams_fab',
             onPressed: () => context.push('/crear-equipo'),
             backgroundColor: AppColors.primary,
             foregroundColor: Colors.black,

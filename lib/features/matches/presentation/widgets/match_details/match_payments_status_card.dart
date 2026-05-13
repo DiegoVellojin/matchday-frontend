@@ -39,17 +39,24 @@ class MatchPaymentsStatusCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text('Estado de Pagos', style: _titleStyle(context)),
-              Text(
-                'Cuota: ${match.currentSymbol}${quota.toStringAsFixed(2)}',
-                style: const TextStyle(
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  'Cuota: ${match.currentSymbol}${quota.toStringAsFixed(2)}',
+                  style: const TextStyle(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w900,
+                    fontSize: 12,
+                  ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 24),
           _buildTeamProgress(
             myTotalCount > 0 && myPaidCount >= myTotalCount ? '✓ Tu Equipo al día' : '⏳ Tu Equipo ($myPaidCount/$myTotalCount)',
             myPaidCount,
@@ -57,21 +64,36 @@ class MatchPaymentsStatusCard extends StatelessWidget {
             AppColors.primary,
             theme,
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
           _buildTeamProgress(
             'Equipo Rival',
             rivalPaidCount,
             rivalTotalCount,
-            Colors.cyan,
+            Colors.cyanAccent,
             theme,
           ),
-          const SizedBox(height: 16),
-          Text(
-            'El partido se confirmará automáticamente cuando todos los jugadores hayan pagado.',
-            style: TextStyle(
-              color: textMuted,
-              fontSize: 11,
-              fontStyle: FontStyle.italic,
+          const SizedBox(height: 20),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: isDark ? Colors.white.withValues(alpha: 0.03) : Colors.black.withValues(alpha: 0.03),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.info_outline_rounded, size: 14, color: textMuted),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'El partido se confirmará cuando todos los cupos estén pagados.',
+                    style: TextStyle(
+                      color: textMuted,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -80,19 +102,23 @@ class MatchPaymentsStatusCard extends StatelessWidget {
   }
 
   Widget _buildCard(BuildContext context, {required Widget child}) {
-    final theme = Theme.of(context);
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: theme.dividerColor),
+        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(
+          color: isDark 
+              ? Colors.white.withValues(alpha: 0.05) 
+              : Colors.black.withValues(alpha: 0.05),
+          width: 1.5,
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
           ),
         ],
       ),
@@ -101,9 +127,10 @@ class MatchPaymentsStatusCard extends StatelessWidget {
   }
 
   TextStyle _titleStyle(BuildContext context) => TextStyle(
-        color: Theme.of(context).colorScheme.onSurface,
+        color: isDark ? Colors.white : Colors.black,
         fontSize: 16,
-        fontWeight: FontWeight.bold,
+        fontWeight: FontWeight.w900,
+        letterSpacing: -0.5,
       );
 
   Widget _buildTeamProgress(String label, int paid, int total, Color color, ThemeData theme) {
@@ -114,20 +141,34 @@ class MatchPaymentsStatusCard extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(label, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+            Text(label, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
             Text(
               '$paid de $total',
-              style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.bold),
+              style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.w900),
             ),
           ],
         ),
-        const SizedBox(height: 8),
-        LinearProgressIndicator(
-          value: progress,
-          backgroundColor: theme.dividerColor,
-          color: color,
-          minHeight: 6,
-          borderRadius: BorderRadius.circular(10),
+        const SizedBox(height: 10),
+        Stack(
+          children: [
+            Container(
+              height: 8,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.05),
+                borderRadius: BorderRadius.circular(4),
+              ),
+            ),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: LinearProgressIndicator(
+                value: progress,
+                backgroundColor: Colors.transparent,
+                color: color,
+                minHeight: 8,
+              ),
+            ),
+          ],
         ),
       ],
     );

@@ -300,17 +300,17 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
                             children: [
                               _buildSectionTitle('DEPORTE Y EQUIPO', isDark),
                               const SizedBox(height: 16),
-                              _buildPremiumLabel('Deporte'),
+                              _buildPremiumLabel('DEPORTE'),
                               _buildPremiumSportSelector(isDark),
                               const SizedBox(height: 24),
 
-                              _buildPremiumLabel('Tu Equipo'),
+                              _buildPremiumLabel('TU EQUIPO'),
                               _buildPremiumTeamSelector(isDark),
                               const SizedBox(height: 32),
 
                               _buildSectionTitle('PROGRAMACIÓN', isDark),
                               const SizedBox(height: 16),
-                              _buildPremiumLabel('Fecha del Encuentro'),
+                              _buildPremiumLabel('FECHA DEL ENCUENTRO'),
                               _buildPremiumTextField(
                                 controller: _dateController,
                                 hint: 'Selecciona la fecha',
@@ -346,7 +346,7 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
                                       children: [
-                                        _buildPremiumLabel('Hora Inicio'),
+                                        _buildPremiumLabel('HORA INICIO'),
                                         _buildPremiumTextField(
                                           controller: _startController,
                                           hint: '00:00',
@@ -376,7 +376,7 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
                                       children: [
-                                        _buildPremiumLabel('Hora Fin'),
+                                        _buildPremiumLabel('HORA FIN'),
                                         _buildPremiumTextField(
                                           controller: _endController,
                                           hint: '00:00',
@@ -407,11 +407,11 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
 
                               _buildSectionTitle('UBICACIÓN', isDark),
                               const SizedBox(height: 16),
-                              _buildPremiumLabel('Ciudad / Región'),
+                              _buildPremiumLabel('CIUDAD / REGIÓN'),
                               _buildPremiumRegionSelector(isDark),
                               const SizedBox(height: 24),
 
-                              _buildPremiumLabel('Cancha'),
+                              _buildPremiumLabel('CANCHA'),
                               _buildPremiumCanchaSelector(isDark),
 
                               const SizedBox(height: 12),
@@ -451,10 +451,15 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
 
   Widget _buildPremiumLabel(String text) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8.0),
+      padding: const EdgeInsets.only(left: 4, bottom: 8.0),
       child: Text(
         text,
-        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+        style: TextStyle(
+          fontSize: 10,
+          fontWeight: FontWeight.w900,
+          letterSpacing: 1.0,
+          color: AppColors.primary.withValues(alpha: 0.8),
+        ),
       ),
     );
   }
@@ -467,37 +472,52 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
     bool readOnly = false,
     VoidCallback? onTap,
   }) {
-    return TextFormField(
-      controller: controller,
-      readOnly: readOnly,
-      onTap: onTap,
-      style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
-      decoration: InputDecoration(
-        hintText: hint,
-        hintStyle: TextStyle(
-          color: isDark ? Colors.grey[600] : Colors.grey[400],
-          fontSize: 14,
-        ),
-        prefixIcon: Icon(icon, color: AppColors.primary, size: 20),
-        filled: true,
-        fillColor: isDark
-            ? Colors.white.withValues(alpha: 0.05)
-            : Colors.grey[100],
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide.none,
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide.none,
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
-        ),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 16,
+    return Container(
+      decoration: BoxDecoration(
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.1 : 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: TextFormField(
+        controller: controller,
+        readOnly: readOnly,
+        onTap: onTap,
+        style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+        decoration: InputDecoration(
+          hintText: hint,
+          hintStyle: TextStyle(
+            color: isDark ? Colors.grey[600] : Colors.grey[400],
+            fontSize: 14,
+          ),
+          prefixIcon: Icon(icon, color: AppColors.primary, size: 20),
+          filled: true,
+          fillColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(20),
+            borderSide: BorderSide(
+              color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.05),
+              width: 1.5,
+            ),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(20),
+            borderSide: BorderSide(
+              color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.05),
+              width: 1.5,
+            ),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(20),
+            borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+          ),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 18,
+          ),
         ),
       ),
     );
@@ -680,18 +700,21 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
   }
 
   Widget _buildPremiumCanchaSelector(bool isDark) {
-    if (selectedRegionId == null)
+    if (selectedRegionId == null) {
       return Text(
         'Primero selecciona una ciudad',
         style: TextStyle(color: Colors.grey[500], fontSize: 12),
       );
-    if (_isLoadingCanchas)
+    }
+    if (_isLoadingCanchas) {
       return const LinearProgressIndicator(color: AppColors.primary);
-    if (_canchas.isEmpty)
+    }
+    if (_canchas.isEmpty) {
       return Text(
         'No hay canchas registradas en esta ciudad.',
         style: TextStyle(color: Colors.grey[500], fontSize: 12),
       );
+    }
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -843,14 +866,30 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
   }
 
   Widget _buildSectionTitle(String title, bool isDark) {
-    return Text(
-      title.toUpperCase(),
-      style: TextStyle(
-        color: isDark ? Colors.white70 : Colors.black54,
-        fontSize: 12,
-        fontWeight: FontWeight.bold,
-        letterSpacing: 1.2,
-      ),
+    return Row(
+      children: [
+        Container(
+          width: 4,
+          height: 16,
+          decoration: BoxDecoration(
+            color: AppColors.primary,
+            borderRadius: BorderRadius.circular(2),
+            boxShadow: [
+              BoxShadow(color: AppColors.primary.withValues(alpha: 0.3), blurRadius: 4),
+            ],
+          ),
+        ),
+        const SizedBox(width: 12),
+        Text(
+          title.toUpperCase(),
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 0.5,
+            color: isDark ? Colors.white : Colors.black,
+          ),
+        ),
+      ],
     );
   }
 
@@ -943,30 +982,37 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
   ) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: isDark
-            ? Colors.white.withValues(alpha: 0.05)
-            : Colors.black.withValues(alpha: 0.03),
-        borderRadius: BorderRadius.circular(24),
+        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+        borderRadius: BorderRadius.circular(28),
         border: Border.all(
-          color: isDark ? Colors.white10 : Colors.black.withOpacity(0.1),
+          color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.05),
+          width: 1.5,
         ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
       ),
       child: Column(
         children: [
           Row(
             children: [
               Container(
-                width: 48,
-                height: 48,
+                width: 52,
+                height: 52,
                 decoration: BoxDecoration(
                   color: AppColors.primary.withValues(alpha: 0.1),
-                  shape: BoxShape.circle,
+                  borderRadius: BorderRadius.circular(16),
                 ),
                 child: const Icon(
                   Icons.sports_soccer_rounded,
                   color: AppColors.primary,
+                  size: 28,
                 ),
               ),
               const SizedBox(width: 16),
@@ -978,16 +1024,18 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
                       'Partido #${match.id}',
                       style: const TextStyle(
                         fontWeight: FontWeight.w900,
-                        fontSize: 16,
+                        fontSize: 18,
+                        letterSpacing: -0.5,
                       ),
                     ),
+                    const SizedBox(height: 4),
                     Text(
                       DateFormat(
                         'EEEE, d MMMM • HH:mm',
                         'es_VE',
                       ).format(match.fechaInicioEstimada),
                       style: TextStyle(
-                        color: Colors.grey[600],
+                        color: isDark ? Colors.grey[400] : Colors.black54,
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
                       ),
@@ -995,48 +1043,29 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
                   ],
                 ),
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 4,
-                ),
-                decoration: BoxDecoration(
-                  color: AppColors.primary,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Text(
-                  'DISPONIBLE',
-                  style: TextStyle(
-                    color: Colors.black,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-              ),
             ],
           ),
-          const SizedBox(height: 20),
-          AnimatedBouncingButton(
-            onTap: () {
-              Navigator.pop(context);
-              context.push('/match-details/${match.id}');
-            },
-            child: Container(
-              width: double.infinity,
-              height: 44,
-              decoration: BoxDecoration(
-                color: AppColors.primary,
-                borderRadius: BorderRadius.circular(12),
+          const SizedBox(height: 24),
+          SizedBox(
+            width: double.infinity,
+            height: 48,
+            child: ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+                context.push('/match-details/${match.id}');
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.black,
+                elevation: 0,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
               ),
-              child: const Center(
-                child: Text(
-                  'VER DETALLES',
-                  style: TextStyle(
-                    color: Colors.black,
-                    fontWeight: FontWeight.w900,
-                    fontSize: 13,
-                    letterSpacing: 0.5,
-                  ),
+              child: const Text(
+                'VER DETALLES',
+                style: TextStyle(
+                  fontWeight: FontWeight.w900,
+                  fontSize: 13,
+                  letterSpacing: 0.5,
                 ),
               ),
             ),

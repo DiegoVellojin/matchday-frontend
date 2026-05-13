@@ -4,6 +4,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import '../../../../../core/theme/app_colors.dart';
 import 'match_details_action_handler.dart';
 import '../../../domain/entities/match_entity.dart';
+import '../../../../../core/widgets/matchday_marquee.dart';
 
 class MatchDetailAppBar extends StatelessWidget {
   final MatchEntity match;
@@ -34,16 +35,16 @@ class MatchDetailAppBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SliverAppBar(
-      expandedHeight: 240.0,
+      expandedHeight: 280.0,
       pinned: true,
       stretch: true,
-      backgroundColor: isDark ? const Color(0xFF111827) : Colors.white,
+      backgroundColor: isDark ? const Color(0xFF0F172A) : Colors.white,
       elevation: 0,
       leading: IconButton(
         icon: Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.3), shape: BoxShape.circle),
-          child: const Icon(Icons.arrow_back, color: Colors.white, size: 20),
+          child: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 18),
         ),
         onPressed: () => context.pop(),
       ),
@@ -61,40 +62,44 @@ class MatchDetailAppBar extends StatelessWidget {
       ],
       flexibleSpace: FlexibleSpaceBar(
         stretchModes: const [StretchMode.zoomBackground, StretchMode.blurBackground],
-        titlePadding: const EdgeInsets.only(left: 20, bottom: 16, right: 20),
+        titlePadding: const EdgeInsets.only(left: 20, bottom: 20, right: 20),
         title: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
                 color: AppColors.primary,
-                borderRadius: BorderRadius.circular(4),
+                borderRadius: BorderRadius.circular(8),
+                boxShadow: [
+                  BoxShadow(color: AppColors.primary.withValues(alpha: 0.4), blurRadius: 8)
+                ],
               ),
               child: Text(
                 match.sportName?.toUpperCase() ?? 'MATCH',
                 style: const TextStyle(
                   fontWeight: FontWeight.w900,
-                  fontSize: 8,
+                  fontSize: 9,
                   color: Colors.black,
-                  letterSpacing: 1,
+                  letterSpacing: 1.2,
                 ),
               ),
-            ).animate().fadeIn(delay: 400.ms),
-            const SizedBox(height: 4),
-            Text(
-              match.nombreEquipoA != null
+            ).animate().fadeIn(delay: 400.ms).scale(),
+            const SizedBox(height: 8),
+            MatchDayMarquee(
+              text: match.nombreEquipoA != null
                   ? '${match.nombreEquipoA} vs ${match.nombreEquipoB ?? '(Esperando rival)'}'
                   : 'Detalles del Encuentro',
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
               style: const TextStyle(
                 fontWeight: FontWeight.w900,
-                fontSize: 16,
+                fontSize: 18,
                 color: Colors.white,
                 letterSpacing: -0.5,
-                shadows: [Shadow(color: Colors.black45, blurRadius: 10)],
+                shadows: [
+                  Shadow(color: Colors.black, blurRadius: 15),
+                  Shadow(color: Colors.black54, offset: Offset(0, 2)),
+                ],
               ),
             ),
           ],
@@ -108,10 +113,12 @@ class MatchDetailAppBar extends StatelessWidget {
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
+                  stops: const [0.0, 0.4, 0.7, 1.0],
                   colors: [
-                    Colors.black.withValues(alpha: 0.2),
+                    Colors.black.withValues(alpha: 0.4),
+                    Colors.black.withValues(alpha: 0.1),
                     Colors.black.withValues(alpha: 0.5),
-                    Colors.black.withValues(alpha: 0.9),
+                    isDark ? const Color(0xFF0F172A) : Colors.black.withValues(alpha: 0.9),
                   ],
                 ),
               ),

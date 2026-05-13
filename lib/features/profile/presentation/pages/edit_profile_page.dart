@@ -152,8 +152,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
           ),
           ElevatedButton(
             onPressed: () {
-              if (dialogFormKey.currentState!.validate())
+              if (dialogFormKey.currentState!.validate()) {
                 Navigator.pop(context);
+              }
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
@@ -210,8 +211,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
         body: BlocBuilder<ProfileBloc, ProfileState>(
           builder: (context, state) {
             final isLoading = state is ProfileUpdating;
-            if (state is ProfileInitial || state is ProfileLoading)
+            if (state is ProfileInitial || state is ProfileLoading) {
               return const EditProfileSkeleton();
+            }
 
             return Form(
               key: _formKey,

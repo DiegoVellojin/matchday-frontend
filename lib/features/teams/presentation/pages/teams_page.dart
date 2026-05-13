@@ -447,6 +447,7 @@ class _TeamsViewState extends State<_TeamsView> {
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
+        heroTag: 'teams_fab',
         onPressed: () => context.push('/crear-equipo'),
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.black,

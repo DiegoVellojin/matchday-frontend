@@ -213,44 +213,51 @@ class _ConfigureMatchPageState extends State<ConfigureMatchPage> {
   }
 
   Widget _buildAppBar(BuildContext context, ColorScheme colorScheme) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return SliverAppBar(
-      expandedHeight: 120,
+      expandedHeight: 140,
       pinned: true,
-      backgroundColor: colorScheme.surface,
+      elevation: 0,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       flexibleSpace: FlexibleSpaceBar(
-        titlePadding: const EdgeInsets.only(left: 56, bottom: 16),
+        centerTitle: false,
+        titlePadding: const EdgeInsets.only(left: 56, bottom: 20),
         title: Text(
           'Configurar Encuentro',
           style: TextStyle(
-            color: colorScheme.onSurface,
-            fontWeight: FontWeight.bold,
+            color: isDark ? Colors.white : Colors.black,
+            fontWeight: FontWeight.w900,
             fontSize: 18,
+            letterSpacing: -0.5,
           ),
         ),
       ),
       leading: IconButton(
-        icon: const Icon(Icons.arrow_back_ios_new, size: 20),
+        icon: Icon(
+          Icons.arrow_back_ios_new_rounded,
+          color: isDark ? Colors.white : Colors.black,
+          size: 20,
+        ),
         onPressed: () => Navigator.pop(context),
       ),
     );
   }
 
   Widget _buildRivalCard(BuildContext context, bool isDark) {
-    final textMuted = isDark ? const Color(0xFF9CA3AF) : Colors.black54;
-
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(24),
+        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+        borderRadius: BorderRadius.circular(28),
         border: Border.all(
-          color: Theme.of(context).dividerColor.withValues(alpha: 0.5),
+          color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.05),
+          width: 1.5,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
           ),
         ],
       ),
@@ -261,13 +268,14 @@ class _ConfigureMatchPageState extends State<ConfigureMatchPage> {
               Hero(
                 tag: 'rival_logo_${widget.partido.id}',
                 child: Container(
-                  width: 60,
-                  height: 60,
+                  width: 64,
+                  height: 64,
                   decoration: BoxDecoration(
                     color: AppColors.primary.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                     border: Border.all(
                       color: AppColors.primary.withValues(alpha: 0.2),
+                      width: 2,
                     ),
                   ),
                   child: ClipOval(
@@ -283,7 +291,7 @@ class _ConfigureMatchPageState extends State<ConfigureMatchPage> {
                   ),
                 ),
               ),
-              const SizedBox(width: 16),
+              const SizedBox(width: 20),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -292,36 +300,43 @@ class _ConfigureMatchPageState extends State<ConfigureMatchPage> {
                       widget.partido.nombreEquipoA ?? 'Rival Desconocido',
                       style: const TextStyle(
                         fontSize: 20,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: -0.5,
                       ),
                     ),
+                    const SizedBox(height: 4),
                     Text(
                       'Capitán: ${widget.partido.nombreCapitanA ?? 'Pendiente'}',
-                      style: TextStyle(color: textMuted, fontSize: 14),
+                      style: TextStyle(
+                        color: isDark ? Colors.grey[400] : Colors.black54,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ],
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 24),
           SizedBox(
             width: double.infinity,
             height: 54,
             child: ElevatedButton.icon(
               onPressed: _handleContactar,
-              icon: const Icon(Icons.chat_bubble_outline),
+              icon: const Icon(Icons.chat_bubble_rounded, size: 20),
               label: const Text(
-                'Coordinar por WhatsApp',
-                style: TextStyle(fontWeight: FontWeight.bold),
+                'COORDINAR POR WHATSAPP',
+                style: TextStyle(fontWeight: FontWeight.w900, fontSize: 13, letterSpacing: 0.5),
               ),
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF25D366).withValues(alpha: 0.9),
                 foregroundColor: Colors.white,
+                elevation: 8,
+                shadowColor: const Color(0xFF25D366).withValues(alpha: 0.3),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(18),
                 ),
-                elevation: 0,
               ),
             ),
           ),
@@ -331,9 +346,6 @@ class _ConfigureMatchPageState extends State<ConfigureMatchPage> {
   }
 
   Widget _buildCostoCard(BuildContext context, bool isDark) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final textMuted = isDark ? const Color(0xFF9CA3AF) : Colors.black54;
 
     return BlocBuilder<ConfigBloc, ConfigState>(
       builder: (context, configState) {
@@ -347,20 +359,17 @@ class _ConfigureMatchPageState extends State<ConfigureMatchPage> {
         final cuotaBs = cuotaDolar * rate;
 
         return Container(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.all(32),
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: isDark 
-                ? [colorScheme.surface, colorScheme.surface.withValues(alpha: 0.8)]
-                : [Colors.white, Colors.grey[50]!],
-            ),
+            color: isDark ? const Color(0xFF1E293B) : Colors.white,
             borderRadius: BorderRadius.circular(32),
-            border: Border.all(color: theme.dividerColor.withValues(alpha: 0.5)),
+            border: Border.all(
+              color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.05),
+              width: 1.5,
+            ),
             boxShadow: [
               BoxShadow(
-                color: AppColors.primary.withValues(alpha: isDark ? 0.05 : 0.02),
+                color: Colors.black.withValues(alpha: 0.1),
                 blurRadius: 20,
                 offset: const Offset(0, 10),
               ),
@@ -372,13 +381,20 @@ class _ConfigureMatchPageState extends State<ConfigureMatchPage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Row(
+                  Row(
                     children: [
-                      Icon(Icons.payments_outlined, color: AppColors.primary, size: 20),
-                      SizedBox(width: 10),
-                      Text(
-                        'Costo de Cancha',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, letterSpacing: 0.5),
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Icon(Icons.payments_rounded, color: AppColors.primary, size: 18),
+                      ),
+                      const SizedBox(width: 12),
+                      const Text(
+                        'COSTO DE CANCHA',
+                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w900, letterSpacing: 0.5),
                       ),
                     ],
                   ),
@@ -386,12 +402,12 @@ class _ConfigureMatchPageState extends State<ConfigureMatchPage> {
                     const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary)),
                 ],
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 32),
               TextField(
                 controller: _costoController,
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 style: const TextStyle(
-                  fontSize: 42,
+                  fontSize: 48,
                   fontWeight: FontWeight.w900,
                   color: AppColors.primary,
                   letterSpacing: -1,
@@ -404,11 +420,11 @@ class _ConfigureMatchPageState extends State<ConfigureMatchPage> {
                       child: DropdownButton<String>(
                         value: _monedaSeleccionada,
                         elevation: 16,
-                        dropdownColor: theme.colorScheme.surface,
+                        dropdownColor: isDark ? const Color(0xFF1F2937) : Colors.white,
                         borderRadius: BorderRadius.circular(16),
                         items: const [
-                          DropdownMenuItem(value: 'USD', child: Text('\$', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: AppColors.primary))),
-                          DropdownMenuItem(value: 'EUR', child: Text('€', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: AppColors.primary))),
+                          DropdownMenuItem(value: 'USD', child: Text('\$', style: TextStyle(fontSize: 28, fontWeight: FontWeight.w900, color: AppColors.primary))),
+                          DropdownMenuItem(value: 'EUR', child: Text('€', style: TextStyle(fontSize: 28, fontWeight: FontWeight.w900, color: AppColors.primary))),
                         ],
                         onChanged: (val) => setState(() => _monedaSeleccionada = val!),
                         icon: const Icon(Icons.keyboard_arrow_down_rounded, color: AppColors.primary),
@@ -424,23 +440,33 @@ class _ConfigureMatchPageState extends State<ConfigureMatchPage> {
                 Center(
                   child: Text(
                     '≈ Bs. ${NumberFormat("#,##0.00", "es_VE").format(bsAmount)}',
-                    style: TextStyle(color: textMuted, fontSize: 14, fontWeight: FontWeight.w500),
+                    style: TextStyle(color: isDark ? Colors.grey[400] : Colors.black54, fontSize: 14, fontWeight: FontWeight.w700),
                   ),
                 ),
-                const SizedBox(height: 24),
-                const Divider(),
-                const SizedBox(height: 16),
-                _buildFinancialRow(
-                  'Cuota por jugador:',
-                  '${_monedaSeleccionada == 'USD' ? '\$' : '€'}${cuotaDolar.toStringAsFixed(2)}',
-                  AppColors.primary,
-                ),
-                const SizedBox(height: 8),
-                _buildFinancialRow(
-                  'Equivalente en Bolívares:',
-                  'Bs. ${NumberFormat("#,##0.00", "es_VE").format(cuotaBs)}',
-                  textMuted,
-                  isSecondary: true,
+                const SizedBox(height: 32),
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: isDark ? Colors.white.withValues(alpha: 0.03) : Colors.black.withValues(alpha: 0.03),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.05)),
+                  ),
+                  child: Column(
+                    children: [
+                      _buildFinancialRow(
+                        'Cuota por jugador:',
+                        '${_monedaSeleccionada == 'USD' ? '\$' : '€'}${cuotaDolar.toStringAsFixed(2)}',
+                        AppColors.primary,
+                      ),
+                      const SizedBox(height: 12),
+                      _buildFinancialRow(
+                        'Equivalente en Bolívares:',
+                        'Bs. ${NumberFormat("#,##0.00", "es_VE").format(cuotaBs)}',
+                        isDark ? Colors.grey[400]! : Colors.black54,
+                        isSecondary: true,
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ],
@@ -508,46 +534,62 @@ class _ConfigureMatchPageState extends State<ConfigureMatchPage> {
   }
 
   Widget _buildBankingCard(BuildContext context, bool isDark) {
-    final theme = Theme.of(context);
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: theme.dividerColor),
+        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(
+          color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.05),
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             children: [
-              Icon(Icons.account_balance_outlined, color: AppColors.primary),
-              SizedBox(width: 10),
-              Text(
-                'Tus Datos de Pago',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(Icons.account_balance_rounded, color: AppColors.primary, size: 18),
+              ),
+              const SizedBox(width: 12),
+              const Text(
+                'TUS DATOS DE PAGO',
+                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w900, letterSpacing: 0.5),
               ),
             ],
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 24),
           _buildStyledTextField(
             'Banco / Plataforma',
             _bancoController,
-            Icons.account_balance,
+            Icons.account_balance_rounded,
             isDark,
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
           _buildStyledTextField(
             'Documento (Cédula/RIF)',
             _cedulaController,
-            Icons.badge_outlined,
+            Icons.badge_rounded,
             isDark,
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
           _buildStyledTextField(
             'Teléfono Móvil',
             _telefonoController,
-            Icons.phone_android,
+            Icons.phone_android_rounded,
             isDark,
             keyboardType: TextInputType.phone,
           ),
@@ -563,25 +605,53 @@ class _ConfigureMatchPageState extends State<ConfigureMatchPage> {
     bool isDark, {
     TextInputType? keyboardType,
   }) {
-    final theme = Theme.of(context);
-    final textMuted = isDark ? const Color(0xFF9CA3AF) : Colors.black54;
-
-    return TextField(
-      controller: controller,
-      keyboardType: keyboardType,
-      decoration: InputDecoration(
-        labelText: label,
-        labelStyle: TextStyle(color: textMuted, fontSize: 14),
-        prefixIcon: Icon(icon, size: 20, color: textMuted),
-        filled: true,
-        fillColor: theme.scaffoldBackgroundColor.withValues(alpha: 0.5),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide.none,
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: AppColors.primary, width: 1),
+    return Container(
+      decoration: BoxDecoration(
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.1 : 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: TextField(
+        controller: controller,
+        keyboardType: keyboardType,
+        style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+        decoration: InputDecoration(
+          labelText: label.toUpperCase(),
+          labelStyle: TextStyle(
+            color: isDark ? Colors.grey[400] : Colors.black54,
+            fontSize: 10,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 1.0,
+          ),
+          prefixIcon: Icon(icon, size: 20, color: AppColors.primary),
+          filled: true,
+          fillColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(20),
+            borderSide: BorderSide(
+              color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.05),
+              width: 1.5,
+            ),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(20),
+            borderSide: BorderSide(
+              color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.05),
+              width: 1.5,
+            ),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(20),
+            borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+          ),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 18,
+          ),
         ),
       ),
     );
@@ -736,55 +806,71 @@ class _ConfigureMatchPageState extends State<ConfigureMatchPage> {
   }
 
   Widget _buildFooter(BuildContext context, bool isDark) {
-    final theme = Theme.of(context);
-    return Container(
-      padding: const EdgeInsets.fromLTRB(20, 10, 20, 30),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.3),
-            blurRadius: 20,
-            offset: const Offset(0, -5),
+    return SafeArea(
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
+        decoration: BoxDecoration(
+          color: Theme.of(context).scaffoldBackgroundColor,
+          border: Border(
+            top: BorderSide(
+              color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.05),
+              width: 1,
+            ),
           ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text(
-                'Cerrar',
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: OutlinedButton(
+                onPressed: () => Navigator.pop(context),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: isDark ? Colors.white : Colors.black,
+                  side: BorderSide(
+                    color: isDark ? Colors.white.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.1),
+                  ),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                ),
+                child: const Text(
+                  'CERRAR',
+                  style: TextStyle(fontWeight: FontWeight.w900, fontSize: 12, letterSpacing: 0.5),
                 ),
               ),
             ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            flex: 2,
-            child: ElevatedButton(
-              onPressed: _costoActual > 0
-                  ? () => _handleConfirmar(context)
-                  : null,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: Colors.black,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
+            const SizedBox(width: 16),
+            Expanded(
+              flex: 2,
+              child: Container(
+                decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.primary.withValues(alpha: 0.3),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
                 ),
-                elevation: 0,
-              ),
-              child: const Text(
-                'Enviar Propuesta',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                child: ElevatedButton(
+                  onPressed: _costoActual > 0
+                      ? () => _handleConfirmar(context)
+                      : null,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.black,
+                    elevation: 0,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  ),
+                  child: const Text(
+                    'ENVIAR PROPUESTA',
+                    style: TextStyle(fontWeight: FontWeight.w900, fontSize: 13, letterSpacing: 0.5),
+                  ),
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

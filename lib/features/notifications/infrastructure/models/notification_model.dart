@@ -17,7 +17,9 @@ class NotificationModel extends NotificationEntity {
       userId: json['fk_id_usuario'] as int,
       message: json['mensaje'] as String,
       isRead: json['leida'] as bool,
-      createdAt: DateTime.parse(json['fecha_creacion'] as String),
+      createdAt: DateTime.parse(json['fecha_creacion'].toString().endsWith('Z') 
+          ? json['fecha_creacion'] as String 
+          : '${json['fecha_creacion']}Z'),
       type: json['tipo'] as String?,
       referenceId: json['referencia_id'] as int?,
     );

@@ -123,9 +123,9 @@ class MatchHistoryList extends StatelessWidget {
       children: [
         Expanded(child: _buildStatItem('Victorias', wins.toString(), AppColors.primary)),
         const SizedBox(width: 12),
-        Expanded(child: _buildStatItem('Empates', draws.toString(), Colors.yellow[600]!)),
+        Expanded(child: _buildStatItem('Empates', draws.toString(), Colors.orangeAccent)),
         const SizedBox(width: 12),
-        Expanded(child: _buildStatItem('Derrotas', losses.toString(), Colors.red[400]!)),
+        Expanded(child: _buildStatItem('Derrotas', losses.toString(), Colors.redAccent)),
       ],
     );
   }
@@ -134,21 +134,14 @@ class MatchHistoryList extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 20),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            color.withValues(alpha: 0.15),
-            color.withValues(alpha: 0.05),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withValues(alpha: 0.3), width: 1.5),
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: color.withValues(alpha: 0.2), width: 1.5),
         boxShadow: [
           BoxShadow(
             color: color.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
@@ -156,12 +149,12 @@ class MatchHistoryList extends StatelessWidget {
         children: [
           Text(
             value,
-            style: TextStyle(color: color, fontSize: 28, fontWeight: FontWeight.bold),
+            style: TextStyle(color: color, fontSize: 32, fontWeight: FontWeight.w900),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 2),
           Text(
             label.toUpperCase(),
-            style: TextStyle(color: color.withValues(alpha: 0.8), fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 0.5),
+            style: TextStyle(color: color, fontSize: 9, fontWeight: FontWeight.w900, letterSpacing: 0.5),
           ),
         ],
       ),
@@ -170,142 +163,139 @@ class MatchHistoryList extends StatelessWidget {
 
   Widget _buildHistoryCard(BuildContext context, MatchEntity match, bool isDark) {
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    final cs = theme.colorScheme;
     final textMuted = isDark ? Colors.grey[400] : Colors.black54;
 
     final result = _getMatchResult(match);
     final resultColor = _getResultColor(result);
     final score = _getScoreDisplay(match);
 
-    return InkWell(
-      onTap: () => context.push('/match-history-detail/${match.id}'),
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: colorScheme.surface,
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: theme.dividerColor),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 12,
-              offset: const Offset(0, 6),
-            ),
-          ],
+    return Container(
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+        borderRadius: BorderRadius.circular(32),
+        border: Border.all(
+          color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.05),
+          width: 1.5,
         ),
-        child: Column(
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  children: [
-                    Icon(Icons.calendar_today, size: 14, color: textMuted),
-                    const SizedBox(width: 8),
-                    Text(
-                      DateFormat('EEE, d MMMM', 'es_VE').format(match.fechaInicioEstimada),
-                      style: TextStyle(color: textMuted, fontSize: 13, fontWeight: FontWeight.w500),
-                    ),
-                  ],
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: resultColor.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: resultColor.withValues(alpha: 0.2)),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: InkWell(
+        onTap: () => context.push('/match-history-detail/${match.id}'),
+        borderRadius: BorderRadius.circular(32),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
                     children: [
-                      Container(
-                        width: 6,
-                        height: 6,
-                        decoration: BoxDecoration(color: resultColor, shape: BoxShape.circle),
-                      ),
+                      Icon(Icons.calendar_today_rounded, size: 14, color: textMuted),
                       const SizedBox(width: 8),
                       Text(
-                        result.toUpperCase(),
-                        style: TextStyle(color: resultColor, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 0.5),
+                        DateFormat("EEE, d 'de' MMMM", 'es_VE').format(match.fechaInicioEstimada.toLocal()).toUpperCase(),
+                        style: TextStyle(color: textMuted, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 0.5),
                       ),
                     ],
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            Row(
-              children: [
-                Container(
-                  width: 50,
-                  height: 50,
-                  decoration: BoxDecoration(
-                    color: theme.scaffoldBackgroundColor, 
-                    shape: BoxShape.circle, 
-                    border: Border.all(color: theme.dividerColor, width: 1.5),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.1),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: ClipOval(
-                    child: _getOpponentLogo(match) != null
-                      ? Image.network(
-                          _getOpponentLogo(match)!, 
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) => const Center(child: Text('⚽', style: TextStyle(fontSize: 24))),
-                        )
-                      : const Center(child: Text('⚽', style: TextStyle(fontSize: 24))),
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'vs ${_getOpponentName(match)}',
-                        style: TextStyle(color: colorScheme.onSurface, fontWeight: FontWeight.bold, fontSize: 16),
-                      ),
-                      const SizedBox(height: 6),
-                      Row(
-                        children: [
-                          Icon(Icons.location_on, size: 14, color: AppColors.primary.withValues(alpha: 0.7)),
-                          const SizedBox(width: 6),
-                          Expanded(
-                            child: Text(
-                              match.nombreCancha ?? 'Ubicación por definir',
-                              style: TextStyle(color: textMuted, fontSize: 13),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: isDark ? Colors.black26 : Colors.grey[100],
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    score,
-                    style: TextStyle(
-                      color: colorScheme.onSurface, 
-                      fontSize: 24, 
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 1.0,
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: resultColor.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: resultColor.withValues(alpha: 0.2)),
+                    ),
+                    child: Text(
+                      result.toUpperCase(),
+                      style: TextStyle(color: resultColor, fontSize: 9, fontWeight: FontWeight.w900, letterSpacing: 0.5),
                     ),
                   ),
-                ),
-              ],
-            ),
-          ],
+                ],
+              ),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Container(
+                    width: 56,
+                    height: 56,
+                    decoration: BoxDecoration(
+                      color: isDark ? Colors.black26 : Colors.grey[100], 
+                      shape: BoxShape.circle, 
+                      border: Border.all(color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.05), width: 1.5),
+                    ),
+                    child: ClipOval(
+                      child: _getOpponentLogo(match) != null
+                        ? Image.network(
+                            _getOpponentLogo(match)!, 
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) => const Icon(Icons.sports_soccer_rounded, size: 24, color: AppColors.primary),
+                          )
+                        : const Icon(Icons.sports_soccer_rounded, size: 24, color: AppColors.primary),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'VS',
+                          style: TextStyle(color: cs.primary, fontWeight: FontWeight.w900, fontSize: 10, letterSpacing: 1),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          _getOpponentName(match).toUpperCase(),
+                          style: TextStyle(color: isDark ? Colors.white : Colors.black, fontWeight: FontWeight.w900, fontSize: 16, letterSpacing: -0.5),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            Icon(Icons.location_on_rounded, size: 12, color: cs.primary),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: Text(
+                                match.nombreCancha?.toUpperCase() ?? 'SEDE NO REGISTRADA',
+                                style: TextStyle(color: textMuted, fontSize: 10, fontWeight: FontWeight.w700),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: isDark ? Colors.black26 : Colors.grey[100],
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.05)),
+                    ),
+                    child: Text(
+                      score,
+                      style: TextStyle(
+                        color: isDark ? Colors.white : Colors.black, 
+                        fontSize: 22, 
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 1.0,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -317,14 +307,16 @@ class MatchHistoryList extends StatelessWidget {
 
     if (golesA == golesB) return 'Empate';
 
-    bool isMainTeam;
-    if (perspectiveTeamId != null) {
-      isMainTeam = match.idEquipoA == perspectiveTeamId;
+    bool isTeamA;
+    if (match.idEquipoUsuario != null) {
+      isTeamA = match.idEquipoUsuario == match.idEquipoA;
+    } else if (perspectiveTeamId != null) {
+      isTeamA = match.idEquipoA == perspectiveTeamId;
     } else {
-      isMainTeam = perspectiveUserId != null && match.idUsuarioOrg == perspectiveUserId;
+      isTeamA = perspectiveUserId != null && match.idUsuarioOrg == perspectiveUserId;
     }
     
-    if (isMainTeam) {
+    if (isTeamA) {
       return golesA > golesB ? 'Victoria' : 'Derrota';
     } else {
       return golesB > golesA ? 'Victoria' : 'Derrota';
@@ -340,26 +332,40 @@ class MatchHistoryList extends StatelessWidget {
   String _getScoreDisplay(MatchEntity match) {
     final golesA = match.resultadoGolesACapA ?? match.resultadoGolesACapB ?? 0;
     final golesB = match.resultadoGolesBCapA ?? match.resultadoGolesBCapB ?? 0;
-    return '$golesA - $golesB';
+
+    bool isTeamA;
+    if (match.idEquipoUsuario != null) {
+      isTeamA = match.idEquipoUsuario == match.idEquipoA;
+    } else if (perspectiveTeamId != null) {
+      isTeamA = match.idEquipoA == perspectiveTeamId;
+    } else {
+      isTeamA = perspectiveUserId != null && match.idUsuarioOrg == perspectiveUserId;
+    }
+
+    return isTeamA ? '$golesA - $golesB' : '$golesB - $golesA';
   }
 
   String _getOpponentName(MatchEntity match) {
-    bool isMainTeam;
-    if (perspectiveTeamId != null) {
-      isMainTeam = match.idEquipoA == perspectiveTeamId;
+    bool isTeamA;
+    if (match.idEquipoUsuario != null) {
+      isTeamA = match.idEquipoUsuario == match.idEquipoA;
+    } else if (perspectiveTeamId != null) {
+      isTeamA = match.idEquipoA == perspectiveTeamId;
     } else {
-      isMainTeam = perspectiveUserId != null && match.idUsuarioOrg == perspectiveUserId;
+      isTeamA = perspectiveUserId != null && match.idUsuarioOrg == perspectiveUserId;
     }
-    return isMainTeam ? (match.nombreEquipoB ?? 'Rival') : (match.nombreEquipoA ?? 'Rival');
+    return isTeamA ? (match.nombreEquipoB ?? 'Rival') : (match.nombreEquipoA ?? 'Rival');
   }
 
   String? _getOpponentLogo(MatchEntity match) {
-    bool isMainTeam;
-    if (perspectiveTeamId != null) {
-      isMainTeam = match.idEquipoA == perspectiveTeamId;
+    bool isTeamA;
+    if (match.idEquipoUsuario != null) {
+      isTeamA = match.idEquipoUsuario == match.idEquipoA;
+    } else if (perspectiveTeamId != null) {
+      isTeamA = match.idEquipoA == perspectiveTeamId;
     } else {
-      isMainTeam = perspectiveUserId != null && match.idUsuarioOrg == perspectiveUserId;
+      isTeamA = perspectiveUserId != null && match.idUsuarioOrg == perspectiveUserId;
     }
-    return isMainTeam ? match.logoEquipoB : match.logoEquipoA;
+    return isTeamA ? match.logoEquipoB : match.logoEquipoA;
   }
 }

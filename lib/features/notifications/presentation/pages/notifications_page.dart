@@ -270,11 +270,22 @@ class _NotificationsViewState extends State<_NotificationsView> {
   }
 
   String _formatDate(DateTime date) {
-    final now = DateTime.now();
-    final diff = now.difference(date);
-    if (diff.inMinutes < 60) return 'Hace ${diff.inMinutes} min';
-    if (diff.inHours < 24) return 'Hace ${diff.inHours} h';
+    final now = DateTime.now().toUtc();
+    final createdAt = date.isUtc ? date : date.toUtc();
+    final diff = now.difference(createdAt);
+    
+    if (diff.inSeconds < 60) return 'Ahora mismo';
+    if (diff.inMinutes < 60) {
+      final mins = diff.inMinutes;
+      return mins > 0 ? 'Hace $mins min' : 'Ahora mismo';
+    }
+    if (diff.inHours < 24) {
+      final hours = diff.inHours;
+      return hours > 0 ? 'Hace $hours h' : 'Hace 1 h';
+    }
     if (diff.inDays == 1) return 'Ayer';
-    return '${date.day}/${date.month}/${date.year}';
+    
+    final displayDate = date.toLocal();
+    return '${displayDate.day}/${displayDate.month}/${displayDate.year}';
   }
 }

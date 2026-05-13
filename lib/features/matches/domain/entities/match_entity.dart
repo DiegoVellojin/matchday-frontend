@@ -52,6 +52,7 @@ class MatchEntity extends Equatable {
   final String? bancoCapitanB;
   final String? cedulaCapitanB;
   final String? telefonoCapitanBPago;
+  final int? idEquipoUsuario;
 
   const MatchEntity({
     required this.id,
@@ -99,6 +100,7 @@ class MatchEntity extends Equatable {
     this.bancoCapitanB,
     this.cedulaCapitanB,
     this.telefonoCapitanBPago,
+    this.idEquipoUsuario,
   });
 
   /// Getter de compatibilidad para evitar romper código existente que use '.estatus'
@@ -162,6 +164,7 @@ class MatchEntity extends Equatable {
         bancoCapitanB,
         cedulaCapitanB,
         telefonoCapitanBPago,
+        idEquipoUsuario,
       ];
 }
 

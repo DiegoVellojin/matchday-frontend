@@ -14,14 +14,20 @@ import 'features/notifications/presentation/bloc/notifications_bloc.dart';
 import 'features/notifications/presentation/bloc/notifications_event.dart';
 import 'features/config/presentation/bloc/config_bloc.dart';
 
+import 'package:intl/date_symbol_data_local.dart';
+
 void main() async {
   // 1. Aseguramos que Flutter esté listo
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // 2. Inicializamos el formateo de fechas en español
+  await initializeDateFormatting('es_VE', null);
+
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  // 2. Inicializamos GetIt ANTES de correr la app
+  // 3. Inicializamos GetIt ANTES de correr la app
   await di.init();
 
   runApp(const MatchDayApp());

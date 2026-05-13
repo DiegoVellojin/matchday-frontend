@@ -24,21 +24,28 @@ class MatchConfirmedActionCard extends StatelessWidget {
         context,
         child: Column(
           children: [
-            const Icon(Icons.shield, color: AppColors.primary, size: 32),
-            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.verified_rounded, color: AppColors.primary, size: 32),
+            ),
+            const SizedBox(height: 16),
             Text('¡Alineaciones Confirmadas!', style: _titleStyle(context)),
             const SizedBox(height: 8),
-            const Text(
+            Text(
               'Prepárate para el encuentro. Los capitanes registrarán el resultado final.',
               textAlign: TextAlign.center,
-              style: TextStyle(color: AppColors.textMuted, fontSize: 13),
+              style: TextStyle(color: isDark ? Colors.grey[400] : Colors.black54, fontSize: 13, fontWeight: FontWeight.w500),
             ),
           ],
         ),
       );
     }
 
-    final hasMatchPassed = DateTime.now().isAfter(match.fechaInicioEstimada);
+    final hasMatchPassed = DateTime.now().toUtc().isAfter(match.fechaInicioEstimada.toUtc());
     final isCaptainA = currentUserId == match.idUsuarioOrg;
     final myGoles = isCaptainA ? match.resultadoGolesACapA : match.resultadoGolesBCapB;
     final hasRegistered = myGoles != null;
@@ -48,14 +55,21 @@ class MatchConfirmedActionCard extends StatelessWidget {
         context,
         child: Column(
           children: [
-            const Icon(Icons.timer, color: Colors.orange, size: 32),
-            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.orange.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.timer_rounded, color: Colors.orange, size: 32),
+            ),
+            const SizedBox(height: 16),
             Text('Esperando el Partido', style: _titleStyle(context)),
             const SizedBox(height: 8),
-            const Text(
+            Text(
               'Una vez que finalice el partido, podrás registrar el resultado aquí.',
               textAlign: TextAlign.center,
-              style: TextStyle(color: AppColors.textMuted, fontSize: 13),
+              style: TextStyle(color: isDark ? Colors.grey[400] : Colors.black54, fontSize: 13, fontWeight: FontWeight.w500),
             ),
           ],
         ),
@@ -69,22 +83,34 @@ class MatchConfirmedActionCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Icon(Icons.sports_score, color: AppColors.primary),
-              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(Icons.sports_score_rounded, color: AppColors.primary, size: 20),
+              ),
+              const SizedBox(width: 12),
               Text('Registro de Resultado', style: _titleStyle(context)),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
           Text(
             hasRegistered
                 ? 'Ya has registrado tu versión del resultado. Esperando confirmación del rival.'
                 : 'El partido ya ha ocurrido. Es momento de registrar el marcador final.',
-            style: const TextStyle(color: AppColors.textMuted, fontSize: 13),
+            style: TextStyle(
+              color: isDark ? Colors.grey[400] : Colors.black54, 
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+              height: 1.4,
+            ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
           SizedBox(
             width: double.infinity,
-            height: 48,
+            height: 54,
             child: ElevatedButton(
               onPressed: () {
                 if (hasRegistered) {
@@ -94,13 +120,15 @@ class MatchConfirmedActionCard extends StatelessWidget {
                 }
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: hasRegistered ? Colors.grey[800] : AppColors.primary,
-                foregroundColor: hasRegistered ? Colors.white : Colors.black,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                backgroundColor: hasRegistered ? (isDark ? Colors.white.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.1)) : AppColors.primary,
+                foregroundColor: hasRegistered ? (isDark ? Colors.white : Colors.black) : Colors.black,
+                elevation: hasRegistered ? 0 : 8,
+                shadowColor: AppColors.primary.withValues(alpha: 0.4),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
               ),
               child: Text(
-                hasRegistered ? 'Ver Resultado Registrado' : 'Registrar Resultado',
-                style: const TextStyle(fontWeight: FontWeight.bold),
+                hasRegistered ? 'VER RESULTADO' : 'REGISTRAR RESULTADO',
+                style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 14, letterSpacing: 0.5),
               ),
             ),
           ),
@@ -110,19 +138,23 @@ class MatchConfirmedActionCard extends StatelessWidget {
   }
 
   Widget _buildCard(BuildContext context, {required Widget child}) {
-    final theme = Theme.of(context);
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: theme.dividerColor),
+        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(
+          color: isDark 
+              ? Colors.white.withValues(alpha: 0.05) 
+              : Colors.black.withValues(alpha: 0.05),
+          width: 1.5,
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
           ),
         ],
       ),
@@ -131,8 +163,9 @@ class MatchConfirmedActionCard extends StatelessWidget {
   }
 
   TextStyle _titleStyle(BuildContext context) => TextStyle(
-        color: Theme.of(context).colorScheme.onSurface,
-        fontSize: 16,
-        fontWeight: FontWeight.bold,
+        color: isDark ? Colors.white : Colors.black,
+        fontSize: 18,
+        fontWeight: FontWeight.w900,
+        letterSpacing: -0.5,
       );
 }

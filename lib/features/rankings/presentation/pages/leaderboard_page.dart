@@ -18,7 +18,8 @@ class LeaderboardPage extends StatefulWidget {
   State<LeaderboardPage> createState() => _LeaderboardPageState();
 }
 
-class _LeaderboardPageState extends State<LeaderboardPage> with AutomaticKeepAliveClientMixin {
+class _LeaderboardPageState extends State<LeaderboardPage>
+    with AutomaticKeepAliveClientMixin {
   @override
   bool get wantKeepAlive => true;
 
@@ -38,10 +39,9 @@ class _LeaderboardPageState extends State<LeaderboardPage> with AutomaticKeepAli
   }
 
   void _loadLeaderboard() {
-    context.read<LeaderboardBloc>().add(LoadLeaderboardEvent(
-      sportId: _selectedSportId,
-      period: _selectedPeriod,
-    ));
+    context.read<LeaderboardBloc>().add(
+      LoadLeaderboardEvent(sportId: _selectedSportId, period: _selectedPeriod),
+    );
   }
 
   @override
@@ -63,9 +63,7 @@ class _LeaderboardPageState extends State<LeaderboardPage> with AutomaticKeepAli
               const SizedBox(height: 16),
               _buildFilters(context),
               const SizedBox(height: 8),
-              Expanded(
-                child: _buildMainContent(state, isDark),
-              ),
+              Expanded(child: _buildMainContent(state, isDark)),
             ],
           );
         },
@@ -88,7 +86,11 @@ class _LeaderboardPageState extends State<LeaderboardPage> with AutomaticKeepAli
               letterSpacing: -0.5,
             ),
           ),
-          const Icon(Icons.military_tech_outlined, color: AppColors.primary, size: 28),
+          const Icon(
+            Icons.military_tech_outlined,
+            color: AppColors.primary,
+            size: 28,
+          ),
         ],
       ),
     );
@@ -105,7 +107,9 @@ class _LeaderboardPageState extends State<LeaderboardPage> with AutomaticKeepAli
             return MatchDayFilterChips<int?>(
               options: [
                 const FilterOption<int?>(label: 'Todos', value: null),
-                ...sports.map((s) => FilterOption<int?>(label: s.name, value: s.id)),
+                ...sports.map(
+                  (s) => FilterOption<int?>(label: s.name, value: s.id),
+                ),
               ],
               selectedValue: _selectedSportId,
               onSelected: (val) {
@@ -144,7 +148,9 @@ class _LeaderboardPageState extends State<LeaderboardPage> with AutomaticKeepAli
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                     side: BorderSide(
-                      color: isSelected ? AppColors.primary : Colors.grey.withValues(alpha: 0.3),
+                      color: isSelected
+                          ? AppColors.primary
+                          : Colors.grey.withValues(alpha: 0.3),
                     ),
                   ),
                   showCheckmark: false,
@@ -161,10 +167,15 @@ class _LeaderboardPageState extends State<LeaderboardPage> with AutomaticKeepAli
     if (state is LeaderboardLoading || state is LeaderboardInitial) {
       return const LeaderboardSkeleton();
     } else if (state is LeaderboardError) {
-      return Center(child: Text(state.message, style: const TextStyle(color: AppColors.error)));
+      return Center(
+        child: Text(
+          state.message,
+          style: const TextStyle(color: AppColors.error),
+        ),
+      );
     } else if (state is LeaderboardLoaded) {
       if (state.leaderboard.isEmpty) return _buildEmptyState(isDark);
-      
+
       final theme = Theme.of(context);
       final surfaceColor = theme.colorScheme.surface;
 
@@ -196,9 +207,15 @@ class _LeaderboardPageState extends State<LeaderboardPage> with AutomaticKeepAli
               final index = entry.key;
               final team = entry.value;
               return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                child: _buildLeaderboardTile(team, isDark),
-              ).animate().fadeIn(duration: 400.ms, delay: (index * 50).ms).slideX(begin: 0.1, end: 0);
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 8,
+                    ),
+                    child: _buildLeaderboardTile(team, isDark),
+                  )
+                  .animate()
+                  .fadeIn(duration: 400.ms, delay: (index * 50).ms)
+                  .slideX(begin: 0.1, end: 0);
             }),
           ],
         ),
@@ -207,7 +224,11 @@ class _LeaderboardPageState extends State<LeaderboardPage> with AutomaticKeepAli
     return const SizedBox.shrink();
   }
 
-  Widget _buildPodium(List<LeaderboardEntryEntity> teams, bool isDark, Color surfaceColor) {
+  Widget _buildPodium(
+    List<LeaderboardEntryEntity> teams,
+    bool isDark,
+    Color surfaceColor,
+  ) {
     if (teams.isEmpty) return const SizedBox.shrink();
     final first = teams[0];
     final second = teams.length > 1 ? teams[1] : null;
@@ -219,21 +240,55 @@ class _LeaderboardPageState extends State<LeaderboardPage> with AutomaticKeepAli
       children: [
         // 2do Lugar
         if (second != null)
-          Expanded(child: _buildPodiumColumn(second, 2, const Color(0xFFC0C0C0), 110, isDark, surfaceColor)),
+          Expanded(
+            child: _buildPodiumColumn(
+              second,
+              2,
+              const Color(0xFFC0C0C0),
+              110,
+              isDark,
+              surfaceColor,
+            ),
+          ),
         if (second != null) const SizedBox(width: 8),
-        
+
         // 1er Lugar
-        Expanded(child: _buildPodiumColumn(first, 1, const Color(0xFFFFD700), 140, isDark, surfaceColor)),
-        
+        Expanded(
+          child: _buildPodiumColumn(
+            first,
+            1,
+            const Color(0xFFFFD700),
+            140,
+            isDark,
+            surfaceColor,
+          ),
+        ),
+
         // 3er Lugar
         if (third != null) const SizedBox(width: 8),
         if (third != null)
-          Expanded(child: _buildPodiumColumn(third, 3, const Color(0xFFCD7F32), 95, isDark, surfaceColor)),
+          Expanded(
+            child: _buildPodiumColumn(
+              third,
+              3,
+              const Color(0xFFCD7F32),
+              95,
+              isDark,
+              surfaceColor,
+            ),
+          ),
       ],
     );
   }
 
-  Widget _buildPodiumColumn(LeaderboardEntryEntity team, int position, Color color, double height, bool isDark, Color surfaceColor) {
+  Widget _buildPodiumColumn(
+    LeaderboardEntryEntity team,
+    int position,
+    Color color,
+    double height,
+    bool isDark,
+    Color surfaceColor,
+  ) {
     final double avatarSize = position == 1 ? 90 : 75;
     final double iconSize = position == 1 ? 48 : 38;
 
@@ -266,8 +321,12 @@ class _LeaderboardPageState extends State<LeaderboardPage> with AutomaticKeepAli
                 ),
                 child: CircleAvatar(
                   backgroundColor: surfaceColor,
-                  backgroundImage: team.urlLogoEquipo != null ? NetworkImage(team.urlLogoEquipo!) : null,
-                  child: team.urlLogoEquipo == null ? Icon(Icons.shield, color: color, size: iconSize) : null,
+                  backgroundImage: team.urlLogoEquipo != null
+                      ? NetworkImage(team.urlLogoEquipo!)
+                      : null,
+                  child: team.urlLogoEquipo == null
+                      ? Icon(Icons.shield, color: color, size: iconSize)
+                      : null,
                 ),
               ),
               Positioned(
@@ -345,11 +404,17 @@ class _LeaderboardPageState extends State<LeaderboardPage> with AutomaticKeepAli
               ),
               const SizedBox(height: 12),
               Container(
-                padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 10),
+                padding: const EdgeInsets.symmetric(
+                  vertical: 4,
+                  horizontal: 10,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.black.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: color.withValues(alpha: 0.4), width: 1),
+                  border: Border.all(
+                    color: color.withValues(alpha: 0.4),
+                    width: 1,
+                  ),
                 ),
                 child: Text(
                   '${team.puntosTotales} pts',
@@ -373,7 +438,11 @@ class _LeaderboardPageState extends State<LeaderboardPage> with AutomaticKeepAli
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF1F2937) : Colors.white,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.05)),
+        border: Border.all(
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.05)
+              : Colors.black.withValues(alpha: 0.05),
+        ),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.05),
@@ -392,22 +461,34 @@ class _LeaderboardPageState extends State<LeaderboardPage> with AutomaticKeepAli
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w900,
-                color: team.posicion <= 3 ? _getRankColor(team.posicion) : Colors.grey,
+                color: team.posicion <= 3
+                    ? _getRankColor(team.posicion)
+                    : Colors.grey,
               ),
             ),
           ),
           const SizedBox(width: 12),
           CircleAvatar(
             radius: 20,
-            backgroundImage: team.urlLogoEquipo != null ? NetworkImage(team.urlLogoEquipo!) : null,
-            child: team.urlLogoEquipo == null ? const Icon(Icons.shield, size: 20) : null,
+            backgroundImage: team.urlLogoEquipo != null
+                ? NetworkImage(team.urlLogoEquipo!)
+                : null,
+            child: team.urlLogoEquipo == null
+                ? const Icon(Icons.shield, size: 20)
+                : null,
           ),
           const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(team.nombreEquipo, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
+                Text(
+                  team.nombreEquipo,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 15,
+                  ),
+                ),
                 Text(
                   '${team.deporte} • ${team.victorias} victorias',
                   style: TextStyle(color: Colors.grey, fontSize: 12),
@@ -420,9 +501,20 @@ class _LeaderboardPageState extends State<LeaderboardPage> with AutomaticKeepAli
             children: [
               Text(
                 '${team.puntosTotales}',
-                style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18, color: AppColors.primary),
+                style: const TextStyle(
+                  fontWeight: FontWeight.w900,
+                  fontSize: 18,
+                  color: AppColors.primary,
+                ),
               ),
-              const Text('PTS', style: TextStyle(color: Colors.grey, fontSize: 9, fontWeight: FontWeight.w900)),
+              const Text(
+                'PTS',
+                style: TextStyle(
+                  color: Colors.grey,
+                  fontSize: 9,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
             ],
           ),
         ],
@@ -432,10 +524,14 @@ class _LeaderboardPageState extends State<LeaderboardPage> with AutomaticKeepAli
 
   Color _getRankColor(int position) {
     switch (position) {
-      case 1: return const Color(0xFFFFD700);
-      case 2: return const Color(0xFFC0C0C0);
-      case 3: return const Color(0xFFCD7F32);
-      default: return Colors.grey;
+      case 1:
+        return const Color(0xFFFFD700);
+      case 2:
+        return const Color(0xFFC0C0C0);
+      case 3:
+        return const Color(0xFFCD7F32);
+      default:
+        return Colors.grey;
     }
   }
 
@@ -446,18 +542,22 @@ class _LeaderboardPageState extends State<LeaderboardPage> with AutomaticKeepAli
         children: [
           const SizedBox(height: 80),
           Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.1),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              Icons.military_tech_outlined,
-              size: 64,
-              color: AppColors.primary.withValues(alpha: 0.5),
-            ),
-          ).animate(onPlay: (controller) => controller.repeat())
-           .shimmer(duration: 2000.ms, color: AppColors.primary.withValues(alpha: 0.2)),
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.military_tech_outlined,
+                  size: 64,
+                  color: AppColors.primary.withValues(alpha: 0.5),
+                ),
+              )
+              .animate(onPlay: (controller) => controller.repeat())
+              .shimmer(
+                duration: 2000.ms,
+                color: AppColors.primary.withValues(alpha: 0.2),
+              ),
           const SizedBox(height: 24),
           Text(
             'Sin rivales a la vista',

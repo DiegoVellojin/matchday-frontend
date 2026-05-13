@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../../../../core/theme/app_colors.dart';
 import '../../../domain/entities/match_entity.dart';
 
 class MatchResultSection extends StatelessWidget {
@@ -28,89 +27,89 @@ class MatchResultSection extends StatelessWidget {
     final teamName = isTeamA ? (match.nombreEquipoA ?? 'Mi Equipo') : (match.nombreEquipoB ?? 'Mi Equipo');
 
     return Container(
-      padding: const EdgeInsets.all(32),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            mainColor.withValues(alpha: 0.15),
-            mainColor.withValues(alpha: 0.05),
-          ],
+        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+        borderRadius: BorderRadius.circular(32),
+        border: Border.all(
+          color: mainColor.withValues(alpha: 0.3),
+          width: 2,
         ),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: mainColor.withValues(alpha: 0.4), width: 2),
         boxShadow: [
           BoxShadow(
             color: mainColor.withValues(alpha: 0.1),
-            blurRadius: 20,
-            spreadRadius: 2,
+            blurRadius: 30,
+            offset: const Offset(0, 10),
           ),
         ],
       ),
       child: Column(
         children: [
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
             decoration: BoxDecoration(
-              color: mainColor.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(20),
+              color: mainColor.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: mainColor.withValues(alpha: 0.2)),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(style['icon'] as IconData, color: mainColor, size: 18),
+                Icon(style['icon'] as IconData, color: mainColor, size: 16),
                 const SizedBox(width: 8),
                 Text(
-                  style['label'] as String,
+                  (style['label'] as String).toUpperCase(),
                   style: TextStyle(
                     color: mainColor,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
-                    letterSpacing: 1.2,
+                    fontWeight: FontWeight.w900,
+                    fontSize: 12,
+                    letterSpacing: 1.5,
                   ),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 32),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              _buildScoreDigit(myGoles, isDark),
+              _buildScoreDigit(myGoles, isDark, mainColor),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+                padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Text(
-                  '-',
+                  ':',
                   style: TextStyle(
-                    fontSize: 48,
-                    fontWeight: FontWeight.w300,
-                    color: mainColor.withValues(alpha: 0.5),
+                    fontSize: 40,
+                    fontWeight: FontWeight.w900,
+                    color: isDark ? Colors.white24 : Colors.black12,
                   ),
                 ),
               ),
-              _buildScoreDigit(rivalGoles, isDark),
+              _buildScoreDigit(rivalGoles, isDark, mainColor),
             ],
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 32),
           Text(
-            teamName,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w500,
-              color: AppColors.textMuted,
+            teamName.toUpperCase(),
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w900,
+              color: isDark ? Colors.grey[500] : Colors.grey[600],
+              letterSpacing: 1.0,
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 8),
           Text(
             myGoles > rivalGoles
-                ? '¡Gran Victoria!'
-                : (myGoles < rivalGoles ? 'A seguir mejorando' : 'Partido reñido'),
+                ? '¡GRAN VICTORIA!'
+                : (myGoles < rivalGoles ? 'A SEGUIR MEJORANDO' : 'PARTIDO REÑIDO'),
             style: TextStyle(
               color: mainColor,
               fontSize: 14,
+              fontWeight: FontWeight.w900,
               fontStyle: FontStyle.italic,
+              letterSpacing: 0.5,
             ),
           ),
         ],
@@ -118,19 +117,24 @@ class MatchResultSection extends StatelessWidget {
     );
   }
 
-  Widget _buildScoreDigit(int value, bool isDark) {
+  Widget _buildScoreDigit(int value, bool isDark, Color color) {
     return Container(
-      width: 70,
-      height: 90,
+      width: 75,
+      height: 95,
       decoration: BoxDecoration(
-        color: isDark ? Colors.black26 : Colors.grey[100],
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+        color: isDark ? Colors.white.withValues(alpha: 0.03) : Colors.black.withValues(alpha: 0.03),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.05)),
       ),
       alignment: Alignment.center,
       child: Text(
         '$value',
-        style: const TextStyle(fontSize: 56, fontWeight: FontWeight.bold),
+        style: TextStyle(
+          fontSize: 52, 
+          fontWeight: FontWeight.w900,
+          color: isDark ? Colors.white : Colors.black,
+          letterSpacing: -2,
+        ),
       ),
     );
   }
@@ -138,21 +142,21 @@ class MatchResultSection extends StatelessWidget {
   Map<String, dynamic> _getResultStyle(int f, int c) {
     if (f > c) {
       return {
-        'label': 'VICTORIA',
+        'label': 'Victoria',
         'color': Colors.greenAccent,
-        'icon': Icons.emoji_events,
+        'icon': Icons.emoji_events_rounded,
       };
     } else if (f < c) {
       return {
-        'label': 'DERROTA',
+        'label': 'Derrota',
         'color': Colors.redAccent,
-        'icon': Icons.trending_down,
+        'icon': Icons.trending_down_rounded,
       };
     } else {
       return {
-        'label': 'EMPATE',
+        'label': 'Empate',
         'color': Colors.amberAccent,
-        'icon': Icons.drag_handle,
+        'icon': Icons.drag_handle_rounded,
       };
     }
   }

@@ -230,12 +230,7 @@ class _TeamDashboardPageState extends State<TeamDashboardPage> {
       children: [
         _buildStatCard('Jugadores', '${team.currentMembers}/${team.maxMembers}', Icons.people_rounded, isDark),
         const SizedBox(width: 12),
-        BlocBuilder<MatchesBloc, MatchesState>(
-          builder: (context, state) {
-            final count = state is MatchesLoaded ? state.matches.length : 0;
-            return _buildStatCard('Partidos', '$count', Icons.sports_soccer_rounded, isDark);
-          },
-        ),
+        _buildStatCard('Partidos', '${team.matchesPlayed}', Icons.sports_soccer_rounded, isDark),
         const SizedBox(width: 12),
         _buildStatCard('Nivel', 'PRO', Icons.bolt_rounded, isDark),
       ],

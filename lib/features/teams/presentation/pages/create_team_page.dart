@@ -267,10 +267,12 @@ class _CreateTeamPageState extends State<CreateTeamPage> {
                                 icon: Icons.shield_outlined,
                                 isDark: isDark,
                                 validator: (value) {
-                                  if (value == null || value.trim().isEmpty)
+                                  if (value == null || value.trim().isEmpty) {
                                     return 'El nombre es obligatorio';
-                                  if (value.trim().length < 4)
+                                  }
+                                  if (value.trim().length < 4) {
                                     return 'Mínimo 4 caracteres';
+                                  }
                                   return null;
                                 },
                               ),

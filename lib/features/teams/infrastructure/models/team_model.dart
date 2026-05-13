@@ -14,6 +14,7 @@ class TeamModel extends TeamEntity {
     super.sportId,
     super.description = '',
     super.chatUrl,
+    super.matchesPlayed = 0,
   });
 
   factory TeamModel.fromJson(Map<String, dynamic> json) {
@@ -30,6 +31,7 @@ class TeamModel extends TeamEntity {
       sportId: json['fk_id_deporte'],
       description: json['descripcion_equipo'] ?? '',
       chatUrl: json['url_chat_equipo'],
+      matchesPlayed: json['partidos_jugados'] ?? 0,
     );
   }
 

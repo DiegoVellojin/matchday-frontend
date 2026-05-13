@@ -30,14 +30,26 @@ class MatchMapPreview extends StatelessWidget {
     if (match.latitudCancha != null && match.longitudCancha != null) {
       final position = LatLng(match.latitudCancha!, match.longitudCancha!);
       return Container(
-        height: 200,
+        height: 220,
         width: double.infinity,
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: Theme.of(context).dividerColor),
+          borderRadius: BorderRadius.circular(28),
+          border: Border.all(
+            color: isDark 
+                ? Colors.white.withValues(alpha: 0.1) 
+                : Colors.black.withValues(alpha: 0.05),
+            width: 1.5,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.1),
+              blurRadius: 20,
+              offset: const Offset(0, 10),
+            ),
+          ],
         ),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(26),
           child: Stack(
             children: [
               GoogleMap(
@@ -53,9 +65,38 @@ class MatchMapPreview extends StatelessWidget {
                 bottom: 12,
                 right: 12,
                 child: FloatingActionButton.small(
+                  heroTag: 'map_preview_fab',
                   onPressed: _openInGoogleMaps,
+                  elevation: 4,
                   backgroundColor: AppColors.primary,
-                  child: const Icon(Icons.directions, color: Colors.black),
+                  child: const Icon(Icons.directions_rounded, color: Colors.black),
+                ),
+              ),
+              Positioned(
+                top: 12,
+                left: 12,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.6),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.location_on_rounded, color: AppColors.primary, size: 14),
+                      SizedBox(width: 4),
+                      Text(
+                        'VER UBICACIÓN',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ],
@@ -70,20 +111,42 @@ class MatchMapPreview extends StatelessWidget {
         height: 180,
         width: double.infinity,
         decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surface,
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: Theme.of(context).dividerColor),
+          color: isDark ? const Color(0xFF1E293B) : Colors.white,
+          borderRadius: BorderRadius.circular(28),
+          border: Border.all(
+            color: isDark 
+                ? Colors.white.withValues(alpha: 0.05) 
+                : Colors.black.withValues(alpha: 0.05),
+            width: 1.5,
+          ),
         ),
-        child: const Column(
+        child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.location_on, color: AppColors.primary, size: 48),
-            SizedBox(height: 8),
-            Text(
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.location_on_rounded, color: AppColors.primary, size: 40),
+            ),
+            const SizedBox(height: 16),
+            const Text(
               'Abrir en Google Maps',
               style: TextStyle(
                 color: AppColors.primary,
-                fontWeight: FontWeight.bold,
+                fontSize: 16,
+                fontWeight: FontWeight.w900,
+                letterSpacing: -0.5,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'La ubicación exacta no está configurada',
+              style: TextStyle(
+                color: isDark ? Colors.grey[500] : Colors.grey[600],
+                fontSize: 12,
               ),
             ),
           ],

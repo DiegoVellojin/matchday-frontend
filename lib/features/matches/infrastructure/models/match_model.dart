@@ -48,6 +48,7 @@ class MatchModel extends MatchEntity {
     super.bancoCapitanB,
     super.cedulaCapitanB,
     super.telefonoCapitanBPago,
+    super.idEquipoUsuario,
   });
 
   factory MatchModel.fromJson(Map<String, dynamic> json) {
@@ -107,6 +108,7 @@ class MatchModel extends MatchEntity {
       bancoCapitanB: json['banco_capitan_b'],
       cedulaCapitanB: json['cedula_capitan_b'],
       telefonoCapitanBPago: json['telefono_capitan_b_pago'],
+      idEquipoUsuario: json['id_equipo_usuario'],
     );
   }
 

@@ -89,7 +89,6 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> {
   }
 
   Widget _buildContent(BuildContext context, MatchEntity match, bool isDark) {
-    final theme = Theme.of(context);
     final profileState = context.read<ProfileBloc>().state;
     int? currentUserId = profileState is ProfileLoaded ? profileState.profile.id : null;
 
@@ -111,7 +110,7 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> {
     );
 
     return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
+      backgroundColor: isDark ? const Color(0xFF0F172A) : Colors.grey[50],
       body: CustomScrollView(
         physics: const BouncingScrollPhysics(),
         slivers: [
@@ -119,7 +118,7 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> {
           SliverToBoxAdapter(
             child: Container(
               decoration: BoxDecoration(
-                color: theme.scaffoldBackgroundColor,
+                color: isDark ? const Color(0xFF0F172A) : Colors.grey[50],
                 borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
               ),
               child: Padding(
@@ -196,12 +195,51 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> {
   }
 
   Widget _buildSectionHeader(String title, bool isDark) {
-    return Row(
-      children: [
-        Text(title, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w900, letterSpacing: 1.5, color: isDark ? Colors.grey[500] : Colors.grey[600])),
-        const SizedBox(width: 12),
-        Expanded(child: Divider(color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.05))),
-      ],
-    ).animate().fadeIn(duration: 400.ms);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: Row(
+        children: [
+          Container(
+            width: 4,
+            height: 16,
+            decoration: BoxDecoration(
+              color: AppColors.primary,
+              borderRadius: BorderRadius.circular(2),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.primary.withValues(alpha: 0.3),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 1.2,
+              color: isDark ? Colors.white.withValues(alpha: 0.9) : Colors.black87,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Container(
+              height: 1,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    isDark ? Colors.white.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.05),
+                    Colors.transparent,
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    ).animate().fadeIn(duration: 400.ms).slideX(begin: -0.05, end: 0);
   }
 }

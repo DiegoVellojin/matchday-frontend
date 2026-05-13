@@ -78,38 +78,41 @@ class _SplashPageState extends State<SplashPage> {
             duration: _mainDuration,
             curve: Curves.easeInOutExpo, 
             alignment: _logoAlignment,
-            child: AnimatedContainer(
-              duration: _mainDuration,
-              curve: Curves.easeInOutExpo, 
-              width: _isGreenScreen ? massiveSquareSize : 128,
-              height: _isGreenScreen ? massiveSquareSize : 128,
-              decoration: BoxDecoration(
-                color: AppColors.primary,
-                borderRadius: BorderRadius.circular(_isGreenScreen ? 0 : 24),
-                boxShadow: _isGreenScreen
-                    ? []
-                    : [
-                        BoxShadow(
-                          color: AppColors.primary.withValues(alpha: 0.3),
-                          blurRadius: 20,
-                          offset: const Offset(0, 10),
+            child: Hero(
+              tag: 'app_logo_hero',
+              child: AnimatedContainer(
+                duration: _mainDuration,
+                curve: Curves.easeInOutExpo, 
+                width: _isGreenScreen ? massiveSquareSize : 128,
+                height: _isGreenScreen ? massiveSquareSize : 128,
+                decoration: BoxDecoration(
+                  color: AppColors.primary,
+                  borderRadius: BorderRadius.circular(_isGreenScreen ? 0 : 24),
+                  boxShadow: _isGreenScreen
+                      ? []
+                      : [
+                          BoxShadow(
+                            color: AppColors.primary.withValues(alpha: 0.3),
+                            blurRadius: 20,
+                            offset: const Offset(0, 10),
+                          ),
+                        ],
+  
+                ),
+                child: Center(
+                  child: AnimatedScale(
+                    duration: _trophyScaleDuration,
+                    curve: Curves.easeInOutExpo, 
+                    scale: _trophyScale,
+                    child: const SizedBox(
+                      width: 80,
+                      height: 80,
+                      child: Center(
+                        child: Icon(
+                          Icons.emoji_events,
+                          size: 80,
+                          color: Colors.black,
                         ),
-                      ],
-
-              ),
-              child: Center(
-                child: AnimatedScale(
-                  duration: _trophyScaleDuration,
-                  curve: Curves.easeInOutExpo, 
-                  scale: _trophyScale,
-                  child: const SizedBox(
-                    width: 80,
-                    height: 80,
-                    child: Center(
-                      child: Icon(
-                        Icons.emoji_events,
-                        size: 80,
-                        color: Colors.black,
                       ),
                     ),
                   ),

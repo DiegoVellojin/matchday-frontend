@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../../../core/widgets/animated_bouncing_button.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/matchday_marquee.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../teams/presentation/bloc/my_teams_bloc.dart';
 import '../../../teams/presentation/bloc/my_teams_event.dart';
@@ -208,16 +209,18 @@ class _ProfilePageState extends State<ProfilePage> {
                 children: [
                   Row(
                     children: [
-                      Text(
-                        profile.name,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 28,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: -1,
-                          shadows: [
-                            Shadow(color: Colors.black45, blurRadius: 10),
-                          ],
+                      Expanded(
+                        child: MatchDayMarquee(
+                          text: profile.name,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 28,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: -1,
+                            shadows: [
+                              Shadow(color: Colors.black45, blurRadius: 10),
+                            ],
+                          ),
                         ),
                       ),
                       const SizedBox(width: 8),

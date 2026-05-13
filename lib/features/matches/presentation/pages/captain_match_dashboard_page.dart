@@ -217,15 +217,20 @@ class _CaptainMatchDashboardPageState extends State<CaptainMatchDashboardPage>
     Color textMuted,
     Color accent,
   ) {
-    final formattedDate = DateFormat('EEE d/MM').format(match.fechaInicioEstimada);
+    final formattedDate = DateFormat('EEE d/MM', 'es_VE').format(match.fechaInicioEstimada);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
       padding: EdgeInsets.fromLTRB(16, MediaQuery.of(context).padding.top + 10, 16, 20),
       decoration: BoxDecoration(
-        color: surface,
-        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(32)),
+        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(40)),
         boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 10, offset: const Offset(0, 4)),
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
         ],
       ),
       child: Column(
@@ -234,31 +239,42 @@ class _CaptainMatchDashboardPageState extends State<CaptainMatchDashboardPage>
             children: [
               IconButton(
                 onPressed: () => Navigator.pop(context),
-                icon: const Icon(Icons.arrow_back_ios_new, size: 20),
-                style: IconButton.styleFrom(backgroundColor: AppColors.border.withValues(alpha: 0.5)),
+                icon: Icon(Icons.arrow_back_ios_new_rounded, size: 20, color: isDark ? Colors.white : Colors.black),
+                style: IconButton.styleFrom(
+                  backgroundColor: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.05),
+                ),
               ),
               const SizedBox(width: 12),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Gestión de pagos',
-                    style: TextStyle(color: textMain, fontSize: 20, fontWeight: FontWeight.bold),
+                    'Gestión de Pagos',
+                    style: TextStyle(
+                      color: isDark ? Colors.white : Colors.black,
+                      fontSize: 22,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: -0.5,
+                    ),
                   ).animate().fadeIn(duration: 400.ms).slideX(begin: -0.1, end: 0),
                   Text(
                     'Control administrativo del encuentro',
-                    style: TextStyle(color: textMuted, fontSize: 12),
+                    style: TextStyle(
+                      color: isDark ? Colors.grey[400] : Colors.black54,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ).animate().fadeIn(duration: 400.ms, delay: 100.ms).slideX(begin: -0.1, end: 0),
                 ],
               ),
             ],
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 28),
           _buildMatchSummaryCard(match, formattedDate, textMain, textMuted, accent)
               .animate()
               .fadeIn(duration: 500.ms, delay: 200.ms)
               .scale(begin: const Offset(0.95, 0.95), end: const Offset(1, 1)),
-          const SizedBox(height: 20),
+          const SizedBox(height: 24),
           _buildTabIndicator(myPaid, myTotal, rivalPaid, rivalTotal, accent, textMuted),
         ],
       ),
@@ -266,49 +282,60 @@ class _CaptainMatchDashboardPageState extends State<CaptainMatchDashboardPage>
   }
 
   Widget _buildMatchSummaryCard(MatchEntity match, String date, Color textMain, Color textMuted, Color accent) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Theme.of(context).scaffoldBackgroundColor,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: AppColors.border),
+        color: isDark ? const Color(0xFF0F172A) : Colors.grey[50],
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(
+          color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.05),
+          width: 1.5,
+        ),
       ),
       child: Column(
         children: [
           Row(
             children: [
               _buildSmallLogo(match.logoEquipoA),
-              const SizedBox(width: 12),
+              const SizedBox(width: 16),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       '${match.nombreEquipoA} vs ${match.nombreEquipoB}',
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                      style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16, letterSpacing: -0.5),
                       overflow: TextOverflow.ellipsis,
                     ),
-                    Text(match.sportName ?? 'Fútbol', style: TextStyle(color: textMuted, fontSize: 11)),
+                    const SizedBox(height: 2),
+                    Text(
+                      match.sportName?.toUpperCase() ?? 'FÚTBOL', 
+                      style: TextStyle(color: accent, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.0),
+                    ),
                   ],
                 ),
               ),
               IconButton(
                 onPressed: _openMap,
-                icon: const Icon(Icons.location_on_outlined, size: 20),
+                icon: const Icon(Icons.location_on_rounded, size: 18),
                 color: accent,
-                style: IconButton.styleFrom(backgroundColor: accent.withValues(alpha: 0.1)),
+                style: IconButton.styleFrom(
+                  backgroundColor: accent.withValues(alpha: 0.1),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
               ),
             ],
           ),
-          const SizedBox(height: 16),
-          const Divider(height: 1),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
+          Divider(color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.05)),
+          const SizedBox(height: 20),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _buildMiniInfo(Icons.calendar_today, date, 'Fecha', accent, textMuted),
-              _buildMiniInfo(Icons.stadium_outlined, match.nombreCancha ?? 'Campo', 'Sede', accent, textMuted),
-              _buildMiniInfo(Icons.payments_outlined, '${match.currentSymbol}${match.costoTotal.toStringAsFixed(0)}', 'Total', accent, textMuted),
+              _buildMiniInfo(Icons.calendar_today_rounded, date, 'Fecha', accent, textMuted),
+              _buildMiniInfo(Icons.stadium_rounded, match.nombreCancha ?? 'Campo', 'Sede', accent, textMuted),
+              _buildMiniInfo(Icons.payments_rounded, '${match.currentSymbol}${match.costoTotal.toStringAsFixed(0)}', 'Total', accent, textMuted),
             ],
           ),
         ],
@@ -329,33 +356,35 @@ class _CaptainMatchDashboardPageState extends State<CaptainMatchDashboardPage>
 
   Widget _buildSmallLogo(String? url) {
     return Container(
-      width: 44,
-      height: 44,
+      width: 48,
+      height: 48,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: AppColors.surface,
-        border: Border.all(color: AppColors.border),
+        color: AppColors.primary.withValues(alpha: 0.1),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.2), width: 1.5),
       ),
       child: ClipOval(
         child: (url != null && url.isNotEmpty && url != 'null')
             ? Image.network(url, fit: BoxFit.cover)
-            : const Center(child: Text('⚽')),
+            : const Center(child: Text('⚽', style: TextStyle(fontSize: 20))),
       ),
     );
   }
 
   Widget _buildTabIndicator(int myPaid, int myTotal, int rivalPaid, int rivalTotal, Color accent, Color textMuted) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
-      height: 50,
-      padding: const EdgeInsets.all(4),
+      height: 54,
+      padding: const EdgeInsets.all(6),
       decoration: BoxDecoration(
-        color: Theme.of(context).scaffoldBackgroundColor,
-        borderRadius: BorderRadius.circular(16),
+        color: isDark ? const Color(0xFF0F172A) : Colors.grey[100],
+        borderRadius: BorderRadius.circular(18),
       ),
       child: Row(
         children: [
-          _tabItem(0, 'Mi Equipo', '$myPaid/$myTotal', accent, textMuted),
-          _tabItem(1, 'Rival', '$rivalPaid/$rivalTotal', accent, textMuted),
+          _tabItem(0, 'MI EQUIPO', '$myPaid/$myTotal', accent, textMuted),
+          const SizedBox(width: 6),
+          _tabItem(1, 'RIVAL', '$rivalPaid/$rivalTotal', accent, textMuted),
         ],
       ),
     );
@@ -430,16 +459,20 @@ class _CaptainMatchDashboardPageState extends State<CaptainMatchDashboardPage>
 
   Widget _buildCuotaHeader(double cuota, Color accent, Color textMuted) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [accent, accent.withValues(alpha: 0.7)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(28),
         boxShadow: [
-          BoxShadow(color: accent.withValues(alpha: 0.3), blurRadius: 15, offset: const Offset(0, 8)),
+          BoxShadow(
+            color: accent.withValues(alpha: 0.3),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
         ],
       ),
       child: Row(
@@ -448,11 +481,25 @@ class _CaptainMatchDashboardPageState extends State<CaptainMatchDashboardPage>
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Recaudación por jugador', style: TextStyle(color: Colors.black54, fontSize: 12, fontWeight: FontWeight.bold)),
-              Text('${_match.currentSymbol}${cuota.toStringAsFixed(2)}', style: const TextStyle(color: Colors.black, fontSize: 28, fontWeight: FontWeight.bold)),
+              const Text(
+                'RECAUDACIÓN POR JUGADOR', 
+                style: TextStyle(color: Colors.black54, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 0.5)
+              ),
+              const SizedBox(height: 4),
+              Text(
+                '${_match.currentSymbol}${cuota.toStringAsFixed(2)}', 
+                style: const TextStyle(color: Colors.black, fontSize: 32, fontWeight: FontWeight.w900, letterSpacing: -1)
+              ),
             ],
           ),
-          const Icon(Icons.account_balance_wallet, color: Colors.black26, size: 40),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.black.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: const Icon(Icons.account_balance_wallet_rounded, color: Colors.black, size: 32),
+          ),
         ],
       ),
     );
@@ -537,13 +584,18 @@ class _CaptainMatchDashboardPageState extends State<CaptainMatchDashboardPage>
   }
 
   Widget _buildStickyFooter(bool everyonePaid, int paidCount, int totalCount, Color surface, Color accent, Color textMuted, bool amIReady, bool isConfirmed, bool hasRegisteredResult, int? currentUserId) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 40),
       decoration: BoxDecoration(
-        color: surface,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(40)),
         boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.2), blurRadius: 20, offset: const Offset(0, -5)),
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.2),
+            blurRadius: 25,
+            offset: const Offset(0, -5),
+          ),
         ],
       ),
       child: Column(
@@ -551,13 +603,15 @@ class _CaptainMatchDashboardPageState extends State<CaptainMatchDashboardPage>
         children: [
           if (!isConfirmed && !everyonePaid)
             Padding(
-              padding: const EdgeInsets.only(bottom: 16),
-              child: LinearProgressIndicator(
-                value: totalCount > 0 ? paidCount / totalCount : 0,
-                backgroundColor: AppColors.border,
-                valueColor: AlwaysStoppedAnimation<Color>(accent),
+              padding: const EdgeInsets.only(bottom: 20),
+              child: ClipRRect(
                 borderRadius: BorderRadius.circular(10),
-                minHeight: 6,
+                child: LinearProgressIndicator(
+                  value: totalCount > 0 ? paidCount / totalCount : 0,
+                  backgroundColor: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.05),
+                  valueColor: AlwaysStoppedAnimation<Color>(accent),
+                  minHeight: 8,
+                ),
               ),
             ),
           AnimatedBouncingButton(
@@ -579,7 +633,7 @@ class _CaptainMatchDashboardPageState extends State<CaptainMatchDashboardPage>
                 gradient: (isConfirmed || (everyonePaid && !amIReady))
                     ? LinearGradient(colors: [accent, accent.withValues(alpha: 0.8)])
                     : null,
-                color: (isConfirmed || (everyonePaid && !amIReady)) ? null : AppColors.border,
+                color: (isConfirmed || (everyonePaid && !amIReady)) ? null : (isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.05)),
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: (everyonePaid && !amIReady) ? [
                   BoxShadow(color: accent.withValues(alpha: 0.4), blurRadius: 15, offset: const Offset(0, 6))
@@ -588,14 +642,15 @@ class _CaptainMatchDashboardPageState extends State<CaptainMatchDashboardPage>
               alignment: Alignment.center,
               child: Text(
                 isConfirmed 
-                    ? (hasRegisteredResult ? '👀 Ver Resultado' : '🏆 Registrar Resultado')
+                    ? (hasRegisteredResult ? 'VER RESULTADO' : 'REGISTRAR RESULTADO')
                     : (amIReady 
-                        ? 'Esperando rival...' 
-                        : (everyonePaid ? '¡Confirmar Equipo Listo!' : 'Faltan pagos ($paidCount/$totalCount)')),
+                        ? 'ESPERANDO RIVAL...' 
+                        : (everyonePaid ? 'CONFIRMAR EQUIPO LISTO' : 'FALTAN PAGOS ($paidCount/$totalCount)')),
                 style: TextStyle(
-                  fontWeight: FontWeight.bold, 
-                  fontSize: 17,
-                  color: (everyonePaid || isConfirmed) ? Colors.black : textMuted,
+                  fontWeight: FontWeight.w900, 
+                  fontSize: 16,
+                  letterSpacing: 0.5,
+                  color: (everyonePaid || isConfirmed) ? Colors.black : (isDark ? Colors.grey[600] : Colors.black26),
                 ),
               ),
             ),

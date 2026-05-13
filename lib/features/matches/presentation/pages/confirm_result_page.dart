@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../domain/entities/match_entity.dart';
@@ -129,28 +130,47 @@ class ConfirmarResultadoPage extends StatelessWidget {
   }
 
   Widget _buildSliverAppBar(BuildContext context, ColorScheme colorScheme) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return SliverAppBar(
-      expandedHeight: 120.0,
+      expandedHeight: 160.0,
       floating: false,
       pinned: true,
-      backgroundColor: colorScheme.surface,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       elevation: 0,
       flexibleSpace: FlexibleSpaceBar(
-        title: Text(
-          'Confirmación'.toUpperCase(),
-          style: const TextStyle(
-            fontWeight: FontWeight.w900,
-            fontSize: 14,
-            letterSpacing: 2,
-            color: AppColors.primary,
-          ),
+        centerTitle: false,
+        titlePadding: const EdgeInsets.only(left: 60, bottom: 20),
+        title: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'VERIFICACIÓN',
+              style: TextStyle(
+                fontWeight: FontWeight.w900,
+                fontSize: 18,
+                letterSpacing: -0.5,
+                color: isDark ? Colors.white : Colors.black,
+              ),
+            ),
+            Text(
+              'RESULTADOS DEL ENCUENTRO',
+              style: TextStyle(
+                color: AppColors.primary,
+                fontSize: 9,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 1.0,
+              ),
+            ),
+          ],
         ),
-        centerTitle: true,
-        background: Container(color: colorScheme.surface),
       ),
-      leading: IconButton(
-        icon: const Icon(Icons.arrow_back_ios_new, size: 20),
-        onPressed: () => Navigator.of(context).pop(),
+      leading: Padding(
+        padding: const EdgeInsets.only(left: 8),
+        child: IconButton(
+          icon: Icon(Icons.arrow_back_ios_new_rounded, size: 20, color: isDark ? Colors.white : Colors.black),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
       ),
     );
   }
@@ -168,36 +188,33 @@ class ConfirmarResultadoPage extends StatelessWidget {
     if (!hasRivalRegistered) {
       color = Colors.orangeAccent;
       icon = Icons.hourglass_empty_rounded;
-      title = 'Esperando al Rival';
-      desc =
-          'Tu resultado ha sido enviado. El otro capitán aún no ha registrado su versión.';
+      title = 'ESPERANDO AL RIVAL';
+      desc = 'Tu resultado ha sido enviado. El otro capitán aún no ha registrado su versión.';
     } else if (resultadosCoinciden) {
       color = AppColors.primary;
       icon = Icons.verified_rounded;
-      title = '¡Resultados Verificados!';
-      desc =
-          'Ambas versiones coinciden perfectamente. El partido ha sido validado con éxito.';
+      title = '¡RESULTADOS VERIFICADOS!';
+      desc = 'Ambas versiones coinciden perfectamente. El partido ha sido validado con éxito.';
     } else {
       color = Colors.redAccent;
       icon = Icons.report_problem_rounded;
-      title = 'Discrepancia en el Marcador';
-      desc =
-          'Los resultados no coinciden. Por favor, comunícate con el otro capitán para acordar el resultado final.';
+      title = 'DISCREPANCIA DETECTADA';
+      desc = 'Los resultados no coinciden. Por favor, comunícate con el otro capitán para acordar el resultado final.';
     }
 
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(28),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            color.withValues(alpha: 0.15),
-            color.withValues(alpha: 0.05),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(28),
+        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+        borderRadius: BorderRadius.circular(32),
         border: Border.all(color: color.withValues(alpha: 0.3), width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: 0.1),
+            blurRadius: 25,
+            offset: const Offset(0, 12),
+          ),
+        ],
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -206,11 +223,11 @@ class ConfirmarResultadoPage extends StatelessWidget {
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               color: color.withValues(alpha: 0.1),
-              shape: BoxShape.circle,
+              borderRadius: BorderRadius.circular(16),
             ),
             child: Icon(icon, color: color, size: 28),
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: 20),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -218,18 +235,20 @@ class ConfirmarResultadoPage extends StatelessWidget {
                 Text(
                   title,
                   style: TextStyle(
-                    color: isDark ? Colors.white : Colors.black87,
+                    color: color,
                     fontWeight: FontWeight.w900,
-                    fontSize: 18,
+                    fontSize: 16,
+                    letterSpacing: -0.5,
                   ),
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: 8),
                 Text(
                   desc,
                   style: TextStyle(
                     color: isDark ? Colors.grey[400] : Colors.black54,
                     fontSize: 13,
-                    height: 1.4,
+                    fontWeight: FontWeight.w700,
+                    height: 1.5,
                   ),
                 ),
               ],
@@ -255,13 +274,13 @@ class ConfirmarResultadoPage extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.only(left: 4, bottom: 16),
+          padding: const EdgeInsets.only(left: 8, bottom: 16),
           child: Text(
             'COMPARACIÓN DETALLADA',
             style: TextStyle(
-              fontSize: 12,
+              fontSize: 11,
               fontWeight: FontWeight.w900,
-              letterSpacing: 1.5,
+              letterSpacing: 1,
               color: isDark ? Colors.grey[600] : Colors.grey[400],
             ),
           ),
@@ -269,50 +288,51 @@ class ConfirmarResultadoPage extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: colorScheme.surface,
+            color: isDark ? const Color(0xFF1E293B) : Colors.white,
             borderRadius: BorderRadius.circular(32),
             border: Border.all(
-              color: isDark ? AppColors.border : theme.dividerColor,
+              color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.05),
+              width: 1.5,
             ),
             boxShadow: [
-              if (!isDark)
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.03),
-                  blurRadius: 20,
-                  offset: const Offset(0, 10),
-                ),
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.1),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
+              ),
             ],
           ),
           child: Column(
             children: [
-              _buildTeamResultRow(myTeam, 'Tu Reporte', myF, myC, true, isDark),
+              _buildTeamResultRow(myTeam, 'TU REPORTE', myF, myC, true, isDark),
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 24),
                 child: Row(
                   children: [
                     Expanded(
-                      child: Divider(color: theme.dividerColor, thickness: 1),
+                      child: Divider(color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.05), thickness: 1.5),
                     ),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: Text(
                         'VS',
                         style: TextStyle(
-                          color: theme.dividerColor,
+                          color: isDark ? Colors.grey[700] : Colors.grey[300],
                           fontWeight: FontWeight.w900,
                           fontSize: 10,
+                          letterSpacing: 1.5,
                         ),
                       ),
                     ),
                     Expanded(
-                      child: Divider(color: theme.dividerColor, thickness: 1),
+                      child: Divider(color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.05), thickness: 1.5),
                     ),
                   ],
                 ),
               ),
               _buildTeamResultRow(
                 opponent,
-                'Reporte Rival',
+                'REPORTE RIVAL',
                 rivF,
                 rivC,
                 false,
@@ -338,18 +358,23 @@ class ConfirmarResultadoPage extends StatelessWidget {
     return Row(
       children: [
         Container(
-          width: 52,
-          height: 52,
+          width: 56,
+          height: 56,
           decoration: BoxDecoration(
             color: isMe
                 ? AppColors.primary.withValues(alpha: 0.1)
-                : (isDark ? Colors.white10 : Colors.grey[100]),
-            shape: BoxShape.circle,
+                : (isDark ? Colors.black.withValues(alpha: 0.3) : Colors.grey[100]),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: isMe ? AppColors.primary.withValues(alpha: 0.2) : Colors.transparent,
+              width: 1.5,
+            ),
           ),
           child: Center(
-            child: Text(
-              isMe ? '👤' : '🛡️',
-              style: const TextStyle(fontSize: 24),
+            child: Icon(
+              isMe ? Icons.person_rounded : Icons.shield_rounded,
+              color: isMe ? AppColors.primary : Colors.grey[400],
+              size: 24,
             ),
           ),
         ),
@@ -359,23 +384,24 @@ class ConfirmarResultadoPage extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                name,
+                name.toUpperCase(),
                 style: TextStyle(
                   fontWeight: FontWeight.w900,
-                  fontSize: 16,
+                  fontSize: 15,
+                  letterSpacing: -0.5,
                   color: isDark ? Colors.white : Colors.black,
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
-              const SizedBox(height: 2),
+              const SizedBox(height: 4),
               Text(
                 label.toUpperCase(),
                 style: TextStyle(
                   color: isMe ? AppColors.primary : Colors.grey,
                   fontSize: 10,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 0.5,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 0.8,
                 ),
               ),
             ],
@@ -383,12 +409,15 @@ class ConfirmarResultadoPage extends StatelessWidget {
         ),
         if (hasData)
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             decoration: BoxDecoration(
               color: isMe
                   ? AppColors.primary.withValues(alpha: 0.1)
-                  : (isDark ? Colors.white10 : Colors.grey[100]),
+                  : (isDark ? Colors.black.withValues(alpha: 0.3) : Colors.grey[100]),
               borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: isMe ? AppColors.primary.withValues(alpha: 0.2) : Colors.transparent,
+              ),
             ),
             child: Text(
               '$f - $c',
@@ -403,13 +432,20 @@ class ConfirmarResultadoPage extends StatelessWidget {
             ),
           )
         else
-          Text(
-            'PENDIENTE',
-            style: TextStyle(
-              color: Colors.grey[600],
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-              fontStyle: FontStyle.italic,
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: Colors.redAccent.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: const Text(
+              'PENDIENTE',
+              style: TextStyle(
+                color: Colors.redAccent,
+                fontSize: 9,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 1.0,
+              ),
             ),
           ),
       ],
@@ -429,29 +465,36 @@ class ConfirmarResultadoPage extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(40),
       decoration: BoxDecoration(
-        color: isDark ? Colors.black26 : Colors.white,
+        color: isDark ? const Color(0xFF1E293B) : Colors.white,
         borderRadius: BorderRadius.circular(40),
         border: Border.all(color: mainColor.withValues(alpha: 0.3), width: 2),
         boxShadow: [
           BoxShadow(
             color: mainColor.withValues(alpha: 0.1),
             blurRadius: 30,
-            spreadRadius: 5,
+            offset: const Offset(0, 15),
           ),
         ],
       ),
       child: Column(
         children: [
-          Text(
-            'MARCADOR OFICIAL'.toUpperCase(),
-            style: TextStyle(
-              color: mainColor,
-              fontWeight: FontWeight.w900,
-              fontSize: 12,
-              letterSpacing: 3,
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color: mainColor.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(100),
+            ),
+            child: Text(
+              'MARCADOR OFICIAL',
+              style: TextStyle(
+                color: mainColor,
+                fontWeight: FontWeight.w900,
+                fontSize: 11,
+                letterSpacing: 1.5,
+              ),
             ),
           ),
-          const SizedBox(height: 32),
+          const SizedBox(height: 40),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -470,7 +513,7 @@ class ConfirmarResultadoPage extends StatelessWidget {
               _buildScoreDigit(c, isDark, mainColor),
             ],
           ),
-          const SizedBox(height: 32),
+          const SizedBox(height: 40),
           Text(
             teamName.toUpperCase(),
             style: TextStyle(
@@ -506,9 +549,9 @@ class ConfirmarResultadoPage extends StatelessWidget {
       width: 80,
       height: 100,
       decoration: BoxDecoration(
-        color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.grey[50],
+        color: isDark ? Colors.black.withValues(alpha: 0.3) : Colors.grey[50],
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: isDark ? Colors.white10 : Colors.grey[200]!),
+        border: Border.all(color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.05), width: 1.5),
       ),
       alignment: Alignment.center,
       child: Text(
@@ -517,6 +560,7 @@ class ConfirmarResultadoPage extends StatelessWidget {
           fontSize: 64,
           fontWeight: FontWeight.w900,
           color: isDark ? Colors.white : Colors.black,
+          letterSpacing: -2,
         ),
       ),
     );
@@ -527,19 +571,19 @@ class ConfirmarResultadoPage extends StatelessWidget {
       return {
         'label': 'VICTORIA',
         'color': Colors.greenAccent,
-        'icon': Icons.emoji_events,
+        'icon': Icons.emoji_events_rounded,
       };
     } else if (f < c) {
       return {
         'label': 'DERROTA',
         'color': Colors.redAccent,
-        'icon': Icons.trending_down,
+        'icon': Icons.trending_down_rounded,
       };
     } else {
       return {
         'label': 'EMPATE',
         'color': Colors.amberAccent,
-        'icon': Icons.drag_handle,
+        'icon': Icons.drag_handle_rounded,
       };
     }
   }
@@ -551,10 +595,17 @@ class ConfirmarResultadoPage extends StatelessWidget {
     bool isDark,
   ) {
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.fromLTRB(24, 16, 24, 40),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        border: Border(top: BorderSide(color: Theme.of(context).dividerColor)),
+        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(40)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.2),
+            blurRadius: 25,
+            offset: const Offset(0, -5),
+          ),
+        ],
       ),
       child: SafeArea(
         child: _buildMainButton(
@@ -574,8 +625,8 @@ class ConfirmarResultadoPage extends StatelessWidget {
     if (!hasRivalRegistered) {
       return _actionButton(
         onPressed: () => Navigator.of(context).pop(),
-        label: 'Volver al Dashboard',
-        backgroundColor: const Color(0xFF2A2A2A),
+        label: 'VOLVER AL DASHBOARD',
+        backgroundColor: Colors.white.withValues(alpha: 0.05),
         foregroundColor: Colors.white,
       );
     }
@@ -584,14 +635,17 @@ class ConfirmarResultadoPage extends StatelessWidget {
       return _actionButton(
         onPressed: () =>
             Navigator.of(context).popUntil((route) => route.isFirst),
-        label: 'Finalizar Encuentro',
+        label: 'FINALIZAR ENCUENTRO',
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.black,
       );
     } else {
       return _actionButton(
-        onPressed: () => Navigator.of(context).pop(),
-        label: 'Corregir Marcador',
+        onPressed: () => context.pushReplacement(
+          '/register-result',
+          extra: {'matchEntity': match},
+        ),
+        label: 'CORREGIR MARCADOR',
         backgroundColor: Colors.orangeAccent,
         foregroundColor: Colors.black,
       );
@@ -604,18 +658,21 @@ class ConfirmarResultadoPage extends StatelessWidget {
     required Color backgroundColor,
     required Color foregroundColor,
   }) {
-    return ElevatedButton(
-      onPressed: onPressed,
-      style: ElevatedButton.styleFrom(
-        backgroundColor: backgroundColor,
-        foregroundColor: foregroundColor,
-        minimumSize: const Size(double.infinity, 56),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        elevation: 0,
-      ),
-      child: Text(
-        label.toUpperCase(),
-        style: const TextStyle(fontWeight: FontWeight.w900, letterSpacing: 1),
+    return SizedBox(
+      width: double.infinity,
+      height: 64,
+      child: ElevatedButton(
+        onPressed: onPressed,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: backgroundColor,
+          foregroundColor: foregroundColor,
+          elevation: 0,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        ),
+        child: Text(
+          label,
+          style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16, letterSpacing: 0.5),
+        ),
       ),
     );
   }

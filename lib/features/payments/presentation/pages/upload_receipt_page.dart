@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/storage/firebase_storage_service.dart';
@@ -96,15 +97,16 @@ class _UploadReceiptPageState extends State<UploadReceiptPage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
+      backgroundColor: isDark ? const Color(0xFF0F172A) : Colors.white,
       body: BlocConsumer<PaymentsBloc, PaymentsState>(
         listener: (context, state) {
           if (state is ReceiptUploadedSuccess) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
-                content: Text('¡Comprobante enviado con éxito!'),
+                content: Text('¡Comprobante enviado con éxito! 🚀'),
                 backgroundColor: AppColors.primary,
               ),
             );
@@ -117,76 +119,46 @@ class _UploadReceiptPageState extends State<UploadReceiptPage> {
         },
         builder: (context, state) {
           return CustomScrollView(
+            physics: const BouncingScrollPhysics(),
             slivers: [
-              SliverAppBar(
-                expandedHeight: 180,
-                pinned: true,
-                stretch: true,
-                backgroundColor: theme.cardColor,
-                flexibleSpace: FlexibleSpaceBar(
-                  background: Container(
-                    decoration: const BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [AppColors.primary, Color(0xFF1A1A1A)],
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                      ),
-                    ),
-                    child: Opacity(
-                      opacity: 0.1,
-                      child: Icon(Icons.receipt_long, size: 200, color: Colors.white),
-                    ),
-                  ),
-                  title: Text(
-                    'Subir Comprobante',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w900,
-                      fontSize: 20,
-                    ),
-                  ),
-                  centerTitle: true,
-                ),
-                leading: IconButton(
-                  icon: const Icon(Icons.arrow_back, color: Colors.white),
-                  onPressed: () => Navigator.pop(context),
-                ),
-              ),
+              _buildSliverAppBar(context, isDark),
               SliverPadding(
-                padding: const EdgeInsets.all(16.0),
+                padding: const EdgeInsets.fromLTRB(20, 24, 20, 40),
                 sliver: SliverList(
                   delegate: SliverChildListDelegate([
-                    const SizedBox(height: 8),
-                    _buildPaymentSummaryCard(theme),
-                    const SizedBox(height: 24),
-                    _buildCaptainBankDetails(theme),
-                    const SizedBox(height: 32),
-                    Text(
-                      'PASO 1: SELECCIONAR ARCHIVO',
-                      style: theme.textTheme.labelLarge?.copyWith(
-                        color: AppColors.primary,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 1.5,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    _buildUploadArea(theme)
+                    _buildPaymentSummaryCard(theme, isDark)
                         .animate()
-                        .fadeIn(duration: 500.ms)
+                        .fadeIn(duration: 400.ms)
                         .slideY(begin: 0.1, end: 0),
+                    const SizedBox(height: 24),
+                    
+                    _buildCaptainBankDetails(theme, isDark)
+                        .animate()
+                        .fadeIn(duration: 400.ms, delay: 100.ms),
                     const SizedBox(height: 32),
-                    Text(
-                      'PASO 2: REFERENCIA DE PAGO',
-                      style: theme.textTheme.labelLarge?.copyWith(
-                        color: AppColors.primary,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 1.5,
-                      ),
-                    ),
+                    
+                    _buildSectionHeader('PASO 1: SELECCIONAR ARCHIVO', isDark),
                     const SizedBox(height: 12),
-                    _buildReferenceField(theme),
-                    const SizedBox(height: 40),
-                    _buildSubmitButton(theme, state),
+                    _buildUploadArea(theme, isDark)
+                        .animate()
+                        .fadeIn(duration: 500.ms, delay: 200.ms)
+                        .scale(begin: const Offset(0.95, 0.95), end: const Offset(1, 1)),
+                    const SizedBox(height: 32),
+                    
+                    _buildSectionHeader('PASO 2: REFERENCIA DE PAGO', isDark),
+                    const SizedBox(height: 12),
+                    _buildReferenceField(theme, isDark)
+                        .animate()
+                        .fadeIn(duration: 500.ms, delay: 300.ms),
+                    const SizedBox(height: 32),
+                    
+                    _buildDisclaimerCard(isDark),
+                    const SizedBox(height: 32),
+                    
+                    _buildSubmitButton(theme, isDark, state)
+                        .animate()
+                        .fadeIn(duration: 500.ms, delay: 400.ms)
+                        .shimmer(delay: 2.seconds, duration: 1.5.seconds),
                     const SizedBox(height: 32),
                   ]),
                 ),
@@ -198,82 +170,207 @@ class _UploadReceiptPageState extends State<UploadReceiptPage> {
     );
   }
 
-  Widget _buildCaptainBankDetails(ThemeData theme) {
+  Widget _buildSliverAppBar(BuildContext context, bool isDark) {
+    return SliverAppBar(
+      expandedHeight: 180,
+      pinned: true,
+      stretch: true,
+      backgroundColor: isDark ? const Color(0xFF1E293B) : AppColors.primary,
+      elevation: 0,
+      flexibleSpace: FlexibleSpaceBar(
+        stretchModes: const [StretchMode.zoomBackground, StretchMode.blurBackground],
+        background: Stack(
+          fit: StackFit.expand,
+          children: [
+            Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: isDark 
+                      ? [const Color(0xFF1E293B), const Color(0xFF0F172A)]
+                      : [AppColors.primary, AppColors.primary.withValues(alpha: 0.8)],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                ),
+              ),
+            ),
+            Positioned(
+              right: -50,
+              top: -50,
+              child: Opacity(
+                opacity: 0.1,
+                child: Icon(Icons.receipt_long_rounded, size: 250, color: isDark ? Colors.white : Colors.black),
+              ),
+            ),
+          ],
+        ),
+        title: Text(
+          'SUBIR COMPROBANTE',
+          style: TextStyle(
+            color: isDark ? Colors.white : Colors.black,
+            fontWeight: FontWeight.w900,
+            fontSize: 16,
+            letterSpacing: 1.0,
+          ),
+        ),
+        centerTitle: true,
+      ),
+      leading: IconButton(
+        icon: Icon(Icons.arrow_back_ios_new_rounded, color: isDark ? Colors.white : Colors.black, size: 20),
+        onPressed: () => Navigator.pop(context),
+        style: IconButton.styleFrom(
+          backgroundColor: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.1),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSectionHeader(String title, bool isDark) {
+    return Text(
+      title,
+      style: const TextStyle(
+        color: AppColors.primary,
+        fontWeight: FontWeight.w900,
+        fontSize: 11,
+        letterSpacing: 1.5,
+      ),
+    );
+  }
+
+  Widget _buildCaptainBankDetails(ThemeData theme, bool isDark) {
     if (widget.pago.banco == null && widget.pago.cedula == null && widget.pago.telefono == null) {
       return const SizedBox.shrink();
     }
 
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: AppColors.primary.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+        color: isDark ? const Color(0xFF1E293B) : Colors.grey[50],
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(
+          color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.05),
+          width: 1.5,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Icon(Icons.account_balance_wallet_outlined, color: AppColors.primary, size: 20),
-              const SizedBox(width: 10),
-              Text(
-                'DATOS DEL CAPITÁN (PAGO MÓVIL)',
-                style: theme.textTheme.labelMedium?.copyWith(
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 1.1,
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(Icons.account_balance_rounded, color: AppColors.primary, size: 18),
+              ),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Text(
+                  'PAGO MÓVIL DESTINO',
+                  style: TextStyle(fontWeight: FontWeight.w900, fontSize: 13, letterSpacing: -0.5),
+                ),
+              ),
+              TextButton.icon(
+                onPressed: () {
+                  final text = "Banco: ${widget.pago.banco}\nCédula: ${widget.pago.cedula}\nTeléfono: ${widget.pago.telefono}";
+                  Clipboard.setData(ClipboardData(text: text)).then((_) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Todos los datos copiados al portapapeles'),
+                          behavior: SnackBarBehavior.floating,
+                          backgroundColor: AppColors.primary,
+                        ),
+                      );
+                    }
+                  });
+                },
+                icon: const Icon(Icons.copy_all_rounded, size: 16, color: AppColors.primary),
+                label: const Text(
+                  'COPIAR TODO',
+                  style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w900, fontSize: 10),
+                ),
+                style: TextButton.styleFrom(
+                  backgroundColor: AppColors.primary.withValues(alpha: 0.1),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 16),
-          _bankInfoRow(Icons.account_balance, 'Banco', widget.pago.banco ?? 'No especificado'),
-          const SizedBox(height: 10),
-          _bankInfoRow(Icons.badge_outlined, 'Cédula', widget.pago.cedula ?? 'No especificado'),
-          const SizedBox(height: 10),
-          _bankInfoRow(Icons.phone_android, 'Teléfono', widget.pago.telefono ?? 'No especificado'),
+          const SizedBox(height: 24),
+          _bankInfoRow(Icons.account_balance_outlined, 'Banco', widget.pago.banco ?? 'No especificado', isDark),
+          _bankDivider(isDark),
+          _bankInfoRow(Icons.badge_outlined, 'Cédula', widget.pago.cedula ?? 'No especificado', isDark),
+          _bankDivider(isDark),
+          _bankInfoRow(Icons.phone_android_rounded, 'Teléfono', widget.pago.telefono ?? 'No especificado', isDark),
         ],
       ),
     );
   }
 
-  Widget _bankInfoRow(IconData icon, String label, String value) {
+  Widget _bankDivider(bool isDark) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      child: Divider(color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.05), height: 1),
+    );
+  }
+
+  Widget _bankInfoRow(IconData icon, String label, String value, bool isDark) {
     return Row(
       children: [
         Icon(icon, size: 16, color: AppColors.textMuted),
-        const SizedBox(width: 12),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(label, style: const TextStyle(color: AppColors.textMuted, fontSize: 10)),
-            Text(value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-          ],
+        const SizedBox(width: 16),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(label.toUpperCase(), style: const TextStyle(color: AppColors.textMuted, fontSize: 9, fontWeight: FontWeight.w900, letterSpacing: 0.5)),
+              Text(value, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 15)),
+            ],
+          ),
         ),
-        const Spacer(),
         IconButton(
           onPressed: () {
-            // Copiar al portapapeles (opcional)
+            Clipboard.setData(ClipboardData(text: value)).then((_) {
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('$label copiado al portapapeles'),
+                    duration: const Duration(seconds: 2),
+                    behavior: SnackBarBehavior.floating,
+                    backgroundColor: AppColors.primary,
+                  ),
+                );
+              }
+            });
           },
-          icon: const Icon(Icons.copy_all, size: 18, color: AppColors.primary),
-          visualDensity: VisualDensity.compact,
+          icon: const Icon(Icons.copy_rounded, size: 18, color: AppColors.primary),
+          style: IconButton.styleFrom(
+            backgroundColor: AppColors.primary.withValues(alpha: 0.1),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          ),
         ),
       ],
     );
   }
 
-  Widget _buildPaymentSummaryCard(ThemeData theme) {
+  Widget _buildPaymentSummaryCard(ThemeData theme, bool isDark) {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: theme.cardColor,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: theme.dividerColor.withValues(alpha: 0.5)),
+        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+        borderRadius: BorderRadius.circular(32),
+        border: Border.all(
+          color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.05),
+          width: 1.5,
+        ),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.1),
-            blurRadius: 15,
-            offset: const Offset(0, 5),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
           ),
         ],
       ),
@@ -285,23 +382,14 @@ class _UploadReceiptPageState extends State<UploadReceiptPage> {
                 width: 56,
                 height: 56,
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
-                  border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+                  color: AppColors.primary.withValues(alpha: 0.1),
+                  border: Border.all(color: AppColors.primary.withValues(alpha: 0.2), width: 1.5),
                 ),
                 child: ClipOval(
                   child: (widget.pago.teamLogo != null && widget.pago.teamLogo!.startsWith('http'))
-                      ? Image.network(
-                          widget.pago.teamLogo!,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) => const Center(child: Text('⚽', style: TextStyle(fontSize: 24))),
-                        )
-                      : Center(
-                          child: Text(
-                            widget.pago.teamLogo ?? '⚽',
-                            style: const TextStyle(fontSize: 24),
-                          ),
-                        ),
+                      ? Image.network(widget.pago.teamLogo!, fit: BoxFit.cover)
+                      : Center(child: Text(widget.pago.teamLogo ?? '⚽', style: const TextStyle(fontSize: 24))),
                 ),
               ),
               const SizedBox(width: 16),
@@ -311,55 +399,55 @@ class _UploadReceiptPageState extends State<UploadReceiptPage> {
                   children: [
                     Text(
                       widget.pago.teamName,
-                      style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
+                      style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18, letterSpacing: -0.5),
                     ),
                     Text(
-                      widget.pago.concepto,
-                      style: theme.textTheme.bodyMedium?.copyWith(color: AppColors.textMuted),
+                      widget.pago.concepto.toUpperCase(),
+                      style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.w900, fontSize: 10, letterSpacing: 0.5),
                     ),
                   ],
                 ),
               ),
             ],
           ),
+          const SizedBox(height: 24),
+          Divider(color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.05)),
           const SizedBox(height: 20),
-          const Divider(),
-          const SizedBox(height: 16),
           BlocBuilder<ConfigBloc, ConfigState>(
             builder: (context, state) {
               final rateData = state.rates[widget.pago.moneda ?? 'USD'];
               final double? rate = rateData != null ? (rateData['monto_bs'] as num).toDouble() : null;
               final amountBs = rate != null ? widget.pago.monto * rate : null;
               
-              return Column(
+              return Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('TOTAL A PAGAR', style: TextStyle(fontWeight: FontWeight.w800, color: AppColors.textMuted, fontSize: 12)),
-                      Text(
-                        '${widget.pago.moneda == 'EUR' ? '€' : '\$'}${widget.pago.monto.toStringAsFixed(2)}',
-                        style: const TextStyle(color: Colors.redAccent, fontWeight: FontWeight.w900, fontSize: 24),
-                      ),
-                    ],
-                  ),
-                  if (amountBs != null) ...[
-                    const SizedBox(height: 4),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text('REFERENCIA BCV', style: TextStyle(color: AppColors.textMuted, fontSize: 10, fontWeight: FontWeight.bold)),
+                      const Text('TOTAL A REPORTAR', style: TextStyle(color: AppColors.textMuted, fontSize: 10, fontWeight: FontWeight.w900)),
+                      if (amountBs != null)
                         Text(
                           'Bs. ${amountBs.toStringAsFixed(2)}',
                           style: TextStyle(
-                            color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
-                            fontWeight: FontWeight.bold,
+                            color: isDark ? Colors.white70 : Colors.black54,
+                            fontWeight: FontWeight.w900,
                             fontSize: 14,
                           ),
                         ),
-                      ],
+                    ],
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary,
+                      borderRadius: BorderRadius.circular(20),
                     ),
-                  ],
+                    child: Text(
+                      '${widget.pago.moneda == 'EUR' ? '€' : '\$'}${widget.pago.monto.toStringAsFixed(2)}',
+                      style: const TextStyle(color: Colors.black, fontWeight: FontWeight.w900, fontSize: 22, letterSpacing: -1),
+                    ),
+                  ),
                 ],
               );
             },
@@ -369,32 +457,37 @@ class _UploadReceiptPageState extends State<UploadReceiptPage> {
     );
   }
 
-  Widget _buildUploadArea(ThemeData theme) {
+  Widget _buildUploadArea(ThemeData theme, bool isDark) {
     return GestureDetector(
       onTap: _isUploading ? null : _handleFileSelect,
       child: Container(
-        height: 200,
+        height: 220,
         width: double.infinity,
         decoration: BoxDecoration(
-          color: theme.cardColor,
-          borderRadius: BorderRadius.circular(24),
+          color: isDark ? const Color(0xFF1E293B) : Colors.grey[50],
+          borderRadius: BorderRadius.circular(32),
           border: Border.all(
-            color: _selectedFile != null ? AppColors.primary : theme.dividerColor,
+            color: _selectedFile != null ? AppColors.primary : (isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.05)),
             width: 2,
-            style: _selectedFile != null ? BorderStyle.solid : BorderStyle.solid,
+            style: BorderStyle.solid,
           ),
         ),
         child: _selectedFile != null
             ? ClipRRect(
-                borderRadius: BorderRadius.circular(22),
+                borderRadius: BorderRadius.circular(30),
                 child: Stack(
                   fit: StackFit.expand,
                   children: [
                     Image.file(_selectedFile!, fit: BoxFit.cover),
                     Container(
-                      color: Colors.black.withValues(alpha: 0.4),
-                      child: const Center(
-                        child: Icon(Icons.refresh, color: Colors.white, size: 40),
+                      color: Colors.black.withValues(alpha: 0.5),
+                      child: const Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.refresh_rounded, color: Colors.white, size: 40),
+                          SizedBox(height: 8),
+                          Text('CAMBIAR ARCHIVO', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 12)),
+                        ],
                       ),
                     ),
                   ],
@@ -403,63 +496,132 @@ class _UploadReceiptPageState extends State<UploadReceiptPage> {
             : Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.cloud_upload_outlined, size: 48, color: AppColors.primary),
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.add_photo_alternate_rounded, size: 40, color: AppColors.primary),
+                  ),
                   const SizedBox(height: 16),
-                  const Text('Toca para seleccionar captura', style: TextStyle(fontWeight: FontWeight.w900)),
+                  const Text('Seleccionar Comprobante', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16)),
                   const SizedBox(height: 4),
-                  const Text('JPG o PNG del comprobante', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
+                  const Text('PNG o JPG de la transacción', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
                 ],
               ),
       ),
     );
   }
 
-  Widget _buildReferenceField(ThemeData theme) {
-    return TextField(
-      controller: _referenciaController,
-      style: const TextStyle(fontWeight: FontWeight.bold),
-      onChanged: (value) => setState(() {}),
-      decoration: InputDecoration(
-        hintText: 'Número de referencia...',
-        prefixIcon: const Icon(Icons.pin_outlined, color: AppColors.primary),
-        filled: true,
-        fillColor: theme.cardColor,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
-        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: AppColors.primary, width: 2)),
+  Widget _buildReferenceField(ThemeData theme, bool isDark) {
+    return Container(
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E293B) : Colors.grey[50],
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.05),
+          width: 1.5,
+        ),
+      ),
+      child: TextField(
+        controller: _referenciaController,
+        style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16),
+        onChanged: (value) => setState(() {}),
+        decoration: InputDecoration(
+          hintText: 'Número de operación / referencia',
+          hintStyle: TextStyle(color: AppColors.textMuted, fontSize: 14, fontWeight: FontWeight.normal),
+          prefixIcon: const Icon(Icons.tag_rounded, color: AppColors.primary),
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.all(20),
+        ),
       ),
     );
   }
 
-  Widget _buildSubmitButton(ThemeData theme, PaymentsState state) {
+  Widget _buildSubmitButton(ThemeData theme, bool isDark, PaymentsState state) {
     final bool canSubmit = _selectedFile != null && _referenciaController.text.isNotEmpty && !_isUploading;
 
-    return SizedBox(
+    return Container(
       width: double.infinity,
-      height: 60,
+      height: 64,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: canSubmit ? [
+          BoxShadow(
+            color: AppColors.primary.withValues(alpha: 0.3),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
+          )
+        ] : [],
+      ),
       child: ElevatedButton(
         onPressed: canSubmit ? () => _handleSubmit(context) : null,
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primary,
           foregroundColor: Colors.black,
-          disabledBackgroundColor: theme.dividerColor.withValues(alpha: 0.1),
+          disabledBackgroundColor: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.05),
           disabledForegroundColor: AppColors.textMuted,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-          elevation: canSubmit ? 8 : 0,
-          shadowColor: AppColors.primary.withValues(alpha: 0.4),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          elevation: 0,
         ),
         child: _isUploading || state is PaymentsLoading
             ? const SizedBox(height: 24, width: 24, child: CircularProgressIndicator(color: Colors.black, strokeWidth: 3))
             : Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(canSubmit ? Icons.check_circle_outline : Icons.lock_outline),
+                  Icon(canSubmit ? Icons.send_rounded : Icons.lock_outline_rounded),
                   const SizedBox(width: 12),
                   Text(
-                    canSubmit ? 'ENVIAR COMPROBANTE' : 'COMPLETA LOS DATOS',
-                    style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16, letterSpacing: 1.1),
+                    canSubmit ? 'ENVIAR REPORTE' : 'COMPLETA LOS DATOS',
+                    style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16, letterSpacing: 0.5),
                   ),
                 ],
               ),
+      ),
+    );
+  }
+
+  Widget _buildDisclaimerCard(bool isDark) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppColors.error.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: AppColors.error.withValues(alpha: 0.2)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(Icons.warning_amber_rounded, color: AppColors.error, size: 24),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'POLÍTICA DE PAGOS',
+                  style: TextStyle(
+                    color: AppColors.error,
+                    fontWeight: FontWeight.w900,
+                    fontSize: 11,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'No habrá reembolsos de pagos. La aplicación no maneja ni se hace responsable de transacciones realizadas por canales externos.',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: isDark ? Colors.white70 : Colors.black87,
+                    fontWeight: FontWeight.w600,
+                    height: 1.4,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
