@@ -8,7 +8,12 @@ abstract class IPaymentsRepository {
   Future<Either<Failure, List<PaymentEntity>>> getMyPayments();
 
   /// Sube la URL del comprobante de pago.
-  Future<Either<Failure, Unit>> uploadReceipt({required int partidaId, required String urlReciboPago, required String referenciaPago});
+  Future<Either<Failure, Unit>> uploadReceipt({
+    required int partidaId, 
+    required String urlReciboPago, 
+    required String referenciaPago,
+    double? tasaUsadaBs,
+  });
 
   /// Verifica el pago de un jugador.
   Future<Either<Failure, Unit>> verifyUserPayment({required int partidaId, required int userId});

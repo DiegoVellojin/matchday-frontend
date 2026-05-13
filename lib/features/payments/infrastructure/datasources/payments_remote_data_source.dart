@@ -19,13 +19,19 @@ class PaymentsRemoteDataSource {
   }
 
   /// Envía el comprobante de pago.
-  Future<void> uploadReceipt({required int partidaId, required String urlReciboPago, required String referenciaPago}) async {
+  Future<void> uploadReceipt({
+    required int partidaId, 
+    required String urlReciboPago, 
+    required String referenciaPago,
+    double? tasaUsadaBs,
+  }) async {
     try {
       await networkRobot.post(
         '/payments/$partidaId/upload',
         data: {
           'url_recibo_pago': urlReciboPago,
           'referencia_pago': referenciaPago,
+          'tasa_usada_bs': tasaUsadaBs,
         },
       );
     } catch (e) {

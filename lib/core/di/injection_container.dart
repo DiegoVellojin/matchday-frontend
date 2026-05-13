@@ -16,6 +16,7 @@ import 'modules/notifications_module.dart';
 import 'modules/profile_module.dart';
 import 'modules/catalogs_module.dart';
 import 'modules/rankings_module.dart';
+import 'modules/finance_module.dart';
 
 Future<void> init() async {
   // 1. Inicializar Módulos de cada Feature (Orden de dependencia: Core primero)
@@ -33,6 +34,7 @@ Future<void> init() async {
   await initProfile();
   await initCatalogs();
   await initRankings();
+  await initFinance();
 }
 
 Future<void> _initTheme() async {

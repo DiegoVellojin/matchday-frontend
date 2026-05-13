@@ -43,6 +43,7 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
   DateTime selectedDate = DateTime.now();
   TimeOfDay startTime = const TimeOfDay(hour: 8, minute: 0);
   TimeOfDay endTime = const TimeOfDay(hour: 10, minute: 0);
+  String selectedMoneda = 'USD';
 
   // Controladores
   final _dateController = TextEditingController();
@@ -71,6 +72,7 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
       selectedDate = match.fechaInicioEstimada;
       startTime = TimeOfDay.fromDateTime(match.fechaInicioEstimada);
       endTime = TimeOfDay.fromDateTime(match.fechaFinEstimada);
+      selectedMoneda = match.moneda;
       
       _dateController.text = DateFormat('yyyy-MM-dd').format(selectedDate);
       // Los controllers de tiempo se llenan en didChangeDependencies
@@ -333,6 +335,29 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
                       isDark: isDark,
                     );
                   }(),
+
+              const SizedBox(height: 20),
+              
+              // Selector de Divisa
+              _buildLabel('Divisa de Pago'),
+              Center(
+                child: SegmentedButton<String>(
+                  segments: const [
+                    ButtonSegment<String>(value: 'USD', label: Text('USD (\$)', style: TextStyle(fontSize: 13)), icon: Icon(Icons.attach_money, size: 16)),
+                    ButtonSegment<String>(value: 'EUR', label: Text('EUR (€)', style: TextStyle(fontSize: 13)), icon: Icon(Icons.euro, size: 16)),
+                  ],
+                  selected: {selectedMoneda},
+                  onSelectionChanged: (newSelection) {
+                    setState(() => selectedMoneda = newSelection.first);
+                  },
+                  style: SegmentedButton.styleFrom(
+                    backgroundColor: isDark ? Colors.grey[900] : Colors.grey[100],
+                    selectedBackgroundColor: AppColors.primary,
+                    selectedForegroundColor: Colors.black,
+                    side: BorderSide(color: theme.dividerColor),
+                  ),
+                ),
+              ),
 
               const SizedBox(height: 32),
               _buildSectionTitle('Fecha y Hora', isDark),
@@ -710,6 +735,7 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
       fechaInicioEstimada: startDateTime,
       fechaFinEstimada: endDateTime,
       costoTotal: widget.editMatch?.costoTotal ?? 50.0,
+      moneda: selectedMoneda,
       status: MatchStatus.fromString(widget.editMatch?.estatus ?? 'publicada'),
       idEquipoA: selectedTeamId,
       cuposTotales: widget.editMatch?.cuposTotales ?? 22,

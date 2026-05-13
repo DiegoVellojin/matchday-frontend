@@ -8,6 +8,7 @@ class MatchEntity extends Equatable {
   final DateTime? fechaAcordada;
   final double costoTotal;
   final MatchStatus status;
+  final String moneda;
   final int idUsuarioOrg;
   final int idDeporte;
   final int idCancha;
@@ -57,6 +58,7 @@ class MatchEntity extends Equatable {
     this.fechaAcordada,
     required this.costoTotal,
     required this.status,
+    this.moneda = 'USD',
     required this.idUsuarioOrg,
     required this.idDeporte,
     required this.idCancha,
@@ -106,6 +108,7 @@ class MatchEntity extends Equatable {
         fechaAcordada,
         costoTotal,
         status,
+        moneda,
         idUsuarioOrg,
         idDeporte,
         idCancha,

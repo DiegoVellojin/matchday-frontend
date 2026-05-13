@@ -21,9 +21,19 @@ class PaymentsRepositoryImpl implements IPaymentsRepository {
   }
 
   @override
-  Future<Either<Failure, Unit>> uploadReceipt({required int partidaId, required String urlReciboPago, required String referenciaPago}) async {
+  Future<Either<Failure, Unit>> uploadReceipt({
+    required int partidaId, 
+    required String urlReciboPago, 
+    required String referenciaPago,
+    double? tasaUsadaBs,
+  }) async {
     try {
-      await remoteDataSource.uploadReceipt(partidaId: partidaId, urlReciboPago: urlReciboPago, referenciaPago: referenciaPago);
+      await remoteDataSource.uploadReceipt(
+        partidaId: partidaId, 
+        urlReciboPago: urlReciboPago, 
+        referenciaPago: referenciaPago,
+        tasaUsadaBs: tasaUsadaBs,
+      );
       return const Right(unit);
     } catch (e) {
       return Left(ServerFailure(e.toString()));

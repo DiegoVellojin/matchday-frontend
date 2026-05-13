@@ -6,8 +6,14 @@ class UploadReceiptEvent extends PaymentsEvent {
   final int partidaId;
   final String urlReciboPago;
   final String referenciaPago;
+  final double? tasaUsadaBs;
 
-  UploadReceiptEvent({required this.partidaId, required this.urlReciboPago, required this.referenciaPago});
+  UploadReceiptEvent({
+    required this.partidaId, 
+    required this.urlReciboPago, 
+    required this.referenciaPago,
+    this.tasaUsadaBs,
+  });
 }
 
 class VerifyPaymentEvent extends PaymentsEvent {

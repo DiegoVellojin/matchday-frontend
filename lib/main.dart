@@ -12,6 +12,7 @@ import 'features/profile/presentation/bloc/profile_bloc.dart';
 import 'features/profile/presentation/bloc/profile_event.dart';
 import 'features/notifications/presentation/bloc/notifications_bloc.dart';
 import 'features/notifications/presentation/bloc/notifications_event.dart';
+import 'features/config/presentation/bloc/config_bloc.dart';
 
 void main() async {
   // 1. Aseguramos que Flutter esté listo
@@ -31,7 +32,7 @@ class MatchDayApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Envolvemos la app en los BLoCs globales (Tema, Perfil, Notif, Auth)
+    // Envolvemos la app en los BLoCs globales (Tema, Perfil, Notif, Auth, Config)
     return MultiBlocProvider(
       providers: [
         BlocProvider(create: (_) => di.sl<ThemeBloc>()),
@@ -43,6 +44,9 @@ class MatchDayApp extends StatelessWidget {
               di.sl<NotificationsBloc>()..add(LoadNotificationsEvent()),
         ),
         BlocProvider(create: (_) => di.sl<AuthBloc>()),
+        BlocProvider(
+          create: (_) => di.sl<ConfigBloc>()..add(FetchRatesEvent()),
+        ),
       ],
       child: BlocBuilder<ThemeBloc, ThemeMode>(
         builder: (context, currentThemeMode) {

@@ -11,6 +11,7 @@ class PaymentEntity {
   final String? banco;
   final String? cedula;
   final String? telefono;
+  final String? moneda;
 
   const PaymentEntity({
     required this.idPartida,
@@ -24,5 +25,6 @@ class PaymentEntity {
     this.banco,
     this.cedula,
     this.telefono,
+    this.moneda,
   });
 }

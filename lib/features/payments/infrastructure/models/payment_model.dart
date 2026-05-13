@@ -11,6 +11,10 @@ class PaymentModel extends PaymentEntity {
     required super.isPaid,
     required super.estatusPago,
     super.urlReciboPago,
+    super.banco,
+    super.cedula,
+    super.telefono,
+    super.moneda,
   });
 
   factory PaymentModel.fromJson(Map<String, dynamic> json) {
@@ -23,6 +27,10 @@ class PaymentModel extends PaymentEntity {
       isPaid: json['is_paid'] ?? false,
       estatusPago: json['estatus_pago'] ?? 'pendiente',
       urlReciboPago: json['url_recibo_pago'],
+      banco: json['banco_receptor'],
+      cedula: json['cedula_receptora'],
+      telefono: json['telefono_receptor'],
+      moneda: json['moneda'] ?? 'USD',
     );
   }
 }

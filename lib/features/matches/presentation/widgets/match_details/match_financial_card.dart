@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../domain/entities/match_entity.dart';
+import '../../../../config/presentation/bloc/config_bloc.dart';
 
 class MatchFinancialCard extends StatelessWidget {
   final MatchEntity match;
@@ -48,26 +50,57 @@ class MatchFinancialCard extends StatelessWidget {
           _buildFinancialRow('Alquiler de Cancha', '\$${match.costoTotal}', isDark),
           _buildFinancialRow('Jugadores Totales', '$totalPlayers', isDark),
           Divider(color: theme.dividerColor, height: 24),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Tu Cuota',
-                style: TextStyle(
-                  color: theme.colorScheme.onSurface,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              Text(
-                '\$${quota.toStringAsFixed(2)}',
-                style: const TextStyle(
-                  color: AppColors.primary,
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
+          BlocBuilder<ConfigBloc, ConfigState>(
+            builder: (context, state) {
+              final rateData = state.rates[match.moneda];
+              final double? rate = rateData != null ? (rateData['monto_bs'] as num).toDouble() : null;
+              final amountBs = rate != null ? quota * rate : null;
+              
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Tu Cuota',
+                        style: TextStyle(
+                          color: theme.colorScheme.onSurface,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Text(
+                        '${match.moneda == 'USD' ? '\$' : '€'}${quota.toStringAsFixed(2)}',
+                        style: const TextStyle(
+                          color: AppColors.primary,
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                  if (amountBs != null) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      'Aprox. Bs. ${amountBs.toStringAsFixed(2)}',
+                      style: TextStyle(
+                        color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                        fontSize: 14,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                    Text(
+                      '(Tasa BCV oficial)',
+                      style: TextStyle(
+                        color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                        fontSize: 10,
+                      ),
+                    ),
+                  ],
+                ],
+              );
+            },
           ),
         ],
       ),

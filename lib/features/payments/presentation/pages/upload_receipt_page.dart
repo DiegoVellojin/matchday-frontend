@@ -10,6 +10,7 @@ import '../bloc/payments_state.dart';
 import '../../domain/entities/payment_entity.dart';
 import '../../../../core/utils/image_picker_utils.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import '../../../config/presentation/bloc/config_bloc.dart';
 
 class UploadReceiptPage extends StatefulWidget {
   final PaymentEntity pago;
@@ -69,11 +70,17 @@ class _UploadReceiptPageState extends State<UploadReceiptPage> {
 
       // 2. Enviar la URL al BLoC para persistir en BD
       if (!context.mounted) return;
+      
+      final configState = context.read<ConfigBloc>().state;
+      final rateData = configState.rates[widget.pago.moneda ?? 'USD'];
+      final double? rate = rateData != null ? (rateData['monto_bs'] as num).toDouble() : null;
+
       context.read<PaymentsBloc>().add(
         UploadReceiptEvent(
           partidaId: widget.pago.idPartida,
           urlReciboPago: downloadUrl,
           referenciaPago: _referenciaController.text,
+          tasaUsadaBs: rate,
         ),
       );
     } catch (e) {
@@ -318,15 +325,44 @@ class _UploadReceiptPageState extends State<UploadReceiptPage> {
           const SizedBox(height: 20),
           const Divider(),
           const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text('TOTAL A PAGAR', style: TextStyle(fontWeight: FontWeight.w800, color: AppColors.textMuted, fontSize: 12)),
-              Text(
-                '\$${widget.pago.monto.toStringAsFixed(2)}',
-                style: const TextStyle(color: Colors.redAccent, fontWeight: FontWeight.w900, fontSize: 24),
-              ),
-            ],
+          BlocBuilder<ConfigBloc, ConfigState>(
+            builder: (context, state) {
+              final rateData = state.rates[widget.pago.moneda ?? 'USD'];
+              final double? rate = rateData != null ? (rateData['monto_bs'] as num).toDouble() : null;
+              final amountBs = rate != null ? widget.pago.monto * rate : null;
+              
+              return Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('TOTAL A PAGAR', style: TextStyle(fontWeight: FontWeight.w800, color: AppColors.textMuted, fontSize: 12)),
+                      Text(
+                        '${widget.pago.moneda == 'EUR' ? '€' : '\$'}${widget.pago.monto.toStringAsFixed(2)}',
+                        style: const TextStyle(color: Colors.redAccent, fontWeight: FontWeight.w900, fontSize: 24),
+                      ),
+                    ],
+                  ),
+                  if (amountBs != null) ...[
+                    const SizedBox(height: 4),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text('REFERENCIA BCV', style: TextStyle(color: AppColors.textMuted, fontSize: 10, fontWeight: FontWeight.bold)),
+                        Text(
+                          'Bs. ${amountBs.toStringAsFixed(2)}',
+                          style: TextStyle(
+                            color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ],
+              );
+            },
           ),
         ],
       ),
