@@ -15,8 +15,8 @@ abstract class MatchesRemoteDataSource {
   Future<MatchModel> createMatch(MatchModel match);
   Future<MatchModel> getMatchDetails(int id);
   Future<MatchModel> acceptEncounter(int matchId, int teamId);
-  Future<MatchModel> proposeTerms(int matchId, DateTime fecha, double costo);
-  Future<MatchModel> configureMatch(int matchId, DateTime fecha, double costo, String banco, String cedula, String telefono);
+  Future<MatchModel> proposeTerms(int matchId, DateTime fecha, double costo, String moneda);
+  Future<MatchModel> configureMatch(int matchId, DateTime fecha, double costo, String moneda, String banco, String cedula, String telefono);
   Future<MatchModel> markTeamReady(int matchId);
   Future<void> registerResult(int matchId, int golesA, int golesB);
   Future<void> joinMatch(int matchId, {int? teamId});
@@ -87,11 +87,12 @@ class MatchesRemoteDataSourceImpl implements MatchesRemoteDataSource {
   }
 
   @override
-  Future<MatchModel> proposeTerms(int matchId, DateTime fecha, double costo) async {
+  Future<MatchModel> proposeTerms(int matchId, DateTime fecha, double costo, String moneda) async {
     try {
       final response = await network.post('/matches/$matchId/propose-terms', data: {
         'fecha_acordada': fecha.toIso8601String(),
         'costo_total': costo,
+        'moneda': moneda,
       });
       return MatchModel.fromJson(response.data);
     } catch (e) {
@@ -100,11 +101,12 @@ class MatchesRemoteDataSourceImpl implements MatchesRemoteDataSource {
   }
 
   @override
-  Future<MatchModel> configureMatch(int matchId, DateTime fecha, double costo, String banco, String cedula, String telefono) async {
+  Future<MatchModel> configureMatch(int matchId, DateTime fecha, double costo, String moneda, String banco, String cedula, String telefono) async {
     try {
       final response = await network.put('/matches/$matchId/configure', data: {
         'fecha_acordada': fecha.toIso8601String(),
         'costo_total_partida': costo,
+        'moneda': moneda,
         'banco_receptor': banco,
         'cedula_receptor': cedula,
         'telefono_receptor': telefono,

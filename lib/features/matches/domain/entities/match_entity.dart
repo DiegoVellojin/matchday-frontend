@@ -21,8 +21,10 @@ class MatchEntity extends Equatable {
   // Propuestas de negociación
   final DateTime? propuestaFechaA;
   final double? propuestaCostoA;
+  final String propuestaMonedaA;
   final DateTime? propuestaFechaB;
   final double? propuestaCostoB;
+  final String propuestaMonedaB;
 
   final bool equipoAListo;
   final bool equipoBListo;
@@ -69,8 +71,10 @@ class MatchEntity extends Equatable {
     required this.cuotaPorJugador,
     this.propuestaFechaA,
     this.propuestaCostoA,
+    this.propuestaMonedaA = 'USD',
     this.propuestaFechaB,
     this.propuestaCostoB,
+    this.propuestaMonedaB = 'USD',
     this.equipoAListo = false,
     this.equipoBListo = false,
     this.nombreEquipoA,
@@ -118,8 +122,10 @@ class MatchEntity extends Equatable {
         cuotaPorJugador,
         propuestaFechaA,
         propuestaCostoA,
+        propuestaMonedaA,
         propuestaFechaB,
         propuestaCostoB,
+        propuestaMonedaB,
         equipoAListo,
         equipoBListo,
         nombreEquipoA,

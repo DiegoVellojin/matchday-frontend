@@ -336,29 +336,6 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
                     );
                   }(),
 
-              const SizedBox(height: 20),
-              
-              // Selector de Divisa
-              _buildLabel('Divisa de Pago'),
-              Center(
-                child: SegmentedButton<String>(
-                  segments: const [
-                    ButtonSegment<String>(value: 'USD', label: Text('USD (\$)', style: TextStyle(fontSize: 13)), icon: Icon(Icons.attach_money, size: 16)),
-                    ButtonSegment<String>(value: 'EUR', label: Text('EUR (€)', style: TextStyle(fontSize: 13)), icon: Icon(Icons.euro, size: 16)),
-                  ],
-                  selected: {selectedMoneda},
-                  onSelectionChanged: (newSelection) {
-                    setState(() => selectedMoneda = newSelection.first);
-                  },
-                  style: SegmentedButton.styleFrom(
-                    backgroundColor: isDark ? Colors.grey[900] : Colors.grey[100],
-                    selectedBackgroundColor: AppColors.primary,
-                    selectedForegroundColor: Colors.black,
-                    side: BorderSide(color: theme.dividerColor),
-                  ),
-                ),
-              ),
-
               const SizedBox(height: 32),
               _buildSectionTitle('Fecha y Hora', isDark),
               const SizedBox(height: 16),

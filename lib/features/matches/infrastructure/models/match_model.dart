@@ -20,8 +20,10 @@ class MatchModel extends MatchEntity {
     required super.cuotaPorJugador,
     super.propuestaFechaA,
     super.propuestaCostoA,
+    super.propuestaMonedaA = 'USD',
     super.propuestaFechaB,
     super.propuestaCostoB,
+    super.propuestaMonedaB = 'USD',
     super.equipoAListo = false,
     super.equipoBListo = false,
     super.nombreEquipoA,
@@ -73,12 +75,14 @@ class MatchModel extends MatchEntity {
       propuestaCostoA: json['propuesta_costo_a'] != null 
           ? (json['propuesta_costo_a'] as num).toDouble() 
           : null,
+      propuestaMonedaA: json['propuesta_moneda_a'] ?? 'USD',
       propuestaFechaB: json['propuesta_fecha_b'] != null 
           ? DateTime.parse(json['propuesta_fecha_b']) 
           : null,
       propuestaCostoB: json['propuesta_costo_b'] != null 
           ? (json['propuesta_costo_b'] as num).toDouble() 
           : null,
+      propuestaMonedaB: json['propuesta_moneda_b'] ?? 'USD',
       equipoAListo: json['equipo_a_listo'] ?? false,
       equipoBListo: json['equipo_b_listo'] ?? false,
       nombreEquipoA: json['nombre_equipo_a'],
@@ -125,8 +129,10 @@ class MatchModel extends MatchEntity {
       'cuota_por_jugador': cuotaPorJugador,
       'propuesta_fecha_a': propuestaFechaA?.toIso8601String(),
       'propuesta_costo_a': propuestaCostoA,
+      'propuesta_moneda_a': propuestaMonedaA,
       'propuesta_fecha_b': propuestaFechaB?.toIso8601String(),
       'propuesta_costo_b': propuestaCostoB,
+      'propuesta_moneda_b': propuestaMonedaB,
       'equipo_a_listo': equipoAListo,
       'equipo_b_listo': equipoBListo,
       'nombre_equipo_a': nombreEquipoA,

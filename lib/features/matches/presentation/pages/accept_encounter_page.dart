@@ -202,7 +202,7 @@ class _AcceptEncounterPageState extends State<AcceptEncounterPage> {
             children: [
               _statBox(theme, cs, Icons.location_on_outlined, match.nombreCancha ?? 'Cancha', 'Ubicación'),
               const SizedBox(width: 8),
-              _statBox(theme, cs, Icons.attach_money, '\$${match.costoTotal.toStringAsFixed(0)}', 'Costo aprox.'),
+              _statBox(theme, cs, match.moneda == 'EUR' ? Icons.euro_rounded : Icons.attach_money, '${match.moneda == 'EUR' ? '€' : '\$'}${match.costoTotal.toStringAsFixed(0)}', 'Costo aprox.'),
             ],
           ),
           const SizedBox(height: 16),

@@ -59,8 +59,8 @@ class ProposeTermsUseCase {
   final IMatchesRepository repository;
   ProposeTermsUseCase(this.repository);
 
-  Future<Either<Failure, MatchEntity>> execute(int matchId, DateTime fecha, double costo) {
-    return repository.proposeTerms(matchId, fecha, costo);
+  Future<Either<Failure, MatchEntity>> execute(int matchId, DateTime fecha, double costo, String moneda) {
+    return repository.proposeTerms(matchId, fecha, costo, moneda);
   }
 }
 
@@ -77,8 +77,8 @@ class ConfigureMatchUseCase {
   final IMatchesRepository repository;
   ConfigureMatchUseCase(this.repository);
 
-  Future<Either<Failure, MatchEntity>> execute(int matchId, DateTime fecha, double costo, String banco, String cedula, String telefono) {
-    return repository.configureMatch(matchId, fecha, costo, banco, cedula, telefono);
+  Future<Either<Failure, MatchEntity>> execute(int matchId, DateTime fecha, double costo, String moneda, String banco, String cedula, String telefono) {
+    return repository.configureMatch(matchId, fecha, costo, moneda, banco, cedula, telefono);
   }
 }
 

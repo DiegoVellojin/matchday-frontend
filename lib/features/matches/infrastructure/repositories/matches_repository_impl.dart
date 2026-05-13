@@ -55,6 +55,12 @@ class MatchesRepositoryImpl implements IMatchesRepository {
         cuposTotales: match.cuposTotales,
         jugadoresInscritos: match.jugadoresInscritos,
         cuotaPorJugador: match.cuotaPorJugador,
+        propuestaFechaA: match.propuestaFechaA,
+        propuestaCostoA: match.propuestaCostoA,
+        propuestaMonedaA: match.propuestaMonedaA,
+        propuestaFechaB: match.propuestaFechaB,
+        propuestaCostoB: match.propuestaCostoB,
+        propuestaMonedaB: match.propuestaMonedaB,
       );
       final result = await remoteDataSource.createMatch(model);
       return Right(result);
@@ -84,9 +90,9 @@ class MatchesRepositoryImpl implements IMatchesRepository {
   }
 
   @override
-  Future<Either<Failure, MatchEntity>> proposeTerms(int matchId, DateTime fecha, double costo) async {
+  Future<Either<Failure, MatchEntity>> proposeTerms(int matchId, DateTime fecha, double costo, String moneda) async {
     try {
-      final result = await remoteDataSource.proposeTerms(matchId, fecha, costo);
+      final result = await remoteDataSource.proposeTerms(matchId, fecha, costo, moneda);
       return Right(result);
     } catch (e) {
       return Left(ServerFailure(e.toString().replaceAll('Exception: ', '')));
@@ -94,9 +100,9 @@ class MatchesRepositoryImpl implements IMatchesRepository {
   }
 
   @override
-  Future<Either<Failure, MatchEntity>> configureMatch(int matchId, DateTime fecha, double costo, String banco, String cedula, String telefono) async {
+  Future<Either<Failure, MatchEntity>> configureMatch(int matchId, DateTime fecha, double costo, String moneda, String banco, String cedula, String telefono) async {
     try {
-      final result = await remoteDataSource.configureMatch(matchId, fecha, costo, banco, cedula, telefono);
+      final result = await remoteDataSource.configureMatch(matchId, fecha, costo, moneda, banco, cedula, telefono);
       return Right(result);
     } catch (e) {
       return Left(ServerFailure(e.toString().replaceAll('Exception: ', '')));
@@ -172,6 +178,12 @@ class MatchesRepositoryImpl implements IMatchesRepository {
         cuposTotales: match.cuposTotales,
         jugadoresInscritos: match.jugadoresInscritos,
         cuotaPorJugador: match.cuotaPorJugador,
+        propuestaFechaA: match.propuestaFechaA,
+        propuestaCostoA: match.propuestaCostoA,
+        propuestaMonedaA: match.propuestaMonedaA,
+        propuestaFechaB: match.propuestaFechaB,
+        propuestaCostoB: match.propuestaCostoB,
+        propuestaMonedaB: match.propuestaMonedaB,
       );
       final result = await remoteDataSource.updateMatch(model);
       return Right(result);

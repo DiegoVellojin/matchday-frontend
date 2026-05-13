@@ -9,7 +9,7 @@ class FinanceRepositoryImpl implements IFinanceRepository {
   @override
   Future<Map<String, dynamic>> getLatestRates() async {
     try {
-      final response = await _dio.get('/api/v1/config/rates/latest');
+      final response = await _dio.get('/config/rates/latest');
       if (response.statusCode == 200) {
         return response.data as Map<String, dynamic>;
       }

@@ -60,13 +60,17 @@ class ProposeTermsEvent extends MatchesEvent {
   final int matchId;
   final DateTime fecha;
   final double costo;
-  ProposeTermsEvent({required this.matchId, required this.fecha, required this.costo});
+  final String moneda;
+  ProposeTermsEvent({required this.matchId, required this.fecha, required this.costo, required this.moneda});
+  @override
+  List<Object?> get props => [matchId, fecha, costo, moneda];
 }
 
 class ConfigureMatchEvent extends MatchesEvent {
   final int matchId;
   final DateTime fecha;
   final double costo;
+  final String moneda;
   final String banco;
   final String cedula;
   final String telefono;
@@ -75,10 +79,14 @@ class ConfigureMatchEvent extends MatchesEvent {
     required this.matchId,
     required this.fecha,
     required this.costo,
+    required this.moneda,
     required this.banco,
     required this.cedula,
     required this.telefono,
   });
+
+  @override
+  List<Object?> get props => [matchId, fecha, costo, moneda, banco, cedula, telefono];
 }
 
 class MarkTeamReadyEvent extends MatchesEvent {
@@ -266,7 +274,7 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
 
   Future<void> _onProposeTerms(ProposeTermsEvent event, Emitter<MatchesState> emit) async {
     emit(MatchesLoading());
-    final result = await proposeTermsUseCase.execute(event.matchId, event.fecha, event.costo);
+    final result = await proposeTermsUseCase.execute(event.matchId, event.fecha, event.costo, event.moneda);
     result.fold(
       (failure) => emit(MatchesError(failure.message)),
       (match) => emit(MatchDetailsLoaded(match)),
@@ -276,7 +284,7 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
   Future<void> _onConfigureMatch(ConfigureMatchEvent event, Emitter<MatchesState> emit) async {
     emit(MatchesLoading());
     final result = await configureMatchUseCase.execute(
-      event.matchId, event.fecha, event.costo, event.banco, event.cedula, event.telefono
+      event.matchId, event.fecha, event.costo, event.moneda, event.banco, event.cedula, event.telefono
     );
     result.fold(
       (failure) => emit(MatchesError(failure.message)),

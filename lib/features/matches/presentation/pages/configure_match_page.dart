@@ -5,9 +5,10 @@ import 'package:intl/intl.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../bloc/matches_bloc.dart';
 import '../../domain/entities/match_entity.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../profile/presentation/bloc/profile_bloc.dart';
 import '../../../profile/presentation/bloc/profile_state.dart';
+import '../../../config/presentation/bloc/config_bloc.dart';
+import '../../../../core/theme/app_colors.dart';
 
 class ConfigureMatchPage extends StatefulWidget {
   final MatchEntity partido;
@@ -25,12 +26,15 @@ class _ConfigureMatchPageState extends State<ConfigureMatchPage> {
   final TextEditingController _telefonoController = TextEditingController();
 
   double _costoActual = 0.0;
+  String _monedaSeleccionada = 'USD';
 
   @override
   void initState() {
     super.initState();
+    context.read<ConfigBloc>().add(FetchRatesEvent());
     _costoController.text = widget.partido.costoTotal.toString();
     _costoActual = widget.partido.costoTotal;
+    _monedaSeleccionada = widget.partido.moneda;
 
     _costoController.addListener(() {
       setState(() {
@@ -116,6 +120,7 @@ class _ConfigureMatchPageState extends State<ConfigureMatchPage> {
         matchId: widget.partido.id,
         fecha: widget.partido.fechaInicioEstimada,
         costo: costo,
+        moneda: _monedaSeleccionada,
         banco: _bancoController.text,
         cedula: _cedulaController.text,
         telefono: _telefonoController.text,
@@ -179,6 +184,12 @@ class _ConfigureMatchPageState extends State<ConfigureMatchPage> {
                     _buildBankingCard(context, isDark)
                         .animate()
                         .fadeIn(duration: 500.ms, delay: 300.ms)
+                        .slideY(begin: 0.1, end: 0),
+                    const SizedBox(height: 16),
+
+                    _buildSecurityNote(context, isDark)
+                        .animate()
+                        .fadeIn(duration: 500.ms, delay: 350.ms)
                         .slideY(begin: 0.1, end: 0),
                     const SizedBox(height: 16),
 
@@ -259,8 +270,16 @@ class _ConfigureMatchPageState extends State<ConfigureMatchPage> {
                       color: AppColors.primary.withValues(alpha: 0.2),
                     ),
                   ),
-                  child: const Center(
-                    child: Text('🛡️', style: TextStyle(fontSize: 28)),
+                  child: ClipOval(
+                    child: (widget.partido.logoEquipoA != null && widget.partido.logoEquipoA!.isNotEmpty && widget.partido.logoEquipoA != 'null')
+                        ? Image.network(
+                            widget.partido.logoEquipoA!,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) => const Center(child: Text('🛡️', style: TextStyle(fontSize: 28))),
+                          )
+                        : const Center(
+                            child: Text('🛡️', style: TextStyle(fontSize: 28)),
+                          ),
                   ),
                 ),
               ),
@@ -316,77 +335,173 @@ class _ConfigureMatchPageState extends State<ConfigureMatchPage> {
     final colorScheme = theme.colorScheme;
     final textMuted = isDark ? const Color(0xFF9CA3AF) : Colors.black54;
 
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: colorScheme.surface,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: theme.dividerColor),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Row(
-            children: [
-              Icon(Icons.payments_outlined, color: AppColors.primary),
-              SizedBox(width: 10),
-              Text(
-                'Costo de Cancha',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+    return BlocBuilder<ConfigBloc, ConfigState>(
+      builder: (context, configState) {
+        final rateData = configState.rates[_monedaSeleccionada];
+        // Forzamos la búsqueda de la tasa. Si no existe en el mapa, intentamos buscarla de nuevo.
+        final double rate = (rateData != null && rateData['monto_bs'] != null) 
+            ? (rateData['monto_bs'] as num).toDouble() 
+            : 1.0;
+        final bsAmount = _costoActual * rate;
+        final cuotaDolar = _costoActual / (widget.partido.cuposTotales > 0 ? widget.partido.cuposTotales : 1);
+        final cuotaBs = cuotaDolar * rate;
+
+        return Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: isDark 
+                ? [colorScheme.surface, colorScheme.surface.withValues(alpha: 0.8)]
+                : [Colors.white, Colors.grey[50]!],
+            ),
+            borderRadius: BorderRadius.circular(32),
+            border: Border.all(color: theme.dividerColor.withValues(alpha: 0.5)),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.primary.withValues(alpha: isDark ? 0.05 : 0.02),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
               ),
             ],
           ),
-          const SizedBox(height: 20),
-          TextField(
-            controller: _costoController,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            style: const TextStyle(
-              fontSize: 32,
-              fontWeight: FontWeight.bold,
-              color: AppColors.primary,
-            ),
-            textAlign: TextAlign.center,
-            decoration: InputDecoration(
-              prefixIcon: const Icon(
-                Icons.attach_money,
-                color: AppColors.primary,
-              ),
-              hintText: '0.00',
-              filled: true,
-              fillColor: theme.scaffoldBackgroundColor.withValues(alpha: 0.5),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(16),
-                borderSide: BorderSide.none,
-              ),
-              contentPadding: const EdgeInsets.symmetric(vertical: 20),
-            ),
-          ),
-          if (_costoActual > 0) ...[
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.05),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    'Cuota estimada por jugador:',
-                    style: TextStyle(color: textMuted, fontSize: 13),
+                  const Row(
+                    children: [
+                      Icon(Icons.payments_outlined, color: AppColors.primary, size: 20),
+                      SizedBox(width: 10),
+                      Text(
+                        'Costo de Cancha',
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, letterSpacing: 0.5),
+                      ),
+                    ],
                   ),
-                  Text(
-                    '\$${(_costoActual / (widget.partido.cuposTotales > 0 ? widget.partido.cuposTotales : 1)).toStringAsFixed(2)}',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.primary,
-                    ),
-                  ),
+                  if (configState.isLoading)
+                    const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary)),
                 ],
               ),
+              const SizedBox(height: 24),
+              TextField(
+                controller: _costoController,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                style: const TextStyle(
+                  fontSize: 42,
+                  fontWeight: FontWeight.w900,
+                  color: AppColors.primary,
+                  letterSpacing: -1,
+                ),
+                textAlign: TextAlign.center,
+                decoration: InputDecoration(
+                  prefixIcon: Container(
+                    margin: const EdgeInsets.only(right: 8),
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton<String>(
+                        value: _monedaSeleccionada,
+                        elevation: 16,
+                        dropdownColor: theme.colorScheme.surface,
+                        borderRadius: BorderRadius.circular(16),
+                        items: const [
+                          DropdownMenuItem(value: 'USD', child: Text('\$', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: AppColors.primary))),
+                          DropdownMenuItem(value: 'EUR', child: Text('€', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: AppColors.primary))),
+                        ],
+                        onChanged: (val) => setState(() => _monedaSeleccionada = val!),
+                        icon: const Icon(Icons.keyboard_arrow_down_rounded, color: AppColors.primary),
+                      ),
+                    ),
+                  ),
+                  hintText: '0.00',
+                  border: InputBorder.none,
+                  contentPadding: EdgeInsets.zero,
+                ),
+              ),
+              if (_costoActual > 0) ...[
+                Center(
+                  child: Text(
+                    '≈ Bs. ${NumberFormat("#,##0.00", "es_VE").format(bsAmount)}',
+                    style: TextStyle(color: textMuted, fontSize: 14, fontWeight: FontWeight.w500),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                const Divider(),
+                const SizedBox(height: 16),
+                _buildFinancialRow(
+                  'Cuota por jugador:',
+                  '${_monedaSeleccionada == 'USD' ? '\$' : '€'}${cuotaDolar.toStringAsFixed(2)}',
+                  AppColors.primary,
+                ),
+                const SizedBox(height: 8),
+                _buildFinancialRow(
+                  'Equivalente en Bolívares:',
+                  'Bs. ${NumberFormat("#,##0.00", "es_VE").format(cuotaBs)}',
+                  textMuted,
+                  isSecondary: true,
+                ),
+              ],
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildFinancialRow(String label, String value, Color valueColor, {bool isSecondary = false}) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            color: isSecondary ? Colors.grey : null,
+            fontSize: isSecondary ? 12 : 14,
+            fontWeight: isSecondary ? FontWeight.normal : FontWeight.w500,
+          ),
+        ),
+        Text(
+          value,
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: valueColor,
+            fontSize: isSecondary ? 13 : 15,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSecurityNote(BuildContext context, bool isDark) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.blue.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.blue.withValues(alpha: 0.2)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.verified_user_outlined, color: Colors.blue, size: 24),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Protocolo de Seguridad Financiera',
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.blue),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Por integridad de los datos, todos los pagos en Bolívares deben realizarse estrictamente a la tasa oficial del Banco Central de Venezuela (BCV) vigente al momento de la transacción.',
+                  style: TextStyle(fontSize: 12, color: isDark ? Colors.blue[200] : Colors.blue[800], height: 1.4),
+                ),
+              ],
             ),
-          ],
+          ),
         ],
       ),
     );
@@ -540,21 +655,17 @@ class _ConfigureMatchPageState extends State<ConfigureMatchPage> {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final match = widget.partido;
-    final coincide =
-        match.propuestaCostoA != null &&
-        match.propuestaCostoA == match.propuestaCostoB;
+    final coincide = match.propuestaCostoA != null && 
+                    match.propuestaCostoA == match.propuestaCostoB;
+    final currentSymbol = _monedaSeleccionada == 'EUR' ? '€' : '\$';
 
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: coincide
-            ? Colors.green.withValues(alpha: 0.05)
-            : colorScheme.surface,
+        color: coincide ? Colors.green.withValues(alpha: 0.05) : colorScheme.surface,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: coincide
-              ? Colors.green.withValues(alpha: 0.2)
-              : theme.dividerColor,
+          color: coincide ? Colors.green.withValues(alpha: 0.2) : theme.dividerColor,
         ),
       ),
       child: Column(
@@ -563,9 +674,7 @@ class _ConfigureMatchPageState extends State<ConfigureMatchPage> {
           Row(
             children: [
               Icon(
-                coincide
-                    ? Icons.check_circle_outline
-                    : Icons.handshake_outlined,
+                coincide ? Icons.check_circle_outline : Icons.handshake_outlined,
                 color: coincide ? Colors.green : AppColors.primary,
               ),
               const SizedBox(width: 10),
@@ -581,6 +690,7 @@ class _ConfigureMatchPageState extends State<ConfigureMatchPage> {
             'Tu Equipo (Org)',
             match.propuestaCostoA,
             isDark,
+            currentSymbol,
           ),
           const SizedBox(height: 8),
           _proposalRow(
@@ -588,9 +698,10 @@ class _ConfigureMatchPageState extends State<ConfigureMatchPage> {
             'Rival (Retador)',
             match.propuestaCostoB,
             isDark,
+            currentSymbol,
           ),
-          if (match.propuestaCostoA != null &&
-              match.propuestaCostoB != null &&
+          if (match.propuestaCostoA != null && 
+              match.propuestaCostoB != null && 
               !coincide)
             Padding(
               padding: const EdgeInsets.only(top: 12),
@@ -608,24 +719,17 @@ class _ConfigureMatchPageState extends State<ConfigureMatchPage> {
     );
   }
 
-  Widget _proposalRow(
-    BuildContext context,
-    String label,
-    double? costo,
-    bool isDark,
-  ) {
+  Widget _proposalRow(BuildContext context, String label, double? amount, bool isDark, String symbol) {
     final textMuted = isDark ? const Color(0xFF9CA3AF) : Colors.black54;
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(label, style: TextStyle(color: textMuted, fontSize: 13)),
         Text(
-          costo != null ? '\$${costo.toStringAsFixed(2)}' : 'Sin propuesta',
+          amount != null ? '$symbol${amount.toStringAsFixed(2)}' : 'Sin propuesta',
           style: TextStyle(
             fontWeight: FontWeight.bold,
-            color: costo != null
-                ? Theme.of(context).colorScheme.onSurface
-                : textMuted.withValues(alpha: 0.5),
+            color: amount != null ? Theme.of(context).colorScheme.onSurface : textMuted,
           ),
         ),
       ],
