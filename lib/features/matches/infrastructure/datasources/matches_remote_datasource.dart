@@ -23,6 +23,7 @@ abstract class MatchesRemoteDataSource {
   Future<List<MatchPlayerModel>> getMatchPlayers(int matchId);
   Future<void> cancelMatch(int matchId);
   Future<MatchModel> updateMatch(MatchModel match);
+  Future<void> evaluateMatch(int matchId, int puntuacion, String? comentario);
 }
 
 class MatchesRemoteDataSourceImpl implements MatchesRemoteDataSource {
@@ -176,6 +177,19 @@ class MatchesRemoteDataSourceImpl implements MatchesRemoteDataSource {
       return MatchModel.fromJson(response.data);
     } catch (e) {
       throw ApiErrorHandler.handle(e, 'Error al actualizar el partido');
+    }
+  }
+
+  @override
+  Future<void> evaluateMatch(int matchId, int puntuacion, String? comentario) async {
+    try {
+      await network.post('/rankings/evaluate', data: {
+        'partida_id': matchId,
+        'puntuacion': puntuacion,
+        'comentario': comentario,
+      });
+    } catch (e) {
+      throw ApiErrorHandler.handle(e, 'Error al enviar la evaluación');
     }
   }
 }

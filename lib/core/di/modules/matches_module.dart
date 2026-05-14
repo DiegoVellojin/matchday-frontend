@@ -24,6 +24,7 @@ Future<void> initMatches() async {
   sl.registerLazySingleton(() => RegisterMatchResultUseCase(sl()));
   sl.registerLazySingleton(() => CancelMatchUseCase(sl()));
   sl.registerLazySingleton(() => UpdateMatchUseCase(sl()));
+  sl.registerLazySingleton(() => EvaluateMatchUseCase(sl()));
 
   // BLoC
   sl.registerFactory(
@@ -38,6 +39,7 @@ Future<void> initMatches() async {
       acceptEncounterUseCase: sl(),
       cancelMatchUseCase: sl(),
       updateMatchUseCase: sl(),
+      evaluateMatchUseCase: sl(),
     ),
   );
 }

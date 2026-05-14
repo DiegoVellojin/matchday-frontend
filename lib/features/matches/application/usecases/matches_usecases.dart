@@ -117,3 +117,12 @@ class UpdateMatchUseCase {
     return repository.updateMatch(match);
   }
 }
+
+class EvaluateMatchUseCase {
+  final IMatchesRepository repository;
+  EvaluateMatchUseCase(this.repository);
+
+  Future<Either<Failure, void>> execute(int matchId, int puntuacion, String? comentario) {
+    return repository.evaluateMatch(matchId, puntuacion, comentario);
+  }
+}

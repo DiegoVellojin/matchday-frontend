@@ -23,4 +23,5 @@ abstract class IMatchesRepository {
   Future<Either<Failure, List<MatchPlayer>>> getMatchPlayers(int matchId);
   Future<Either<Failure, void>> cancelMatch(int matchId);
   Future<Either<Failure, MatchEntity>> updateMatch(MatchEntity match);
+  Future<Either<Failure, void>> evaluateMatch(int matchId, int puntuacion, String? comentario);
 }

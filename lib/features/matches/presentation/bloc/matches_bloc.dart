@@ -111,6 +111,15 @@ class UpdateMatchEvent extends MatchesEvent {
   UpdateMatchEvent(this.match);
 }
 
+class EvaluateMatchEvent extends MatchesEvent {
+  final int matchId;
+  final int puntuacion;
+  final String? comentario;
+  EvaluateMatchEvent({required this.matchId, required this.puntuacion, this.comentario});
+  @override
+  List<Object?> get props => [matchId, puntuacion, comentario];
+}
+
 // STATES
 abstract class MatchesState extends Equatable {
   @override
@@ -171,6 +180,8 @@ class MatchUpdated extends MatchesState {
   List<Object?> get props => [match];
 }
 
+class MatchEvaluated extends MatchesState {}
+
 // BLOC
 class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
   final GetMatchesUseCase getMatchesUseCase;
@@ -183,6 +194,7 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
   final AcceptEncounterUseCase acceptEncounterUseCase;
   final CancelMatchUseCase cancelMatchUseCase;
   final UpdateMatchUseCase updateMatchUseCase;
+  final EvaluateMatchUseCase evaluateMatchUseCase;
 
   MatchesBloc({
     required this.getMatchesUseCase,
@@ -195,6 +207,7 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
     required this.acceptEncounterUseCase,
     required this.cancelMatchUseCase,
     required this.updateMatchUseCase,
+    required this.evaluateMatchUseCase,
   }) : super(MatchesInitial()) {
     on<LoadMatchesEvent>(_onLoadMatches);
     on<LoadMatchDetailsEvent>(_onLoadMatchDetails);
@@ -207,6 +220,7 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
     on<RegisterResultEvent>(_onRegisterResult);
     on<CancelMatchEvent>(_onCancelMatch);
     on<UpdateMatchEvent>(_onUpdateMatch);
+    on<EvaluateMatchEvent>(_onEvaluateMatch);
   }
 
   Future<void> _onAcceptEncounter(AcceptEncounterEvent event, Emitter<MatchesState> emit) async {
@@ -325,6 +339,15 @@ class MatchesBloc extends Bloc<MatchesEvent, MatchesState> {
     result.fold(
       (failure) => emit(MatchesError(failure.message)),
       (match) => emit(MatchUpdated(match)),
+    );
+  }
+
+  Future<void> _onEvaluateMatch(EvaluateMatchEvent event, Emitter<MatchesState> emit) async {
+    emit(MatchesLoading());
+    final result = await evaluateMatchUseCase.execute(event.matchId, event.puntuacion, event.comentario);
+    result.fold(
+      (failure) => emit(MatchesError(failure.message)),
+      (_) => emit(MatchEvaluated()),
     );
   }
 }

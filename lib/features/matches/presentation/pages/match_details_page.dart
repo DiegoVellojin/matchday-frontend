@@ -20,6 +20,7 @@ import '../widgets/match_details/match_financial_card.dart';
 import '../widgets/match_details/match_players_section.dart';
 import '../widgets/match_details/match_confirmed_action_card.dart';
 import '../widgets/match_details/match_result_section.dart';
+import '../widgets/match_details/match_evaluation_widget.dart';
 import '../widgets/match_details/match_bottom_bar.dart';
 import '../widgets/match_details/match_details_action_handler.dart';
 
@@ -133,6 +134,11 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> {
                       MatchResultSection(match: match, isDark: isDark, currentUserId: currentUserId)
                           .animate().scale(duration: 500.ms, curve: Curves.easeOutBack),
                       const SizedBox(height: 20),
+
+                      if (isAnyCaptain) ...[
+                        MatchEvaluationWidget(match: match, isDark: isDark),
+                        const SizedBox(height: 24),
+                      ],
                     ],
 
                     _buildSectionHeader('UBICACIÓN', isDark),

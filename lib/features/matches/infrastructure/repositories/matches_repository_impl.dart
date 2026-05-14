@@ -191,4 +191,14 @@ class MatchesRepositoryImpl implements IMatchesRepository {
       return Left(ServerFailure(e.toString().replaceAll('Exception: ', '')));
     }
   }
+
+  @override
+  Future<Either<Failure, void>> evaluateMatch(int matchId, int puntuacion, String? comentario) async {
+    try {
+      await remoteDataSource.evaluateMatch(matchId, puntuacion, comentario);
+      return const Right(null);
+    } catch (e) {
+      return Left(ServerFailure(e.toString().replaceAll('Exception: ', '')));
+    }
+  }
 }
