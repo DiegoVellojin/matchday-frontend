@@ -228,26 +228,27 @@ class _TeamDashboardPageState extends State<TeamDashboardPage> {
   Widget _buildStatsRow(TeamEntity team, bool isDark) {
     return Row(
       children: [
-        _buildStatCard('Jugadores', '${team.currentMembers}/${team.maxMembers}', Icons.people_rounded, isDark),
+        Expanded(child: _buildStatCard('Jugadores', '${team.currentMembers}/${team.maxMembers}', Icons.people_rounded, isDark)),
         const SizedBox(width: 12),
-        _buildStatCard('Partidos', '${team.matchesPlayed}', Icons.sports_soccer_rounded, isDark),
+        Expanded(child: _buildStatCard('Partidos', '${team.matchesPlayed}', Icons.sports_soccer_rounded, isDark)),
         const SizedBox(width: 12),
-        GestureDetector(
-          onTap: () => context.push('/reviews', extra: {
-            'targetId': team.id,
-            'isTeam': true,
-            'title': team.name,
-          }),
-          child: _buildStatCard(
-              'Calificación', team.calificacionPromedio.toStringAsFixed(1), Icons.star_rounded, isDark),
+        Expanded(
+          child: GestureDetector(
+            onTap: () => context.push('/reviews', extra: {
+              'targetId': team.id,
+              'isTeam': true,
+              'title': team.name,
+            }),
+            child: _buildStatCard(
+                'Calificación', team.calificacionPromedio.toStringAsFixed(1), Icons.star_rounded, isDark),
+          ),
         ),
       ],
     );
   }
 
   Widget _buildStatCard(String label, String value, IconData icon, bool isDark) {
-    return Expanded(
-      child: Container(
+    return Container(
         padding: const EdgeInsets.symmetric(vertical: 20),
         decoration: BoxDecoration(
           color: isDark ? const Color(0xFF1F2937) : Colors.white,
@@ -262,11 +263,9 @@ class _TeamDashboardPageState extends State<TeamDashboardPage> {
             Icon(icon, color: AppColors.primary, size: 20),
             const SizedBox(height: 8),
             Text(value, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900, letterSpacing: -0.5)),
-            Text(label, style: TextStyle(color: isDark ? Colors.grey[500] : Colors.grey[600], fontSize: 10, fontWeight: FontWeight.w700, letterSpacing: 0.5)),
           ],
         ),
-      ),
-    );
+      );
   }
 
   Widget _buildModernTabs(bool isDark) {

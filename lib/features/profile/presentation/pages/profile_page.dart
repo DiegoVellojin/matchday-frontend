@@ -276,31 +276,37 @@ class _ProfilePageState extends State<ProfilePage> {
   Widget _buildStatisticsGrid(UserProfileEntity profile, bool isDark) {
     return Row(
       children: [
-        _buildStatCard(
-          'Jugados',
-          profile.partidosJugados.toString(),
-          Icons.sports_soccer_rounded,
-          isDark,
-        ),
-        const SizedBox(width: 12),
-        _buildStatCard(
-          'Organizados',
-          profile.partidosOrganizados.toString(),
-          Icons.workspace_premium_rounded,
-          isDark,
-        ),
-        const SizedBox(width: 12),
-        GestureDetector(
-          onTap: () => context.push('/reviews', extra: {
-            'targetId': profile.id,
-            'isTeam': false,
-            'title': profile.name,
-          }),
+        Expanded(
           child: _buildStatCard(
-            'Rating',
-            profile.rating.toStringAsFixed(1),
-            Icons.star_rounded,
+            'Jugados',
+            profile.partidosJugados.toString(),
+            Icons.sports_soccer_rounded,
             isDark,
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: _buildStatCard(
+            'Organizados',
+            profile.partidosOrganizados.toString(),
+            Icons.workspace_premium_rounded,
+            isDark,
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: GestureDetector(
+            onTap: () => context.push('/reviews', extra: {
+              'targetId': profile.id,
+              'isTeam': false,
+              'title': profile.name,
+            }),
+            child: _buildStatCard(
+              'Rating',
+              profile.rating.toStringAsFixed(1),
+              Icons.star_rounded,
+              isDark,
+            ),
           ),
         ),
       ],
@@ -313,8 +319,7 @@ class _ProfilePageState extends State<ProfilePage> {
     IconData icon,
     bool isDark,
   ) {
-    return Expanded(
-      child: Container(
+    return Container(
         padding: const EdgeInsets.symmetric(vertical: 20),
         decoration: BoxDecoration(
           color: isDark ? const Color(0xFF1F2937) : Colors.white,
@@ -355,8 +360,7 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
           ],
         ),
-      ),
-    );
+      );
   }
 
   Widget _buildMyTeamsSection(List<TeamEntity> teams, bool isDark) {
