@@ -290,11 +290,18 @@ class _ProfilePageState extends State<ProfilePage> {
           isDark,
         ),
         const SizedBox(width: 12),
-        _buildStatCard(
-          'Rating',
-          profile.rating.toStringAsFixed(1),
-          Icons.star_rounded,
-          isDark,
+        GestureDetector(
+          onTap: () => context.push('/reviews', extra: {
+            'targetId': profile.id,
+            'isTeam': false,
+            'title': profile.name,
+          }),
+          child: _buildStatCard(
+            'Rating',
+            profile.rating.toStringAsFixed(1),
+            Icons.star_rounded,
+            isDark,
+          ),
         ),
       ],
     ).animate().fadeIn(duration: 600.ms).slideY(begin: 0.2, end: 0);

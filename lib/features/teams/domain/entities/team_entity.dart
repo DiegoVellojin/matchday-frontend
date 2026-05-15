@@ -12,6 +12,8 @@ class TeamEntity {
   final String description;
   final String? chatUrl;
   final int matchesPlayed;
+  final double calificacionPromedio;
+  final int numCalificaciones;
 
   const TeamEntity({
     required this.id,
@@ -27,5 +29,7 @@ class TeamEntity {
     this.description = '',
     this.chatUrl,
     this.matchesPlayed = 0,
+    this.calificacionPromedio = 0.0,
+    this.numCalificaciones = 0,
   });
 }

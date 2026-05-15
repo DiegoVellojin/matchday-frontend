@@ -46,6 +46,7 @@ import '../../features/rankings/presentation/bloc/leaderboard_bloc.dart';
 import '../../features/rankings/presentation/bloc/leaderboard_event.dart';
 import '../../features/profile/presentation/bloc/profile_bloc.dart';
 import '../../features/profile/presentation/bloc/profile_state.dart';
+import '../../features/rankings/presentation/pages/reviews_page.dart';
 
 class AppRouter {
   static Page<T> _buildTransitionPage<T>({
@@ -245,6 +246,20 @@ class AppRouter {
                   match: matchEntity,
                   currentUserId: currentUserId,
                 ),
+              );
+            },
+          ),
+          GoRoute(
+            path: '/reviews',
+            pageBuilder: (context, state) {
+              final extra = state.extra as Map<String, dynamic>?;
+              final targetId = extra?['targetId'] as int;
+              final isTeam = extra?['isTeam'] as bool;
+              final title = extra?['title'] as String;
+              return _buildTransitionPage(
+                context: context,
+                state: state,
+                child: ReviewsPage(targetId: targetId, isTeam: isTeam, title: title),
               );
             },
           ),

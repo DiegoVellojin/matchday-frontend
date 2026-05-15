@@ -105,6 +105,8 @@ class _CaptainMatchDashboardPageState extends State<CaptainMatchDashboardPage>
       },
       monto: cuota,
       partidaId: _match.id,
+      moneda: _match.moneda,
+      tasaUsadaBs: player.tasaUsadaBs,
     );
   }
 

@@ -246,6 +246,7 @@ class _PendientePagoDetailsLink extends _MatchDetailsActionLink {
       banco: req.amIInA ? req.match.bancoReceptor : req.match.bancoCapitanB,
       cedula: req.amIInA ? req.match.cedulaReceptora : req.match.cedulaCapitanB,
       telefono: req.amIInA ? req.match.telefonoReceptor : req.match.telefonoCapitanBPago,
+      moneda: req.match.moneda,
     );
 
     req.context.push('/upload-receipt', extra: {'payment': payment});

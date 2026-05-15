@@ -3,7 +3,9 @@ import '../../../features/rankings/domain/repositories/i_rankings_repository.dar
 import '../../../features/rankings/infrastructure/datasources/rankings_remote_datasource.dart';
 import '../../../features/rankings/infrastructure/repositories/rankings_repository_impl.dart';
 import '../../../features/rankings/application/usecases/get_team_leaderboard_usecase.dart';
+import '../../../features/rankings/application/usecases/get_evaluations_usecase.dart';
 import '../../../features/rankings/presentation/bloc/leaderboard_bloc.dart';
+import '../../../features/rankings/presentation/bloc/evaluations_bloc.dart';
 
 Future<void> initRankings() async {
   // Data sources
@@ -14,9 +16,13 @@ Future<void> initRankings() async {
 
   // Use cases
   sl.registerLazySingleton(() => GetTeamLeaderboardUseCase(sl()));
+  sl.registerLazySingleton(() => GetEvaluationsUseCase(sl()));
 
   // BLoC
   sl.registerFactory(
     () => LeaderboardBloc(getTeamLeaderboardUseCase: sl()),
+  );
+  sl.registerFactory(
+    () => EvaluationsBloc(getEvaluationsUseCase: sl()),
   );
 }

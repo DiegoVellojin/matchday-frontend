@@ -232,7 +232,15 @@ class _TeamDashboardPageState extends State<TeamDashboardPage> {
         const SizedBox(width: 12),
         _buildStatCard('Partidos', '${team.matchesPlayed}', Icons.sports_soccer_rounded, isDark),
         const SizedBox(width: 12),
-        _buildStatCard('Nivel', 'PRO', Icons.bolt_rounded, isDark),
+        GestureDetector(
+          onTap: () => context.push('/reviews', extra: {
+            'targetId': team.id,
+            'isTeam': true,
+            'title': team.name,
+          }),
+          child: _buildStatCard(
+              'Calificación', team.calificacionPromedio.toStringAsFixed(1), Icons.star_rounded, isDark),
+        ),
       ],
     );
   }

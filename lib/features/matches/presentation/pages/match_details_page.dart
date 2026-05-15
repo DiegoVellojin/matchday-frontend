@@ -136,7 +136,18 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> {
                       const SizedBox(height: 20),
 
                       if (isAnyCaptain) ...[
-                        MatchEvaluationWidget(match: match, isDark: isDark),
+                        Builder(
+                          builder: (ctx) {
+                            final rivalName = amIInA ? match.nombreEquipoB : match.nombreEquipoA;
+                            final rivalLogo = amIInA ? match.logoEquipoB : match.logoEquipoA;
+                            return MatchEvaluationWidget(
+                              match: match, 
+                              isDark: isDark,
+                              rivalName: rivalName,
+                              rivalLogo: rivalLogo,
+                            );
+                          },
+                        ),
                         const SizedBox(height: 24),
                       ],
                     ],

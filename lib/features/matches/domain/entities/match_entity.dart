@@ -1,6 +1,25 @@
 import 'package:equatable/equatable.dart';
 import 'match_status.dart';
 
+class MatchEvaluation extends Equatable {
+  final int id;
+  final int puntuacion;
+  final String? comentario;
+  final String evaluadorNombre;
+  final DateTime fecha;
+
+  const MatchEvaluation({
+    required this.id,
+    required this.puntuacion,
+    this.comentario,
+    required this.evaluadorNombre,
+    required this.fecha,
+  });
+
+  @override
+  List<Object?> get props => [id, puntuacion, comentario, evaluadorNombre, fecha];
+}
+
 class MatchEntity extends Equatable {
   final int id;
   final DateTime fechaInicioEstimada;
@@ -54,6 +73,7 @@ class MatchEntity extends Equatable {
   final String? telefonoCapitanBPago;
   final int? idEquipoUsuario;
   final bool yaEvaluado;
+  final List<MatchEvaluation> evaluaciones;
 
   const MatchEntity({
     required this.id,
@@ -103,6 +123,7 @@ class MatchEntity extends Equatable {
     this.telefonoCapitanBPago,
     this.idEquipoUsuario,
     this.yaEvaluado = false,
+    this.evaluaciones = const [],
   });
 
   /// Getter de compatibilidad para evitar romper código existente que use '.estatus'
@@ -178,6 +199,8 @@ class MatchPlayer extends Equatable {
   final String? urlReciboPago;
   final String? referenciaPago;
   final int? idEquipo;
+  final double? tasaUsadaBs;
+  final double? montoPagadoBs;
 
   const MatchPlayer({
     required this.idUsuario,
@@ -187,6 +210,8 @@ class MatchPlayer extends Equatable {
     this.urlReciboPago,
     this.referenciaPago,
     this.idEquipo,
+    this.tasaUsadaBs,
+    this.montoPagadoBs,
   });
 
   @override

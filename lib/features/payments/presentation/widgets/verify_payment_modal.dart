@@ -4,25 +4,43 @@ import 'package:flutter_animate/flutter_animate.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../bloc/payments_bloc.dart';
 import '../bloc/payments_event.dart';
+import '../../../config/presentation/bloc/config_bloc.dart';
 
 class VerifyPaymentModal extends StatelessWidget {
   final Map<String, dynamic> jugador;
   final double monto;
   final int partidaId;
+  final String? moneda;
+  final double? tasaUsadaBs;
 
   const VerifyPaymentModal({
     super.key,
     required this.jugador,
     required this.monto,
     required this.partidaId,
+    this.moneda,
+    this.tasaUsadaBs,
   });
 
-  static void show(BuildContext context, {required Map<String, dynamic> jugador, required double monto, required int partidaId}) {
+  static void show(
+    BuildContext context, {
+    required Map<String, dynamic> jugador,
+    required double monto,
+    required int partidaId,
+    String? moneda,
+    double? tasaUsadaBs,
+  }) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => VerifyPaymentModal(jugador: jugador, monto: monto, partidaId: partidaId),
+      builder: (context) => VerifyPaymentModal(
+        jugador: jugador,
+        monto: monto,
+        partidaId: partidaId,
+        moneda: moneda,
+        tasaUsadaBs: tasaUsadaBs,
+      ),
     );
   }
 
@@ -41,8 +59,18 @@ class VerifyPaymentModal extends StatelessWidget {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: Theme.of(context).cardColor,
-        title: Text('Rechazar Pago', style: TextStyle(color: Theme.of(context).textTheme.titleLarge?.color)),
-        content: Text('¿Estás seguro de rechazar el pago de ${jugador['nombre']}?', style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color)),
+        title: Text(
+          'Rechazar Pago',
+          style: TextStyle(
+            color: Theme.of(context).textTheme.titleLarge?.color,
+          ),
+        ),
+        content: Text(
+          '¿Estás seguro de rechazar el pago de ${jugador['nombre']}?',
+          style: TextStyle(
+            color: Theme.of(context).textTheme.bodyMedium?.color,
+          ),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -53,7 +81,10 @@ class VerifyPaymentModal extends StatelessWidget {
               Navigator.pop(context); // Cerrar diálogo
               Navigator.pop(context); // Cerrar modal
             },
-            child: Text('Rechazar', style: TextStyle(color: Theme.of(context).colorScheme.error)),
+            child: Text(
+              'Rechazar',
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            ),
           ),
         ],
       ),
@@ -77,7 +108,9 @@ class VerifyPaymentModal extends StatelessWidget {
               panEnabled: true,
               minScale: 0.5,
               maxScale: 4.0,
-              child: (jugador['url_recibo_pago'] != null && jugador['url_recibo_pago'].toString().startsWith('http'))
+              child:
+                  (jugador['url_recibo_pago'] != null &&
+                      jugador['url_recibo_pago'].toString().startsWith('http'))
                   ? Image.network(
                       jugador['url_recibo_pago'],
                       fit: BoxFit.contain,
@@ -102,8 +135,10 @@ class VerifyPaymentModal extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    
-    final String refText = (jugador['referencia'] != null && jugador['referencia'].toString().isNotEmpty)
+
+    final String refText =
+        (jugador['referencia'] != null &&
+            jugador['referencia'].toString().isNotEmpty)
         ? jugador['referencia']
         : 'SIN REF';
 
@@ -139,7 +174,7 @@ class VerifyPaymentModal extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 8),
-          
+
           // Header
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
@@ -150,13 +185,13 @@ class VerifyPaymentModal extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Verificar Pago', 
+                      'Verificar Pago',
                       style: TextStyle(
-                        fontSize: 24, 
-                        fontWeight: FontWeight.w900, 
+                        fontSize: 24,
+                        fontWeight: FontWeight.w900,
                         color: isDark ? Colors.white : Colors.black,
                         letterSpacing: -0.5,
-                      )
+                      ),
                     ),
                     Text(
                       'REVISIÓN DE COMPROBANTE',
@@ -173,7 +208,9 @@ class VerifyPaymentModal extends StatelessWidget {
                   icon: const Icon(Icons.close_rounded),
                   onPressed: () => Navigator.pop(context),
                   style: IconButton.styleFrom(
-                    backgroundColor: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.05),
+                    backgroundColor: isDark
+                        ? Colors.white.withValues(alpha: 0.05)
+                        : Colors.black.withValues(alpha: 0.05),
                   ),
                 ),
               ],
@@ -187,19 +224,19 @@ class VerifyPaymentModal extends StatelessWidget {
                 // Player Card
                 _buildPlayerHeader(isDark),
                 const SizedBox(height: 24),
-                
+
                 // Transaction Details Card
                 _buildDetailsCard(context, isDark, comprobante),
                 const SizedBox(height: 24),
-                
+
                 // Receipt Preview
                 _buildReceiptCard(context, isDark),
                 const SizedBox(height: 24),
-                
+
                 // Verification Checklist
                 _buildChecklistCard(isDark),
                 const SizedBox(height: 32),
-                
+
                 // Action Buttons
                 _buildActionButtons(context),
                 const SizedBox(height: 40),
@@ -218,7 +255,9 @@ class VerifyPaymentModal extends StatelessWidget {
         color: isDark ? const Color(0xFF1E293B) : Colors.grey[50],
         borderRadius: BorderRadius.circular(28),
         border: Border.all(
-          color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.05),
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.05)
+              : Colors.black.withValues(alpha: 0.05),
           width: 1.5,
         ),
       ),
@@ -229,16 +268,27 @@ class VerifyPaymentModal extends StatelessWidget {
             height: 60,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              border: Border.all(color: AppColors.primary.withValues(alpha: 0.3), width: 2),
+              border: Border.all(
+                color: AppColors.primary.withValues(alpha: 0.3),
+                width: 2,
+              ),
             ),
             child: ClipOval(
-              child: (jugador['url_foto_perfil'] != null && jugador['url_foto_perfil'].toString().startsWith('http'))
+              child:
+                  (jugador['url_foto_perfil'] != null &&
+                      jugador['url_foto_perfil'].toString().startsWith('http'))
                   ? Image.network(
                       jugador['url_foto_perfil'],
                       fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) => const Icon(Icons.person, size: 30),
+                      errorBuilder: (context, error, stackTrace) =>
+                          const Icon(Icons.person, size: 30),
                     )
-                  : Center(child: Text(jugador['avatar'] ?? '👤', style: const TextStyle(fontSize: 28))),
+                  : Center(
+                      child: Text(
+                        jugador['avatar'] ?? '👤',
+                        style: const TextStyle(fontSize: 28),
+                      ),
+                    ),
             ),
           ),
           const SizedBox(width: 16),
@@ -247,12 +297,21 @@ class VerifyPaymentModal extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
-                  'ORDEN DE PAGO DE', 
-                  style: TextStyle(color: AppColors.primary, fontSize: 9, fontWeight: FontWeight.w900, letterSpacing: 0.5)
+                  'ORDEN DE PAGO DE',
+                  style: TextStyle(
+                    color: AppColors.primary,
+                    fontSize: 9,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 0.5,
+                  ),
                 ),
                 Text(
-                  jugador['nombre'] ?? 'Jugador', 
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, letterSpacing: -0.5),
+                  jugador['nombre'] ?? 'Jugador',
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: -0.5,
+                  ),
                   overflow: TextOverflow.ellipsis,
                 ),
               ],
@@ -263,39 +322,159 @@ class VerifyPaymentModal extends StatelessWidget {
     );
   }
 
-  Widget _buildDetailsCard(BuildContext context, bool isDark, Map<String, String> comprobante) {
+  Widget _buildDetailsCard(
+    BuildContext context,
+    bool isDark,
+    Map<String, String> comprobante,
+  ) {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF1E293B) : Colors.white,
         borderRadius: BorderRadius.circular(28),
         border: Border.all(
-          color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.05),
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.05)
+              : Colors.black.withValues(alpha: 0.05),
           width: 1.5,
         ),
       ),
       child: Column(
         children: [
-          _buildDetailRow(context, Icons.receipt_long_rounded, 'CONCEPTO', comprobante['concepto']!, isDark),
-          _buildDivider(isDark),
           _buildDetailRow(
-            context, 
-            Icons.payments_rounded, 
-            'MONTO REPORTADO', 
-            '\$${monto.toStringAsFixed(2)}', 
+            context,
+            Icons.receipt_long_rounded,
+            'CONCEPTO',
+            comprobante['concepto']!,
             isDark,
-            isAmount: true
           ),
           _buildDivider(isDark),
-          _buildDetailRow(context, Icons.fingerprint_rounded, 'NRO. REFERENCIA', comprobante['referencia']!, isDark, isRef: true),
+          BlocBuilder<ConfigBloc, ConfigState>(
+            builder: (context, state) {
+              final currency = moneda ?? 'USD';
+              final symbol = currency == 'EUR' ? '€' : '\$';
+
+              // Si tenemos la tasa histórica la usamos, si no buscamos la actual
+              double? rate;
+              if (tasaUsadaBs != null && tasaUsadaBs! > 0) {
+                rate = tasaUsadaBs;
+              } else {
+                final rateData = state.rates[currency];
+                rate = rateData != null
+                    ? (rateData['monto_bs'] as num).toDouble()
+                    : null;
+              }
+
+              final amountBs = rate != null ? monto * rate : null;
+
+              return Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(
+                      Icons.payments_rounded,
+                      size: 18,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'MONTO REPORTADO',
+                          style: TextStyle(
+                            color: AppColors.textMuted,
+                            fontSize: 9,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Text(
+                              '$symbol${monto.toStringAsFixed(2)}',
+                              style: const TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.w900,
+                                color: AppColors.primary,
+                                letterSpacing: -1,
+                              ),
+                            ),
+                            if (amountBs != null)
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  Text(
+                                    'Bs. ${amountBs.toStringAsFixed(2)}',
+                                    style: TextStyle(
+                                      color: isDark
+                                          ? Colors.white
+                                          : Colors.black,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w900,
+                                    ),
+                                  ),
+                                  Text(
+                                    'Tasa BCV: ${rate!.toStringAsFixed(2)}',
+                                    style: TextStyle(
+                                      color: AppColors.primary.withValues(
+                                        alpha: 0.7,
+                                      ),
+                                      fontSize: 8,
+                                      fontWeight: FontWeight.w900,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
           _buildDivider(isDark),
-          _buildDetailRow(context, Icons.event_available_rounded, 'FECHA REPORTE', comprobante['fecha']!, isDark),
+          _buildDetailRow(
+            context,
+            Icons.fingerprint_rounded,
+            'NRO. REFERENCIA',
+            comprobante['referencia']!,
+            isDark,
+            isRef: true,
+          ),
+          _buildDivider(isDark),
+          _buildDetailRow(
+            context,
+            Icons.event_available_rounded,
+            'FECHA REPORTE',
+            comprobante['fecha']!,
+            isDark,
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildDetailRow(BuildContext context, IconData icon, String label, String value, bool isDark, {bool isAmount = false, bool isRef = false}) {
+  Widget _buildDetailRow(
+    BuildContext context,
+    IconData icon,
+    String label,
+    String value,
+    bool isDark, {
+    bool isAmount = false,
+    bool isRef = false,
+  }) {
     return Row(
       children: [
         Container(
@@ -311,28 +490,47 @@ class VerifyPaymentModal extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(label, style: const TextStyle(color: AppColors.textMuted, fontSize: 9, fontWeight: FontWeight.w900, letterSpacing: 0.5)),
+              Text(
+                label,
+                style: const TextStyle(
+                  color: AppColors.textMuted,
+                  fontSize: 9,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 0.5,
+                ),
+              ),
               const SizedBox(height: 2),
               if (isRef)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 2,
+                  ),
                   decoration: BoxDecoration(
-                    color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.05),
+                    color: isDark
+                        ? Colors.white.withValues(alpha: 0.05)
+                        : Colors.black.withValues(alpha: 0.05),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
-                    value, 
-                    style: const TextStyle(fontFamily: 'monospace', fontWeight: FontWeight.bold, fontSize: 13)
+                    value,
+                    style: const TextStyle(
+                      fontFamily: 'monospace',
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
+                    ),
                   ),
                 )
               else
                 Text(
-                  value, 
+                  value,
                   style: TextStyle(
-                    fontSize: isAmount ? 20 : 14, 
+                    fontSize: isAmount ? 20 : 14,
                     fontWeight: FontWeight.w900,
-                    color: isAmount ? AppColors.primary : (isDark ? Colors.white : Colors.black),
-                  )
+                    color: isAmount
+                        ? AppColors.primary
+                        : (isDark ? Colors.white : Colors.black),
+                  ),
                 ),
             ],
           ),
@@ -344,7 +542,12 @@ class VerifyPaymentModal extends StatelessWidget {
   Widget _buildDivider(bool isDark) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 16),
-      child: Divider(color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.05), height: 1),
+      child: Divider(
+        color: isDark
+            ? Colors.white.withValues(alpha: 0.05)
+            : Colors.black.withValues(alpha: 0.05),
+        height: 1,
+      ),
     );
   }
 
@@ -355,7 +558,9 @@ class VerifyPaymentModal extends StatelessWidget {
         color: isDark ? const Color(0xFF1E293B) : Colors.white,
         borderRadius: BorderRadius.circular(28),
         border: Border.all(
-          color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.05),
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.05)
+              : Colors.black.withValues(alpha: 0.05),
           width: 1.5,
         ),
       ),
@@ -364,11 +569,19 @@ class VerifyPaymentModal extends StatelessWidget {
         children: [
           const Row(
             children: [
-              Icon(Icons.image_search_rounded, color: AppColors.primary, size: 18),
+              Icon(
+                Icons.image_search_rounded,
+                color: AppColors.primary,
+                size: 18,
+              ),
               SizedBox(width: 8),
               Text(
-                'COMPROBANTE ADJUNTO', 
-                style: TextStyle(fontWeight: FontWeight.w900, fontSize: 11, letterSpacing: 0.5)
+                'COMPROBANTE ADJUNTO',
+                style: TextStyle(
+                  fontWeight: FontWeight.w900,
+                  fontSize: 11,
+                  letterSpacing: 0.5,
+                ),
               ),
             ],
           ),
@@ -381,11 +594,17 @@ class VerifyPaymentModal extends StatelessWidget {
               decoration: BoxDecoration(
                 color: isDark ? const Color(0xFF0F172A) : Colors.grey[100],
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: isDark ? Colors.white12 : Colors.black12),
+                border: Border.all(
+                  color: isDark ? Colors.white12 : Colors.black12,
+                ),
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(18),
-                child: (jugador['url_recibo_pago'] != null && jugador['url_recibo_pago'].toString().startsWith('http'))
+                child:
+                    (jugador['url_recibo_pago'] != null &&
+                        jugador['url_recibo_pago'].toString().startsWith(
+                          'http',
+                        ))
                     ? Hero(
                         tag: 'receipt_${jugador['id']}',
                         child: Image.network(
@@ -393,12 +612,25 @@ class VerifyPaymentModal extends StatelessWidget {
                           fit: BoxFit.contain,
                           loadingBuilder: (context, child, loadingProgress) {
                             if (loadingProgress == null) return child;
-                            return const Center(child: CircularProgressIndicator(color: AppColors.primary));
+                            return const Center(
+                              child: CircularProgressIndicator(
+                                color: AppColors.primary,
+                              ),
+                            );
                           },
-                          errorBuilder: (context, error, stackTrace) => const Icon(Icons.broken_image, size: 48, color: Colors.grey),
+                          errorBuilder: (context, error, stackTrace) =>
+                              const Icon(
+                                Icons.broken_image,
+                                size: 48,
+                                color: Colors.grey,
+                              ),
                         ),
                       )
-                    : const Icon(Icons.receipt_long, size: 64, color: Colors.grey),
+                    : const Icon(
+                        Icons.receipt_long,
+                        size: 64,
+                        color: Colors.grey,
+                      ),
               ),
             ),
           ),
@@ -406,9 +638,13 @@ class VerifyPaymentModal extends StatelessWidget {
             padding: EdgeInsets.only(top: 12),
             child: Center(
               child: Text(
-                'Toca para ampliar imagen', 
-                style: TextStyle(color: AppColors.textMuted, fontSize: 11, fontWeight: FontWeight.bold)
-              )
+                'Toca para ampliar imagen',
+                style: TextStyle(
+                  color: AppColors.textMuted,
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
           ),
         ],
@@ -428,8 +664,13 @@ class VerifyPaymentModal extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'RECORDATORIO DE SEGURIDAD', 
-            style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w900, fontSize: 11, letterSpacing: 0.5)
+            'RECORDATORIO DE SEGURIDAD',
+            style: TextStyle(
+              color: AppColors.primary,
+              fontWeight: FontWeight.w900,
+              fontSize: 11,
+              letterSpacing: 0.5,
+            ),
           ),
           const SizedBox(height: 12),
           _checkItem('Confirma que el monto sea el correcto'),
@@ -445,9 +686,18 @@ class VerifyPaymentModal extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 6),
       child: Row(
         children: [
-          const Icon(Icons.check_circle_outline_rounded, size: 14, color: AppColors.primary),
+          const Icon(
+            Icons.check_circle_outline_rounded,
+            size: 14,
+            color: AppColors.primary,
+          ),
           const SizedBox(width: 8),
-          Expanded(child: Text(text, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
+          Expanded(
+            child: Text(
+              text,
+              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+            ),
+          ),
         ],
       ),
     );
@@ -464,7 +714,9 @@ class VerifyPaymentModal extends StatelessWidget {
               style: OutlinedButton.styleFrom(
                 foregroundColor: Colors.redAccent,
                 side: const BorderSide(color: Colors.redAccent, width: 2),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(18),
+                ),
                 padding: EdgeInsets.zero,
               ),
               child: const FittedBox(
@@ -475,7 +727,11 @@ class VerifyPaymentModal extends StatelessWidget {
                     'RECHAZAR',
                     maxLines: 1,
                     softWrap: false,
-                    style: TextStyle(fontWeight: FontWeight.w900, fontSize: 13, letterSpacing: 0.5),
+                    style: TextStyle(
+                      fontWeight: FontWeight.w900,
+                      fontSize: 13,
+                      letterSpacing: 0.5,
+                    ),
                   ),
                 ),
               ),
@@ -502,7 +758,9 @@ class VerifyPaymentModal extends StatelessWidget {
                 backgroundColor: AppColors.primary,
                 foregroundColor: Colors.black,
                 elevation: 0,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(18),
+                ),
                 padding: EdgeInsets.zero,
               ),
               child: const FittedBox(
@@ -513,7 +771,11 @@ class VerifyPaymentModal extends StatelessWidget {
                     'APROBAR PAGO',
                     maxLines: 1,
                     softWrap: false,
-                    style: TextStyle(fontWeight: FontWeight.w900, fontSize: 13, letterSpacing: 0.5),
+                    style: TextStyle(
+                      fontWeight: FontWeight.w900,
+                      fontSize: 13,
+                      letterSpacing: 0.5,
+                    ),
                   ),
                 ),
               ),

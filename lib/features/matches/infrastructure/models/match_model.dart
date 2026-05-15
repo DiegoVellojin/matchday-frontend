@@ -50,6 +50,7 @@ class MatchModel extends MatchEntity {
     super.telefonoCapitanBPago,
     super.idEquipoUsuario,
     super.yaEvaluado = false,
+    super.evaluaciones = const [],
   });
 
   factory MatchModel.fromJson(Map<String, dynamic> json) {
@@ -57,8 +58,8 @@ class MatchModel extends MatchEntity {
       id: json['id'],
       fechaInicioEstimada: DateTime.parse(json['fecha_inicio_estimada']),
       fechaFinEstimada: DateTime.parse(json['fecha_fin_estimada']),
-      fechaAcordada: json['fecha_acordada'] != null 
-          ? DateTime.parse(json['fecha_acordada']) 
+      fechaAcordada: json['fecha_acordada'] != null
+          ? DateTime.parse(json['fecha_acordada'])
           : null,
       costoTotal: (json['costo_total_partida'] as num).toDouble(),
       status: MatchStatus.fromString(json['estatus_partida']),
@@ -71,18 +72,18 @@ class MatchModel extends MatchEntity {
       cuposTotales: json['cupos_totales'] ?? 22,
       jugadoresInscritos: json['jugadores_inscritos'] ?? 0,
       cuotaPorJugador: (json['cuota_por_jugador'] as num?)?.toDouble() ?? 0.0,
-      propuestaFechaA: json['propuesta_fecha_a'] != null 
-          ? DateTime.parse(json['propuesta_fecha_a']) 
+      propuestaFechaA: json['propuesta_fecha_a'] != null
+          ? DateTime.parse(json['propuesta_fecha_a'])
           : null,
-      propuestaCostoA: json['propuesta_costo_a'] != null 
-          ? (json['propuesta_costo_a'] as num).toDouble() 
+      propuestaCostoA: json['propuesta_costo_a'] != null
+          ? (json['propuesta_costo_a'] as num).toDouble()
           : null,
       propuestaMonedaA: json['propuesta_moneda_a'] ?? 'USD',
-      propuestaFechaB: json['propuesta_fecha_b'] != null 
-          ? DateTime.parse(json['propuesta_fecha_b']) 
+      propuestaFechaB: json['propuesta_fecha_b'] != null
+          ? DateTime.parse(json['propuesta_fecha_b'])
           : null,
-      propuestaCostoB: json['propuesta_costo_b'] != null 
-          ? (json['propuesta_costo_b'] as num).toDouble() 
+      propuestaCostoB: json['propuesta_costo_b'] != null
+          ? (json['propuesta_costo_b'] as num).toDouble()
           : null,
       propuestaMonedaB: json['propuesta_moneda_b'] ?? 'USD',
       equipoAListo: json['equipo_a_listo'] ?? false,
@@ -101,8 +102,12 @@ class MatchModel extends MatchEntity {
       resultadoGolesBCapA: json['resultado_goles_b_cap_a'],
       resultadoGolesACapB: json['resultado_goles_a_cap_b'],
       resultadoGolesBCapB: json['resultado_goles_b_cap_b'],
-      latitudCancha: json['latitud_cancha'] != null ? (json['latitud_cancha'] as num).toDouble() : null,
-      longitudCancha: json['longitud_cancha'] != null ? (json['longitud_cancha'] as num).toDouble() : null,
+      latitudCancha: json['latitud_cancha'] != null
+          ? (json['latitud_cancha'] as num).toDouble()
+          : null,
+      longitudCancha: json['longitud_cancha'] != null
+          ? (json['longitud_cancha'] as num).toDouble()
+          : null,
       bancoReceptor: json['banco_receptor'],
       cedulaReceptora: json['cedula_receptora'],
       telefonoReceptor: json['telefono_receptor'],
@@ -111,6 +116,16 @@ class MatchModel extends MatchEntity {
       telefonoCapitanBPago: json['telefono_capitan_b_pago'],
       idEquipoUsuario: json['id_equipo_usuario'],
       yaEvaluado: json['ya_evaluado'] ?? false,
+      evaluaciones: (json['evaluaciones'] as List?)
+              ?.map((e) => MatchEvaluation(
+                    id: e['id_evaluacion'],
+                    puntuacion: e['puntuacion'],
+                    comentario: e['comentario'],
+                    evaluadorNombre: e['evaluador_nombre'] ?? 'Usuario',
+                    fecha: DateTime.parse(e['fecha_evaluacion']),
+                  ))
+              .toList() ??
+          const [],
     );
   }
 
@@ -174,6 +189,8 @@ class MatchPlayerModel extends MatchPlayer {
     super.urlReciboPago,
     super.referenciaPago,
     super.idEquipo,
+    super.tasaUsadaBs,
+    super.montoPagadoBs,
   });
 
   factory MatchPlayerModel.fromJson(Map<String, dynamic> json) {
@@ -185,6 +202,8 @@ class MatchPlayerModel extends MatchPlayer {
       urlReciboPago: json['url_recibo_pago'],
       referenciaPago: json['referencia_pago'],
       idEquipo: json['id_equipo'],
+      tasaUsadaBs: (json['tasa_usada_bs'] as num?)?.toDouble(),
+      montoPagadoBs: (json['monto_pagado_bs'] as num?)?.toDouble(),
     );
   }
 }
