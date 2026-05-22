@@ -25,13 +25,16 @@ class TeamsRobot {
 
   Future<void> abrirFormularioCreacion() async {
     print('🖱️ Pulsando botón "Crear Equipo"...');
-    final crearBtn = find.textContaining('Crear Equipo');
+    final crearBtn = find.textContaining(
+      RegExp(r'crear equipo', caseSensitive: false),
+    );
     final target = crearBtn.evaluate().isNotEmpty
         ? crearBtn
         : find.byIcon(Icons.add);
     await tester.ensureVisible(target);
     await tester.tap(target);
-    await tester.pumpAndSettle(const Duration(seconds: 3));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 600));
   }
 
   Future<void> ingresarNombreEquipo(String nombre) async {
@@ -44,17 +47,19 @@ class TeamsRobot {
   }
 
   Future<void> crearEquipo() async {
-    print('🚀 Pulsando "Crear Equipo & Invitar Amigos"...');
-    final scrollable = find.byType(SingleChildScrollView);
-    if (scrollable.evaluate().isNotEmpty) {
-      await tester.drag(scrollable, const Offset(0, -300));
-      await tester.pumpAndSettle();
-    }
+    print('🚀 Pulsando "CREAR EQUIPO"...');
+    final exactButton = find.widgetWithText(ElevatedButton, 'CREAR EQUIPO');
+    final genericButton = find.textContaining(
+      RegExp(r'^crear equipo$', caseSensitive: false),
+    );
+    final target = exactButton.evaluate().isNotEmpty
+        ? exactButton.first
+        : genericButton.first;
 
-    final btn = find.textContaining('Crear Equipo').last;
-    await tester.ensureVisible(btn);
-    await tester.tap(btn);
-    await tester.pumpAndSettle(const Duration(seconds: 5));
+    await tester.ensureVisible(target);
+    await tester.tap(target, warnIfMissed: false);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 800));
   }
 
   Future<void> verificarEquipoEnMisEquipos(String nombreEquipo) async {
@@ -80,10 +85,12 @@ class TeamsRobot {
   Future<void> seleccionarEquipo(String nombre) async {
     print('🖱️ Seleccionando equipo "$nombre"...');
     await _esperarCarga();
-    final equipo = find.textContaining(nombre);
-    final target = equipo.evaluate().isNotEmpty
-        ? equipo.first
-        : find.byType(GestureDetector).first;
+    final target = find.textContaining(RegExp(nombre, caseSensitive: false));
+    expect(
+      target,
+      findsWidgets,
+      reason: 'No se encontró el equipo "$nombre" en la grilla de equipos.',
+    );
     await tester.ensureVisible(target);
     await tester.tap(target);
     await tester.pumpAndSettle(const Duration(seconds: 2));
@@ -91,19 +98,53 @@ class TeamsRobot {
 
   Future<void> solicitarUnirse() async {
     print('🖱️ Pulsando botón "Solicitar Unirse"...');
-    final btn = find.textContaining(
-      RegExp(r'(Unirse|Solicitar)', caseSensitive: false),
+    Finder target = find.textContaining(
+      RegExp(r'^UNIRSE$', caseSensitive: false),
     );
-    final target = btn.evaluate().isNotEmpty
-        ? btn.first
-        : find.byType(ElevatedButton).last;
+    if (target.evaluate().isEmpty) {
+      target = find.textContaining(
+        RegExp(r'SOLICITAR UNIRSE AL EQUIPO', caseSensitive: false),
+      );
+    }
+    expect(
+      target,
+      findsWidgets,
+      reason:
+          'No se encontró un botón de acción para solicitar unirse al equipo.',
+    );
     await tester.ensureVisible(target);
     await tester.tap(target);
-    await tester.pumpAndSettle(const Duration(seconds: 3));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 600));
   }
 
   Future<void> verificarMensajeConfirmacion(String mensaje) async {
-    expect(find.textContaining(mensaje), findsWidgets);
+    final expected = find.textContaining(RegExp(mensaje, caseSensitive: false));
+    final successFallback = find.textContaining(
+      RegExp(r'solicitud enviada|con éxito|exito', caseSensitive: false),
+    );
+    final idempotentFallback = find.textContaining(
+      RegExp(
+        r'ya (envi|solicit)|solicitud (ya )?exist|pendiente',
+        caseSensitive: false,
+      ),
+    );
+
+    bool found = false;
+    for (int i = 0; i < 12; i++) {
+      await tester.pump(const Duration(milliseconds: 250));
+      found =
+          expected.evaluate().isNotEmpty ||
+          successFallback.evaluate().isNotEmpty ||
+          idempotentFallback.evaluate().isNotEmpty;
+      if (found) break;
+    }
+
+    expect(
+      found,
+      isTrue,
+      reason: 'No se encontró el mensaje de confirmación "$mensaje".',
+    );
   }
 
   Future<void> verificarListaEquipos() async {

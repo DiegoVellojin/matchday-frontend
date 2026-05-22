@@ -17,26 +17,38 @@ class MatchesRobot {
   }
 
   Future<void> abrirFormularioCreacion() async {
-    final fab = find.byType(FloatingActionButton);
-    if (fab.evaluate().isEmpty) {
-      final navItem = find.text('Partidos').last;
-      await tester.ensureVisible(navItem);
-      await tester.tap(navItem);
-      await tester.pumpAndSettle();
+    print('📍 Navegando al tab de Partidos antes de abrir el formulario...');
+    final navItem = find.text('Partidos').first;
+    await tester.ensureVisible(navItem);
+    await tester.tap(navItem);
+    await tester.pumpAndSettle(const Duration(seconds: 2));
+
+    final organizeBtn = find.text('ORGANIZAR');
+    if (organizeBtn.evaluate().isNotEmpty) {
+      await tester.ensureVisible(organizeBtn);
+      await tester.tap(organizeBtn);
+      await tester.pumpAndSettle(const Duration(seconds: 3));
+      return;
     }
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pumpAndSettle();
+
+    final fab = find.byType(FloatingActionButton);
+    await tester.ensureVisible(fab.first);
+    await tester.tap(fab.first);
+    await tester.pumpAndSettle(const Duration(seconds: 3));
   }
 
   Future<void> seleccionarDeporte(String deporte) async {
     await _esperarCarga();
-    final selector = find.byType(DropdownButton<int>).at(0);
+    final selector = _findInteractableDropdown(
+      fallbackReason:
+          'No se encontró un selector de deporte interactivo en el formulario.',
+    );
     await tester.ensureVisible(selector);
     await tester.tap(selector);
     await tester.pumpAndSettle();
 
     await tester.pump(const Duration(seconds: 2));
-    final opcion = find.textContaining(deporte).last;
+    final opcion = _findTextIgnoringAccents(deporte).first;
     await tester.ensureVisible(opcion);
     await tester.tap(opcion, warnIfMissed: false);
     await tester.pumpAndSettle();
@@ -54,38 +66,52 @@ class MatchesRobot {
 
   Future<void> seleccionarCancha(String ciudad, String cancha) async {
     print('🔄 Micro-scroll de refresco...');
-    await tester.drag(find.byType(SingleChildScrollView), const Offset(0, -50));
-    await tester.pumpAndSettle(const Duration(seconds: 2));
+    final scrollable = find.byType(Scrollable);
+    if (scrollable.evaluate().isNotEmpty) {
+      await tester.drag(
+        scrollable.first,
+        const Offset(0, -50),
+        warnIfMissed: false,
+      );
+      await tester.pumpAndSettle(const Duration(seconds: 2));
+    }
 
-    final regionSelector = find.byType(DropdownButton<int>).at(2);
+    final regionSelector = _findDropdownByHintOrNullValueFallback(
+      hintText: 'selecciona una ciudad',
+      fallbackReason:
+          'No se encontró el selector de ciudad por hint ni por estado inicial sin selección.',
+    );
+
     print('ℹ️ Abriendo selector de Ciudad ($ciudad)...');
     await tester.ensureVisible(regionSelector);
     await tester.tap(regionSelector);
     await tester.pumpAndSettle(const Duration(seconds: 2));
 
-    final regionFinder = find.textContaining(
-      RegExp(ciudad, caseSensitive: false),
-    );
+    final regionFinder = _findTextIgnoringAccents(ciudad);
     final capitalFinder = (ciudad.toLowerCase() == 'caracas')
-        ? find.textContaining(RegExp(r'Caracas', caseSensitive: false))
+        ? _findTextIgnoringAccents('Caracas')
         : null;
 
     Finder targetRegion;
     if (regionFinder.evaluate().isNotEmpty) {
-      targetRegion = regionFinder.last;
+      targetRegion = regionFinder.first;
     } else if (capitalFinder != null && capitalFinder.evaluate().isNotEmpty) {
-      targetRegion = capitalFinder.last;
+      targetRegion = capitalFinder.first;
     } else {
       print('⚠️ $ciudad no visible, forzando scroll en el menú de BD...');
-      await tester.drag(find.byType(Scrollable).last, const Offset(0, -300));
+      await tester.drag(
+        find.byType(Scrollable).first,
+        const Offset(0, -300),
+        warnIfMissed: false,
+      );
       await tester.pumpAndSettle();
       targetRegion = regionFinder.evaluate().isNotEmpty
-          ? regionFinder.last
+          ? regionFinder.first
           : find
                 .byWidgetPredicate(
                   (w) => w.runtimeType.toString().contains('DropdownMenuItem'),
                 )
-                .last;
+                .first;
     }
 
     await tester.ensureVisible(targetRegion);
@@ -97,7 +123,11 @@ class MatchesRobot {
     await tester.pumpAndSettle(const Duration(seconds: 2));
 
     print('🏟️ Abriendo selector de canchas...');
-    final selectorCancha = find.byType(DropdownButton<int>).at(3);
+    final selectorCancha = _findDropdownByHintOrNullValueFallback(
+      hintText: 'selecciona una cancha',
+      fallbackReason:
+          'No se encontró el selector de cancha por hint ni por estado inicial sin selección.',
+    );
     await tester.ensureVisible(selectorCancha);
     await tester.tap(selectorCancha, warnIfMissed: false);
     await tester.pumpAndSettle(const Duration(seconds: 3));
@@ -105,14 +135,90 @@ class MatchesRobot {
     final itemsCancha = find.byWidgetPredicate(
       (w) => w.runtimeType.toString().contains('DropdownMenuItem'),
     );
-    final canchaFinder = find.textContaining(cancha);
+    final canchaFinder = _findTextIgnoringAccents(cancha);
     Finder targetCancha = canchaFinder.evaluate().isNotEmpty
-        ? canchaFinder.last
+        ? canchaFinder.first
         : itemsCancha.first;
 
     await tester.ensureVisible(targetCancha);
     await tester.tap(targetCancha);
     await tester.pumpAndSettle();
+  }
+
+  Finder _findDropdownByHintOrNullValueFallback({
+    required String hintText,
+    required String fallbackReason,
+  }) {
+    final byHint = find.byWidgetPredicate(
+      (widget) =>
+          widget is DropdownButton<int> &&
+          widget.hint is Text &&
+          ((widget.hint as Text).data?.toLowerCase().contains(
+                hintText.toLowerCase(),
+              ) ??
+              false),
+    );
+    if (byHint.evaluate().isNotEmpty) return byHint.first;
+
+    final nullValueDropdown = find.byWidgetPredicate(
+      (widget) =>
+          widget is DropdownButton<int> &&
+          widget.value == null &&
+          widget.onChanged != null &&
+          widget.items != null &&
+          widget.items!.isNotEmpty,
+    );
+    expect(nullValueDropdown, findsWidgets, reason: fallbackReason);
+    return nullValueDropdown.first;
+  }
+
+  Finder _findInteractableDropdown({required String fallbackReason}) {
+    final interactable = find.byWidgetPredicate(
+      (widget) =>
+          widget is DropdownButton<int> &&
+          widget.onChanged != null &&
+          widget.items != null &&
+          widget.items!.isNotEmpty,
+    );
+    expect(interactable, findsWidgets, reason: fallbackReason);
+    return interactable.first;
+  }
+
+  Finder _findTextIgnoringAccents(String text) {
+    final normalizedNeedle = _normalizeText(text);
+    return find.byWidgetPredicate((widget) {
+      if (widget is! Text) return false;
+      final data = widget.data;
+      if (data == null || data.trim().isEmpty) return false;
+      return _normalizeText(data).contains(normalizedNeedle);
+    });
+  }
+
+  String _normalizeText(String input) {
+    var out = input.toLowerCase();
+    out = out
+        .replaceAll('á', 'a')
+        .replaceAll('à', 'a')
+        .replaceAll('ä', 'a')
+        .replaceAll('â', 'a')
+        .replaceAll('é', 'e')
+        .replaceAll('è', 'e')
+        .replaceAll('ë', 'e')
+        .replaceAll('ê', 'e')
+        .replaceAll('í', 'i')
+        .replaceAll('ì', 'i')
+        .replaceAll('ï', 'i')
+        .replaceAll('î', 'i')
+        .replaceAll('ó', 'o')
+        .replaceAll('ò', 'o')
+        .replaceAll('ö', 'o')
+        .replaceAll('ô', 'o')
+        .replaceAll('ú', 'u')
+        .replaceAll('ù', 'u')
+        .replaceAll('ü', 'u')
+        .replaceAll('û', 'u')
+        .replaceAll('ñ', 'n');
+    return out;
   }
 
   Future<void> publicar() async {
@@ -163,6 +269,10 @@ class MatchesRobot {
     print('🧐 Verificando que el estado sea "$estado"...');
     await _esperarCarga();
     final finder = find.textContaining(RegExp(estado, caseSensitive: false));
-    expect(finder, findsWidgets, reason: 'No se encontró el estado $estado en pantalla.');
+    expect(
+      finder,
+      findsWidgets,
+      reason: 'No se encontró el estado $estado en pantalla.',
+    );
   }
 }

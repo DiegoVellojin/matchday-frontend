@@ -2,8 +2,8 @@ import 'package:dio/dio.dart';
 import '../storage/secure_storage_service.dart';
 
 /// Cliente HTTP centralizado para la comunicación con la API de MatchDay.
-/// 
-/// Utiliza [Dio] bajo el capó y gestiona automáticamente la inyección de 
+///
+/// Utiliza [Dio] bajo el capó y gestiona automáticamente la inyección de
 /// tokens de autenticación en las cabeceras, así como el logging de peticiones.
 class NetworkRobot {
   final Dio _dio;
@@ -21,17 +21,30 @@ class NetworkRobot {
         onRequest: (options, handler) async {
           // Inyectar el JWT si está disponible en el almacenamiento seguro.
           final token = await _storage.getToken();
-          
+
           if (token != null) {
             options.headers['Authorization'] = 'Bearer $token';
           }
-          
-          return handler.next(options); 
+
+          return handler.next(options);
         },
         onResponse: (response, handler) {
-          return handler.next(response); 
+          return handler.next(response);
         },
-        onError: (DioException e, handler) {
+        onError: (DioException e, handler) async {
+          final responseData = e.response?.data;
+          final detail = responseData is Map
+              ? responseData['detail']?.toString() ?? ''
+              : responseData?.toString() ?? '';
+          final normalizedDetail = detail.toLowerCase();
+
+          if (e.response?.statusCode == 401 ||
+              normalizedDetail.contains('token expirado') ||
+              normalizedDetail.contains('expired token') ||
+              normalizedDetail.contains('token expired')) {
+            await _storage.deleteToken();
+          }
+
           return handler.next(e);
         },
       ),
@@ -39,12 +52,19 @@ class NetworkRobot {
   }
 
   /// Realiza una petición GET.
-  Future<Response> get(String path, {Map<String, dynamic>? queryParameters}) async {
+  Future<Response> get(
+    String path, {
+    Map<String, dynamic>? queryParameters,
+  }) async {
     return await _dio.get(path, queryParameters: queryParameters);
   }
 
   /// Realiza una petición POST enviando [data] en el cuerpo.
-  Future<Response> post(String path, {dynamic data, Map<String, dynamic>? queryParameters}) async {
+  Future<Response> post(
+    String path, {
+    dynamic data,
+    Map<String, dynamic>? queryParameters,
+  }) async {
     return await _dio.post(path, data: data, queryParameters: queryParameters);
   }
 

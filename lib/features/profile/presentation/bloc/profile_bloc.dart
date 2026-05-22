@@ -7,7 +7,7 @@ import 'profile_event.dart';
 import 'profile_state.dart';
 
 /// BLoC responsable de gestionar la información y acciones del perfil del usuario.
-/// 
+///
 /// Interviene en la visualización, actualización de datos y el cierre de sesión,
 /// delegando la persistencia y la lógica a los Casos de Uso.
 class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
@@ -20,18 +20,20 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
     required this.updateUserProfileUseCase,
     required this.secureStorageService,
   }) : super(ProfileInitial()) {
-    
     on<LoadProfileEvent>((event, emit) async {
       emit(ProfileLoading());
-      
+
       final profileResult = await getUserProfileUseCase();
 
-      profileResult.fold(
-        (failure) => emit(ProfileError(message: failure.message)),
-        (profile) => emit(ProfileLoaded(profile: profile)),
-      );
+      await profileResult.fold((failure) async {
+        if (_shouldForceLogout(failure.message)) {
+          await secureStorageService.deleteToken();
+          emit(LogoutSuccess());
+          return;
+        }
+        emit(ProfileError(message: failure.message));
+      }, (profile) async => emit(ProfileLoaded(profile: profile)));
     });
-
 
     on<UpdateProfileEvent>((event, emit) async {
       emit(ProfileUpdating());
@@ -42,9 +44,16 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
         password: event.password,
       );
 
-      result.fold(
-        (failure) => emit(ProfileError(message: failure.message)),
-        (profile) {
+      await result.fold(
+        (failure) async {
+          if (_shouldForceLogout(failure.message)) {
+            await secureStorageService.deleteToken();
+            emit(LogoutSuccess());
+            return;
+          }
+          emit(ProfileError(message: failure.message));
+        },
+        (profile) async {
           emit(ProfileUpdateSuccess(profile));
           add(LoadProfileEvent());
         },
@@ -55,8 +64,13 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
       emit(ProfileInitial()); // Limpiamos el estado del perfil
       emit(LogoutSuccess());
     });
+  }
 
+  bool _shouldForceLogout(String message) {
+    final normalized = message.toLowerCase();
+    return normalized.contains('token expirado') ||
+        normalized.contains('expired token') ||
+        normalized.contains('token expired') ||
+        normalized.contains('401');
   }
 }
-
-
