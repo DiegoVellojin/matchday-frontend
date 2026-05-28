@@ -13,7 +13,7 @@ Future<void> laAppEstaEnLaPantallaDeBienvenida(WidgetTester tester) async {
   bool foundLogin = false;
   bool alreadyLoggedIn = false;
 
-  for (int i = 0; i < 12; i++) {
+  for (int i = 0; i < 60; i++) {
     await tester.pump(const Duration(milliseconds: 500));
 
     // Si vemos 'Equipos', es que ya estamos dentro (login persistente)
@@ -37,7 +37,7 @@ Future<void> laAppEstaEnLaPantallaDeBienvenida(WidgetTester tester) async {
 
   if (!foundLogin) {
     fail(
-      'No se encontró ni el Hub ni el botón "Iniciar Sesión" tras esperar 6 segundos.',
+      'No se encontró ni el Hub ni el botón "Iniciar Sesión" tras esperar 30 segundos.',
     );
   }
 

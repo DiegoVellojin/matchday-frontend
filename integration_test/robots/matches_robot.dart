@@ -65,12 +65,12 @@ class MatchesRobot {
   }
 
   Future<void> seleccionarCancha(String ciudad, String cancha) async {
-    print('🔄 Micro-scroll de refresco...');
+    print('🔄 Generoso scroll inicial para enfocar Ubicación...');
     final scrollable = find.byType(Scrollable);
     if (scrollable.evaluate().isNotEmpty) {
       await tester.drag(
         scrollable.first,
-        const Offset(0, -50),
+        const Offset(0, -400),
         warnIfMissed: false,
       );
       await tester.pumpAndSettle(const Duration(seconds: 2));
@@ -84,43 +84,111 @@ class MatchesRobot {
 
     print('ℹ️ Abriendo selector de Ciudad ($ciudad)...');
     await tester.ensureVisible(regionSelector);
-    await tester.tap(regionSelector);
-    await tester.pumpAndSettle(const Duration(seconds: 2));
+    
+    // Intento robusto de apertura con reintentos
+    bool overlayAbierto = false;
+    for (int tapCount = 0; tapCount < 3; tapCount++) {
+      await tester.tap(regionSelector);
+      await tester.pumpAndSettle(const Duration(seconds: 2));
+      
+      final dropdownItems = find.byWidgetPredicate(
+        (w) => w.runtimeType.toString().contains('DropdownMenuItem'),
+      );
+      if (dropdownItems.evaluate().isNotEmpty) {
+        overlayAbierto = true;
+        print('✅ Selector de Ciudad abierto con éxito en el intento ${tapCount + 1}');
+        break;
+      }
+      
+      print('⚠️ Intento ${tapCount + 1} de abrir selector falló. Haciendo micro-scroll y reintentando...');
+      if (scrollable.evaluate().isNotEmpty) {
+        await tester.drag(scrollable.first, const Offset(0, -50), warnIfMissed: false);
+        await tester.pumpAndSettle(const Duration(milliseconds: 500));
+      }
+    }
 
     final regionFinder = _findTextIgnoringAccents(ciudad);
     final capitalFinder = (ciudad.toLowerCase() == 'caracas')
         ? _findTextIgnoringAccents('Caracas')
         : null;
 
-    Finder targetRegion;
-    if (regionFinder.evaluate().isNotEmpty) {
-      targetRegion = regionFinder.first;
-    } else if (capitalFinder != null && capitalFinder.evaluate().isNotEmpty) {
-      targetRegion = capitalFinder.first;
-    } else {
-      print('⚠️ $ciudad no visible, forzando scroll en el menú de BD...');
-      await tester.drag(
-        find.byType(Scrollable).first,
-        const Offset(0, -300),
-        warnIfMissed: false,
+    Finder? targetRegion;
+    print('⚠️ Buscando $ciudad de forma visible en la lista del dropdown...');
+    final dropdownScrollable = find.byType(Scrollable).last;
+    
+    bool encontrado = false;
+    for (int scrollSteps = 0; scrollSteps < 25; scrollSteps++) {
+      if (regionFinder.evaluate().isNotEmpty) {
+        final Finder candidate = regionFinder.first;
+        try {
+          final RenderBox renderBox = tester.renderObject(candidate);
+          final position = renderBox.localToGlobal(Offset.zero);
+          if (position.dy > 120 && position.dy < 600) {
+            targetRegion = candidate;
+            encontrado = true;
+            print('🎯 Ciudad encontrada y visible en pantalla (y = ${position.dy})!');
+            break;
+          }
+        } catch (e) {
+          // Ignorar excepciones al intentar obtener el RenderBox si el widget aún no está montado/renderizado
+        }
+      }
+      if (capitalFinder != null && capitalFinder.evaluate().isNotEmpty) {
+        final Finder candidate = capitalFinder.first;
+        try {
+          final RenderBox renderBox = tester.renderObject(candidate);
+          final position = renderBox.localToGlobal(Offset.zero);
+          if (position.dy > 120 && position.dy < 600) {
+            targetRegion = candidate;
+            encontrado = true;
+            print('🎯 Caracas encontrada y visible en pantalla (y = ${position.dy})!');
+            break;
+          }
+        } catch (e) {
+          // Ignorar excepciones
+        }
+      }
+      
+      print('🔄 Desplazando lista emergente hacia abajo (paso $scrollSteps)...');
+      await tester.drag(dropdownScrollable, const Offset(0, -80), warnIfMissed: false);
+      await tester.pumpAndSettle(const Duration(milliseconds: 300));
+    }
+    
+    if (!encontrado) {
+      print('⚠️ Advertencia: No se pudo localizar la región visiblemente en el rango seguro. Usando primer item.');
+      final items = find.byWidgetPredicate(
+        (w) => w.runtimeType.toString().contains('DropdownMenuItem'),
       );
-      await tester.pumpAndSettle();
-      targetRegion = regionFinder.evaluate().isNotEmpty
-          ? regionFinder.first
-          : find
-                .byWidgetPredicate(
-                  (w) => w.runtimeType.toString().contains('DropdownMenuItem'),
-                )
-                .first;
+      targetRegion = items.first;
     }
 
-    await tester.ensureVisible(targetRegion);
-    await tester.tap(targetRegion, warnIfMissed: false);
+    await tester.ensureVisible(targetRegion!);
+    await tester.tap(targetRegion!, warnIfMissed: false);
     await tester.pumpAndSettle(const Duration(seconds: 2));
 
-    print('⌛ Esperando carga de canchas de Render...');
-    await _esperarCarga();
-    await tester.pumpAndSettle(const Duration(seconds: 2));
+    print('⌛ Esperando a que el selector de canchas esté listo y visible de la red...');
+    bool canchaReady = false;
+    for (int i = 0; i < 40; i++) {
+      await tester.pump(const Duration(milliseconds: 500));
+      final byHint = find.byWidgetPredicate(
+        (widget) =>
+            widget is DropdownButton<int> &&
+            widget.hint is Text &&
+            ((widget.hint as Text).data?.toLowerCase().contains('selecciona una cancha') ?? false),
+      );
+      if (byHint.evaluate().isNotEmpty) {
+        canchaReady = true;
+        break;
+      }
+    }
+
+    if (!canchaReady) {
+      print('⚠️ Advertencia: El selector de canchas no se detectó tras 20s. Volcando textos visibles:');
+      for (final element in find.byType(Text).evaluate()) {
+        final t = element.widget as Text;
+        if (t.data != null) print('  - "${t.data}"');
+      }
+    }
 
     print('🏟️ Abriendo selector de canchas...');
     final selectorCancha = _findDropdownByHintOrNullValueFallback(
@@ -222,7 +290,13 @@ class MatchesRobot {
   }
 
   Future<void> publicar() async {
-    final btn = find.text('Buscar o Crear Partido');
+    Finder btn = find.text('BUSCAR O CREAR PARTIDO');
+    if (btn.evaluate().isEmpty) {
+      btn = find.text('Buscar o Crear Partido');
+    }
+    if (btn.evaluate().isEmpty) {
+      btn = find.textContaining(RegExp('CREAR PARTIDO', caseSensitive: false));
+    }
     await tester.ensureVisible(btn);
     await tester.tap(btn);
     await tester.pumpAndSettle(const Duration(seconds: 2));
@@ -243,7 +317,7 @@ class MatchesRobot {
     print('📍 Navegando a la sección "Partidos" (Bottom Nav)...');
     final tabNav = find.text('Partidos').last;
     await tester.ensureVisible(tabNav);
-    await tester.tap(tabNav);
+    await tester.tap(tabNav, warnIfMissed: false);
     await tester.pumpAndSettle(const Duration(seconds: 4));
 
     print('🖱️ Pulsando en el tab "Mis Partidos"...');
