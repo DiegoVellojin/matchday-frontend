@@ -27,7 +27,7 @@ android {
     }
 
     kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_17.toString()
+        jvmTarget = "17"
     }
 
     defaultConfig {
@@ -42,10 +42,22 @@ android {
         manifestPlaceholders["MAPS_API_KEY"] = mapsApiKey
     }
 
+    signingConfigs {
+        create("release") {
+            storeFile = file("../../matchday_release.keystore")
+            storePassword = System.getenv("MATCHDAY_KEYSTORE_PASSWORD")
+            keyAlias = "matchday_key"
+            keyPassword = System.getenv("MATCHDAY_KEY_PASSWORD")
+        }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
+            signingConfig = signingConfigs.getByName("release")
+            isMinifyEnabled = true
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+        }
+        debug {
             signingConfig = signingConfigs.getByName("debug")
         }
     }

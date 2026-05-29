@@ -134,6 +134,41 @@ lib/features/matches/
     flutter run
     ```
 
+
+---
+
+## 📦 Compilación y Generación de Ejecutables (Android & iOS)
+
+El proyecto cuenta con un sistema robusto y automatizado para generar los ejecutables listos para distribución y tiendas oficiales (Google Play Store & Apple App Store / Ad-Hoc). 
+
+Toda la orquestación está centralizada en el script de automatización [build_release.sh](file:///Users/diegovellojin/Desktop/MatchDay/matchday_app/build_release.sh).
+
+### Prerrequisitos de Compilación
+* **Java SDK:** OpenJDK 17 (configurado automáticamente en el script).
+* **CocoaPods:** Instalado y sincronizado (`pod install`).
+* **Llave de Android:** Archivo `secure_key.txt` configurado en la raíz con la contraseña del Keystore.
+
+### Comandos de Ejecución
+Para compilar y empaquetar ambas plataformas de una sola pasada:
+```bash
+chmod +x build_release.sh
+./build_release.sh
+```
+
+### Ubicación de los Artefactos Generados
+
+Una vez finalizado el script con éxito, encontrarás tus binarios en las siguientes ubicaciones del proyecto:
+
+1. **🤖 Android App Bundle (`.aab`):**
+   * **Ruta:** `build/app/outputs/bundle/release/app-release.aab`
+   * **Propósito:** Firmado oficialmente con la llave del almacén de producción, listo para cargarse en Google Play Console.
+   
+2. **🍏 iOS Ejecutable (`.ipa`):**
+   * **Ruta:** `build/ReleaseIPA/Runner.ipa`
+   * **Propósito:** Empaquetado en estructura de desarrollo compatible con tu *Personal Team* local para pruebas físicas mediante instaladores Ad-Hoc o locales.
+
+---
+
 <br>
 <hr>
 <p align="center">

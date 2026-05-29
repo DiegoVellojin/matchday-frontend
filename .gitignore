@@ -54,4 +54,6 @@ firebase_options.dart
 
 # Archivos de entorno y claves
 lib/core/config/env.dart
+secure_key.txt
+matchday_release.keystore
 android/secrets.properties
