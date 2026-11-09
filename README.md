@@ -109,6 +109,7 @@ lib/features/matches/
 * **Flutter SDK** (^3.19.0)
 * **IDE**: VSCode o Android Studio.
 * Archivo `.env` configurado (API Keys de Google Maps).
+* Clave de Google Maps para iOS en `ios/Flutter/Secrets.xcconfig` (copia `Secrets.xcconfig.example`).
 
 ### Instalación
 
